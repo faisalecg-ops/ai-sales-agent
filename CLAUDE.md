@@ -15,7 +15,10 @@ Read this before any task on this project.
   213 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
   `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
   `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
-  a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`).
+  a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — in
+  GitHub only, NOT installed live, and not asked for by the owner. Read
+  `docs/sales-agent-status-2026-10-09.md` before any sales agent work.
+  Never change the sales agent without the owner's explicit approval.
 - **Next: the Social Media Agent at `/social`** — still discussion only. Build
   nothing for it until the owner approves its plan in writing. Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
