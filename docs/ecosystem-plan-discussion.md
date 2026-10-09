@@ -243,12 +243,24 @@ newsletters, country landing pages.
    - **Design**: fully in the admin (branding, colours, fonts, styles as in
      §3.3); logos and colours supplied per event at installation.
 
-## 6a. Still open
+## 6a. Further answers (9 October 2026)
 
-- Languages: interface language only (English default, Urdu option with
-  right-to-left layout), or articles in two languages side by side? The
-  second is much larger work.
-- Main event sites: WordPress or plain HTML/PHP?
+- **Languages**: English only for now, but always leave room for other
+  languages later (language files, per-article language, right-to-left ready).
+- **Main event sites**: plain HTML / PHP (not WordPress).
+- **Build Asia**: new website being built in a separate chat, temporarily at
+  buildasia.ecgateway.net; it will replace buildasia.net when final.
+- **Pharma Asia**: pharmaasia.com.pk; renovation discussed with management,
+  development not started.
+
+**Final Phase 1 plan written** for owner and management approval as a Claude
+doc: "Event Blog — Phase 1 Plan"
+(https://claude.ai/code/artifact/6938893a-3a85-485f-992c-f5f6faddfa91).
+Awaiting written approval. Asked the owner: first install on Build Asia's new
+site, or on Pharma Asia's current site for earlier review?
+
+## 6b. Still open
+
 - (Social agent, later) Same logins as the sales agent or separate? AI image
   generation wanted (extra cost)? Which social platforms per event? Target
   number of articles per event per week?
