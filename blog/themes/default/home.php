@@ -22,7 +22,7 @@ foreach ($sections as $section):
       <div class="wrap slide__content">
         <?php if ($s['headline'] !== ''): ?><h2 class="slide__title"><?= e($s['headline']) ?></h2><?php endif; ?>
         <?php if ($s['text'] !== ''): ?><p class="slide__text"><?= e($s['text']) ?></p><?php endif; ?>
-        <?php if ($s['button_label'] !== '' && $s['button_url'] !== ''): ?><a class="btn btn--primary" href="<?= e($s['button_url']) ?>"<?= $i > 0 ? ' tabindex="-1"' : '' ?>><?= e($s['button_label']) ?></a><?php endif; ?>
+        <?php if ($s['button_label'] !== '' && $s['button_url'] !== ''): ?><a class="btn btn--cta" href="<?= e($s['button_url']) ?>"<?= $i > 0 ? ' tabindex="-1"' : '' ?>><?= e($s['button_label']) ?></a><?php endif; ?>
       </div>
     </div>
   <?php endforeach; ?>
@@ -53,13 +53,17 @@ foreach ($sections as $section):
         $lead = $featured[0];
         $rest = array_slice($featured, 1); ?>
 <section class="wrap section featured" aria-labelledby="h-featured">
-  <h2 class="section-h" id="h-featured"><?= e(t('featured')) ?></h2>
+  <h2 class="section-h reveal" id="h-featured"><?= e(t('featured')) ?></h2>
   <div class="featured__grid">
     <div class="featured__lead"><?= View::card($lead, 'lead', $first && empty($slides)) ?></div>
     <?php if ($rest): ?><div class="featured__side"><?php foreach ($rest as $a) echo View::card($a, 'side'); ?></div><?php endif; ?>
   </div>
 </section>
 <?php   break;
+
+    case 'stats':
+        echo View::render('partials/stats');
+        break;
 
     case 'event_panel':
         echo '<div class="wrap section">' . View::render('partials/event_panel') . '</div>';
@@ -70,7 +74,7 @@ foreach ($sections as $section):
             break;
         } ?>
 <section class="wrap section" aria-labelledby="h-latest">
-  <div class="section-head"><h2 class="section-h" id="h-latest"><?= e(t('latest')) ?></h2><a class="more" href="<?= e(url('latest')) ?>"><?= e(t('view_all')) ?> →</a></div>
+  <div class="section-head reveal"><h2 class="section-h" id="h-latest"><?= e(t('latest')) ?></h2><a class="more" href="<?= e(url('latest')) ?>"><?= e(t('view_all')) ?> →</a></div>
   <div class="grid grid--3"><?php foreach ($latest as $a) echo View::card($a); ?></div>
 </section>
 <?php   break;
@@ -81,7 +85,7 @@ foreach ($sections as $section):
             $arts = $blk['articles'];
             if (!$arts) continue; ?>
 <section class="wrap section cat-block" aria-labelledby="h-cat-<?= (int)$c['id'] ?>">
-  <div class="section-head"><h2 class="section-h" id="h-cat-<?= (int)$c['id'] ?>"><a href="<?= e(url($c['slug'] . '/')) ?>"><?= e($c['name']) ?></a></h2><a class="more" href="<?= e(url($c['slug'] . '/')) ?>"><?= e(t('view_all')) ?> →</a></div>
+  <div class="section-head reveal"><h2 class="section-h" id="h-cat-<?= (int)$c['id'] ?>"><a href="<?= e(url($c['slug'] . '/')) ?>"><?= e($c['name']) ?></a></h2><a class="more" href="<?= e(url($c['slug'] . '/')) ?>"><?= e(t('view_all')) ?> →</a></div>
   <div class="grid grid--4"><?php foreach ($arts as $a) echo View::card($a); ?></div>
 </section>
 <?php   endforeach;
@@ -92,7 +96,7 @@ foreach ($sections as $section):
             break;
         } ?>
 <section class="wrap section" aria-labelledby="h-most">
-  <h2 class="section-h" id="h-most"><?= e(t('most_read')) ?></h2>
+  <h2 class="section-h reveal" id="h-most"><?= e(t('most_read')) ?></h2>
   <ol class="most-read">
     <?php foreach ($mostRead as $i => $a): ?>
       <li class="reveal"><span class="most-read__n"><?= $i + 1 ?></span><div><?php if ($a['category_name']): ?><span class="fly"><?= e($a['category_name']) ?></span><?php endif; ?><a href="<?= e(Article::urlFor($a)) ?>"><?= e($a['title']) ?></a></div></li>
@@ -106,7 +110,7 @@ foreach ($sections as $section):
             break;
         } ?>
 <section class="wrap section" aria-labelledby="h-tags">
-  <h2 class="section-h" id="h-tags"><?= e(t('topics')) ?></h2>
+  <h2 class="section-h reveal" id="h-tags"><?= e(t('topics')) ?></h2>
   <ul class="tags"><?php foreach ($tags as $tg): ?><li><a href="<?= e(url('tag/' . $tg['slug'])) ?>"><?= e($tg['name']) ?></a></li><?php endforeach; ?></ul>
 </section>
 <?php   break;

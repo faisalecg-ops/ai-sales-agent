@@ -70,7 +70,7 @@ $hasSide = $sideBanner !== '' || $toc;
 
 <?php if ($related): ?>
 <section class="wrap section related" aria-labelledby="h-related">
-  <h2 class="section-h" id="h-related"><?= e(t('related')) ?></h2>
+  <h2 class="section-h reveal" id="h-related"><?= e(t('related')) ?></h2>
   <div class="grid grid--3"><?php foreach ($related as $r) echo View::card($r); ?></div>
 </section>
 <?php endif; ?>

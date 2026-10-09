@@ -41,7 +41,8 @@ final class Theme
             ['muted', 'background', 'Grey secondary text on the background', 4.5],
             ['primary', 'background', 'The main colour (links, labels) on the background', 3.0],
             ['#FFFFFF', 'primary', 'White button text on the main colour', 4.5],
-            ['#FFFFFF', 'secondary', 'White text on the second colour (dark header, footer)', 4.5],
+            ['#FFFFFF', 'secondary', 'White text on the second colour (dark header, footer, buttons)', 4.5],
+            ['highlight_ink', 'highlight', 'Text on the highlight colour (call-to-action buttons)', 4.5],
         ];
         foreach ($pairs as [$fg, $bg, $label, $min]) {
             $f = str_starts_with($fg, '#') ? $fg : (string)($t[$fg] ?? '');
@@ -61,6 +62,17 @@ final class Theme
             return '';
         }
         $family = trim(explode(',', $fonts[$key]['stack'])[0], "' ");
+        if (!empty($fonts[$key]['variable'])) {
+            // One variable file holds every weight and width.
+            $range = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
+            $css = "@font-face{font-family:'$family';font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;src:url("
+                . url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2-variations'),url(" . url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2');unicode-range:$range}";
+            if (is_file(BLOG_ROOT . '/assets/fonts/' . $key . '-latin-ext-variable.woff2')) {
+                $css .= "@font-face{font-family:'$family';font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;src:url("
+                    . url('assets/fonts/' . $key . '-latin-ext-variable.woff2') . ") format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}";
+            }
+            return $css;
+        }
         $css = '';
         foreach ($fonts[$key]['weights'] as $w) {
             $css .= "@font-face{font-family:'$family';font-style:normal;font-weight:$w;font-display:swap;src:url(" . url('assets/fonts/' . $key . '-latin-' . $w . '-normal.woff2') . ") format('woff2')}";
@@ -71,12 +83,22 @@ final class Theme
         return $css;
     }
 
+    /** The font file to load first for a font. */
+    public static function fontFile(string $key, int $weight): string
+    {
+        $f = Settings::fonts()[$key] ?? null;
+        if (!$f) {
+            return '';
+        }
+        return !empty($f['variable']) ? url('assets/fonts/' . $key . '-latin-variable.woff2') : url('assets/fonts/' . $key . '-latin-' . $weight . '-normal.woff2');
+    }
+
     public static function preloadFonts(array $t): string
     {
         $out = '';
         foreach (array_unique([(string)$t['heading_font'], (string)$t['body_font']]) as $k) {
             if (isset(Settings::fonts()[$k])) {
-                $out .= '<link rel="preload" href="' . e(url('assets/fonts/' . $k . '-latin-' . ($k === $t['heading_font'] ? '700' : '400') . '-normal.woff2')) . '" as="font" type="font/woff2" crossorigin>';
+                $out .= '<link rel="preload" href="' . e(self::fontFile($k, $k === $t['heading_font'] ? 700 : 400)) . '" as="font" type="font/woff2" crossorigin>';
             }
         }
         return $out;
@@ -87,10 +109,11 @@ final class Theme
     {
         $t = $t ?? Settings::theme();
         $fonts = Settings::fonts();
-        $heading = $fonts[$t['heading_font']]['stack'] ?? $fonts['source-serif-4']['stack'];
-        $body = $fonts[$t['body_font']]['stack'] ?? $fonts['inter']['stack'];
+        $hf = $fonts[$t['heading_font']] ?? $fonts['archivo'];
+        $heading = $hf['stack'];
+        $body = ($fonts[$t['body_font']] ?? $fonts['archivo'])['stack'];
         $col = static fn(string $k, string $d) => self::validColour((string)($t[$k] ?? '')) ? (string)$t[$k] : $d;
-        $btn = match ($t['button_shape']) { 'pill' => '999px', 'rounded' => '6px', default => '0px' };
+        $btn = match ($t['button_shape']) { 'pill' => '999px', 'rounded' => '5px', default => '0px' };
         $radius = max(0, min(24, (int)$t['radius'])) . 'px';
         $shade = max(0, min(85, (int)$t['slider_shade'])) / 100;
         $css = self::fontFace((string)$t['heading_font']);
@@ -101,6 +124,10 @@ final class Theme
             . '--primary:' . $col('primary', '#E3120B') . ';'
             . '--secondary:' . $col('secondary', '#1F2E3D') . ';'
             . '--accent:' . $col('accent', '#006BA2') . ';'
+            . '--highlight:' . $col('highlight', (string)($t['primary'] ?? '#F7B10B')) . ';'
+            . '--highlight-ink:' . $col('highlight_ink', '#1D1500') . ';'
+            . '--head-stretch:' . ($hf['stretch'] ?? '100%') . ';'
+            . '--head-weight:' . ($hf['head_weight'] ?? 700) . ';'
             . '--bg:' . $col('background', '#FFFFFF') . ';'
             . '--surface:' . $col('surface', '#F6F5F2') . ';'
             . '--text:' . $col('text', '#121212') . ';'
@@ -118,6 +145,6 @@ final class Theme
     {
         $h = in_array($t['header_style'], ['light', 'dark', 'transparent'], true) ? $t['header_style'] : 'light';
         $c = in_array($t['card_style'], ['rule', 'bordered', 'shadow'], true) ? $t['card_style'] : 'rule';
-        return 'hdr-' . $h . ' cards-' . $c;
+        return 'hdr-' . $h . ' cards-' . $c . (!empty($t['band']) ? ' has-band' : '') . (!array_key_exists('motion', $t) || !empty($t['motion']) ? ' motion-on' : '');
     }
 }

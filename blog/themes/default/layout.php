@@ -22,6 +22,10 @@ $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat
 <?= Seo::head($seo) ?>
 <?= Theme::preloadFonts($theme) ?>
 <style><?= Theme::css($theme) ?></style>
+<?php if (!array_key_exists('motion', $theme) || !empty($theme['motion'])): ?>
+<script>/* Scroll animations only where they can run properly — never for visitors who prefer reduced motion. Safety net: show everything if the page script has not started within 2.5 s. */
+(function(){var r=document.documentElement;if((window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)||!('IntersectionObserver' in window))return;r.classList.add('anim');setTimeout(function(){if(!window.__blogMotion)r.classList.remove('anim');},2500);})();</script>
+<?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/blog.css')) ?>">
 <?php if ($favicon): ?><link rel="icon" href="<?= e(Media::url($favicon, 400)) ?>"><link rel="apple-touch-icon" href="<?= e(Media::url($favicon, 400)) ?>"><?php endif; ?>
 <meta name="theme-color" content="<?= e($theme['primary']) ?>">
@@ -70,12 +74,13 @@ $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat
         <button type="submit" aria-label="<?= e(t('search')) ?>"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </form>
       <?php if (Settings::get('header_button_enabled', true) && $mainSite): ?>
-        <a class="btn btn--primary visit" href="<?= e($mainSite) ?>"><?= e(Event::fill((string)Settings::get('header_button_text', 'Visit {event} ↗'))) ?></a>
+        <a class="btn btn--cta visit" href="<?= e($mainSite) ?>"><?= e(Event::fill((string)Settings::get('header_button_text', 'Visit {event} ↗'))) ?></a>
       <?php endif; ?>
       <button class="burger" type="button" aria-controls="site-nav" aria-expanded="false"><span></span><span></span><span></span><span class="sr"><?= e(t('menu')) ?></span></button>
     </div>
   </div>
 </header>
+<div class="band band--masthead" aria-hidden="true"></div>
 
 <main id="main" class="main">
 <?= $content ?>
@@ -83,9 +88,10 @@ $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat
 
 <?= Banner::render('footer') ? '<div class="wrap">' . Banner::render('footer') . '</div>' : '' ?>
 
+<div class="band band--foot" aria-hidden="true"></div>
 <footer class="footer">
   <div class="wrap footer__grid">
-    <div class="footer__about">
+    <div class="footer__about reveal">
       <?php $fl = Media::find((int)Settings::get('logo_footer', 0)) ?: $logoDark; ?>
       <?php if ($fl): ?><img src="<?= e(Media::url($fl, 400)) ?>" alt="<?= e($event) ?>" class="footer__logo" loading="lazy" width="<?= (int)$fl['width'] ?>" height="<?= (int)$fl['height'] ?>"><?php else: ?><span class="brand__box brand__box--light"><?= e($event) ?></span><?php endif; ?>
       <?php if ($tl = Event::get('event_tagline') ?: (string)Settings::get('site_tagline', '')): ?><p><?= e($tl) ?></p><?php endif; ?>
@@ -93,11 +99,11 @@ $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat
     </div>
     <?php $fm = array_filter((array)Settings::get('footer_menu', []), static fn($m) => !empty($m['label']) && !empty($m['url'])); ?>
     <?php if ($fm): ?>
-    <nav class="footer__col" aria-label="Footer">
+    <nav class="footer__col reveal" aria-label="Footer">
       <ul><?php foreach ($fm as $m): ?><li><a href="<?= e($m['url']) ?>"><?= e($m['label']) ?></a></li><?php endforeach; ?></ul>
     </nav>
     <?php endif; ?>
-    <div class="footer__col">
+    <div class="footer__col reveal">
       <h2 class="footer__h"><?= e(t('footer_contact')) ?></h2>
       <ul>
         <?php if ($v = Settings::get('contact_address', '')): ?><li><?= nl2br(e($v)) ?></li><?php endif; ?>

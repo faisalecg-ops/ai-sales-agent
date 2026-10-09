@@ -65,6 +65,7 @@ final class Settings
                 ['key' => 'banner_top',    'enabled' => true],
                 ['key' => 'featured',      'enabled' => true],
                 ['key' => 'event_panel',   'enabled' => true],
+                ['key' => 'stats',         'enabled' => true],
                 ['key' => 'latest',        'enabled' => true],
                 ['key' => 'banner_middle', 'enabled' => true],
                 ['key' => 'categories',    'enabled' => true],
@@ -76,6 +77,8 @@ final class Settings
             'slider_speed'      => 6,        // seconds per slide
             'home_category_ids' => [],       // empty = all categories with articles
             'featured_count'    => 3,
+            'stats_caption'     => '',
+            'stats'             => [],      // [{value, suffix, label}] — e.g. 32000, "+", "Trade visitors"
             'latest_count'      => 6,
 
             // Menus
@@ -129,39 +132,47 @@ final class Settings
 
     public static function defaultTheme(): array
     {
+        // Build Asia's look (21st edition banner): navy, royal blue, amber, Archivo.
         return [
-            'preset'      => 'editorial',
-            'primary'     => '#E3120B',
-            'secondary'   => '#1F2E3D',
-            'accent'      => '#006BA2',
+            'preset'      => 'buildasia',
+            'primary'     => '#1F4FBF',   // royal blue: labels, links, the top line
+            'secondary'   => '#142A5C',   // navy: dark areas, main buttons, headings
+            'accent'      => '#1F4FBF',   // links inside articles
+            'highlight'   => '#F7B10B',   // amber: call-to-action buttons, counters, stripe
+            'highlight_ink' => '#1D1500', // text on amber
             'background'  => '#FFFFFF',
-            'surface'     => '#F6F5F2',
-            'text'        => '#121212',
-            'muted'       => '#595959',
-            'heading_font'=> 'source-serif-4',
-            'body_font'   => 'inter',
+            'surface'     => '#EEF3FB',
+            'text'        => '#17203A',
+            'muted'       => '#55607A',
+            'heading_font'=> 'archivo',
+            'body_font'   => 'archivo',
             'header_style'=> 'light',     // light | dark | transparent
-            'button_shape'=> 'square',    // square | rounded | pill
-            'radius'      => 2,           // px for cards and images
+            'button_shape'=> 'rounded',   // square | rounded | pill
+            'radius'      => 8,           // px for cards and images
             'card_style'  => 'rule',      // rule | bordered | shadow
             'slider_shade'=> 45,          // % darkening over slider images
+            'band'        => true,        // the slanted stripe under the header and above the footer
+            'motion'      => true,        // scroll animations (always off for "reduce motion" visitors)
         ];
     }
 
     public static function presets(): array
     {
         return [
-            'editorial' => ['label' => 'Editorial red',  'primary' => '#E3120B', 'secondary' => '#1F2E3D', 'accent' => '#006BA2', 'background' => '#FFFFFF', 'surface' => '#F6F5F2', 'text' => '#121212', 'muted' => '#595959'],
-            'navy'      => ['label' => 'Corporate navy', 'primary' => '#0B3D91', 'secondary' => '#0A1F44', 'accent' => '#F2A900', 'background' => '#FFFFFF', 'surface' => '#F3F5F9', 'text' => '#111827', 'muted' => '#4B5563'],
-            'forest'    => ['label' => 'Industry green', 'primary' => '#0F7B45', 'secondary' => '#123524', 'accent' => '#C98A00', 'background' => '#FFFFFF', 'surface' => '#F2F6F3', 'text' => '#121A15', 'muted' => '#4D5A52'],
-            'teal'      => ['label' => 'Health teal',    'primary' => '#00808A', 'secondary' => '#0E3B43', 'accent' => '#D9480F', 'background' => '#FFFFFF', 'surface' => '#F0F6F7', 'text' => '#0F1F22', 'muted' => '#4A5A5D'],
-            'graphite'  => ['label' => 'Graphite',       'primary' => '#D14900', 'secondary' => '#1C1C1E', 'accent' => '#2563EB', 'background' => '#FFFFFF', 'surface' => '#F4F4F5', 'text' => '#18181B', 'muted' => '#52525B'],
+            'buildasia' => ['label' => 'Build Asia',     'primary' => '#1F4FBF', 'secondary' => '#142A5C', 'accent' => '#1F4FBF', 'highlight' => '#F7B10B', 'highlight_ink' => '#1D1500', 'background' => '#FFFFFF', 'surface' => '#EEF3FB', 'text' => '#17203A', 'muted' => '#55607A'],
+            'editorial' => ['label' => 'Editorial red',  'primary' => '#E3120B', 'secondary' => '#1F2E3D', 'accent' => '#006BA2', 'highlight' => '#E3120B', 'highlight_ink' => '#FFFFFF', 'background' => '#FFFFFF', 'surface' => '#F6F5F2', 'text' => '#121212', 'muted' => '#595959'],
+            'navy'      => ['label' => 'Corporate navy', 'primary' => '#0B3D91', 'secondary' => '#0A1F44', 'accent' => '#0B3D91', 'highlight' => '#F2A900', 'highlight_ink' => '#1A1300', 'background' => '#FFFFFF', 'surface' => '#F3F5F9', 'text' => '#111827', 'muted' => '#4B5563'],
+            'forest'    => ['label' => 'Industry green', 'primary' => '#0F7B45', 'secondary' => '#123524', 'accent' => '#0F7B45', 'highlight' => '#E0A100', 'highlight_ink' => '#1A1300', 'background' => '#FFFFFF', 'surface' => '#F2F6F3', 'text' => '#121A15', 'muted' => '#4D5A52'],
+            'teal'      => ['label' => 'Health teal',    'primary' => '#00808A', 'secondary' => '#0E3B43', 'accent' => '#00808A', 'highlight' => '#F28C28', 'highlight_ink' => '#1F1000', 'background' => '#FFFFFF', 'surface' => '#F0F6F7', 'text' => '#0F1F22', 'muted' => '#4A5A5D'],
+            'graphite'  => ['label' => 'Graphite',       'primary' => '#D14900', 'secondary' => '#1C1C1E', 'accent' => '#2563EB', 'highlight' => '#D14900', 'highlight_ink' => '#FFFFFF', 'background' => '#FFFFFF', 'surface' => '#F4F4F5', 'text' => '#18181B', 'muted' => '#52525B'],
         ];
     }
 
     public static function fonts(): array
     {
         return [
+            'archivo'          => ['label' => 'Archivo (Build Asia website)',     'stack' => "Archivo, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif", 'weights' => [400, 700],
+                                   'variable' => true, 'stretch' => '112%', 'head_weight' => 850],
             'source-serif-4'   => ['label' => 'Source Serif (classic newspaper)', 'stack' => "'Source Serif 4', Georgia, 'Times New Roman', serif", 'weights' => [400, 600, 700]],
             'playfair-display' => ['label' => 'Playfair Display (elegant)',       'stack' => "'Playfair Display', Georgia, serif",               'weights' => [400, 600, 700]],
             'merriweather'     => ['label' => 'Merriweather (sturdy serif)',      'stack' => "Merriweather, Georgia, serif",                     'weights' => [400, 600, 700]],

@@ -116,13 +116,72 @@
   };
   setTimeout(send, 1500);
 
-  // Reveal on scroll
-  var reveals = document.querySelectorAll('.reveal');
-  if (!reduce && 'IntersectionObserver' in window) {
+  // ---- Motion, in the Build Asia website's style: elements rise and fade in a
+  // short stagger, figures count up, the stripe draws itself across, the header
+  // tightens after scrolling, and the slanted panels drift gently (desktop only).
+  window.__blogMotion = true;
+  var motion = doc.classList.contains('anim');
+
+  var compact = false;
+  var onScrollHeader = function () {
+    var c = window.scrollY > 60;
+    if (c !== compact) { compact = c; doc.classList.toggle('header-compact', c); }
+  };
+  window.addEventListener('scroll', onScrollHeader, { passive: true });
+  onScrollHeader();
+
+  var countUp = function (el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if (isNaN(target) || el.__counted) return;
+    el.__counted = true;
+    var suffix = el.textContent.replace(/^[\d,.\s]+/, '');
+    var start = null, dur = Math.min(2200, 900 + String(target).length * 180);
+    var step = function (t) {
+      if (start === null) start = t;
+      var p = Math.min(1, (t - start) / dur), eased = 1 - Math.pow(1 - p, 4);
+      el.textContent = Math.round(target * eased).toLocaleString('en-US') + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    el.textContent = '0' + suffix;
+    requestAnimationFrame(step);
+  };
+
+  var reveals = document.querySelectorAll('.reveal, .band');
+  if (motion) {
     var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } });
-    }, { rootMargin: '0px 0px -40px 0px', threshold: 0.05 });
-    reveals.forEach(function (el) { io.observe(el); });
+      entries.filter(function (en) { return en.isIntersecting; }).forEach(function (en, i) {
+        var el = en.target;
+        el.style.setProperty('--rv-delay', Math.min(i, 6) * 80 + 'ms');
+        el.classList.add('is-in');
+        io.unobserve(el);
+        el.querySelectorAll('[data-count]').forEach(countUp);
+        setTimeout(function () { el.style.removeProperty('--rv-delay'); }, 1400);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    reveals.forEach(function (el) {
+      el.querySelectorAll('[data-count]').forEach(function (c) { c.textContent = '0' + c.textContent.replace(/^[\d,.\s]+/, ''); });
+      io.observe(el);
+    });
+
+    var fine = window.matchMedia('(min-width: 900px) and (pointer: fine)');
+    var layers = Array.prototype.slice.call(document.querySelectorAll('.event-panel, .stats'));
+    var ticking = false;
+    var drift = function () {
+      ticking = false;
+      if (!fine.matches) return;
+      var vh = window.innerHeight;
+      layers.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > vh + 100) return;
+        var off = (r.top + r.height / 2 - vh / 2) * -0.12;
+        el.style.setProperty('--py', Math.max(-60, Math.min(60, off)).toFixed(1) + 'px');
+      });
+    };
+    if (layers.length) {
+      window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(drift); } }, { passive: true });
+      window.addEventListener('resize', drift);
+      drift();
+    }
   } else {
     reveals.forEach(function (el) { el.classList.add('is-in'); });
   }

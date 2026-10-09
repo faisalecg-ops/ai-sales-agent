@@ -7,6 +7,7 @@ $labels = [
     'banner_top'    => ['Sponsor banner — top', 'Wide sponsor banner(s) for the top position.', 'banners'],
     'featured'      => ['Featured articles', 'The editor\'s picks: one large story and smaller ones beside it.', 'articles'],
     'event_panel'   => ['Event panel', 'Countdown to the show with Register and Book a stand buttons.', 'event'],
+    'stats'         => ['Counter strip', 'Figures that count up as readers scroll to them — set them below.', ''],
     'latest'        => ['Latest articles', 'The newest articles, with a link to all of them.', ''],
     'banner_middle' => ['Sponsor banner — middle', 'Wide sponsor banner(s) for the middle position.', 'banners'],
     'categories'    => ['Category blocks', 'A row of recent articles for each category.', 'categories'],
@@ -28,6 +29,19 @@ if (is_post()) {
     Settings::set('featured_count', max(1, min(7, (int)in('featured_count', 3))));
     Settings::set('latest_count', max(3, min(24, (int)in('latest_count', 6))));
     Settings::set('home_category_ids', array_values(array_map('intval', (array)in('home_cats', []))));
+    $stats = [];
+    $sv = (array)in('stat_value', []);
+    $ss = (array)in('stat_suffix', []);
+    $sl = (array)in('stat_label', []);
+    foreach ($sv as $i => $v) {
+        $num = (int)preg_replace('/[^0-9]/', '', (string)$v);
+        $label = mb_substr(trim((string)($sl[$i] ?? '')), 0, 60);
+        if ($num > 0 && $label !== '') {
+            $stats[] = ['value' => $num, 'suffix' => mb_substr(trim((string)($ss[$i] ?? '')), 0, 12), 'label' => $label];
+        }
+    }
+    Settings::set('stats', array_slice($stats, 0, 6));
+    Settings::set('stats_caption', in_str('stats_caption', 160));
     Cache::clear();
     Activity::log('home.updated');
     flash('ok', 'Home page saved. It is live now.');
@@ -70,6 +84,18 @@ ob_start(); ?>
     </div>
     <div class="field"><label>Category blocks</label><p class="help">Which categories get a block. None ticked = every category that has articles.</p>
       <div class="checks"><?php foreach ($cats as $c): ?><label><input type="checkbox" name="home_cats[]" value="<?= (int)$c['id'] ?>"<?= in_array((int)$c['id'], $chosen, true) ? ' checked' : '' ?>> <?= e($c['name']) ?></label><?php endforeach; ?></div></div>
+  </section>
+  <section class="card">
+    <h2>Counter strip</h2>
+    <p class="help">Up to six figures, e.g. <em>32000</em> <em>+</em> <em>Trade visitors</em>. Use the latest post-show report figures. Empty rows are ignored; with no figures the strip is hidden.</p>
+    <?= f_text('stats_caption', 'Caption above the figures (optional)', (string)Settings::get('stats_caption', ''), 'e.g. "{event} in numbers" — {event} becomes the exhibition name.', ['maxlength' => 160]) ?>
+    <table class="table stats-edit"><thead><tr><th>Number</th><th>After the number</th><th>Label</th></tr></thead><tbody>
+    <?php $rows = (array)Settings::get('stats', []); for ($i = 0; $i < 6; $i++): $r = $rows[$i] ?? ['value' => '', 'suffix' => '', 'label' => '']; ?>
+      <tr><td><input name="stat_value[]" value="<?= e((string)$r['value']) ?>" inputmode="numeric" placeholder="32000" aria-label="Number <?= $i + 1 ?>"></td>
+        <td><input name="stat_suffix[]" value="<?= e((string)$r['suffix']) ?>" maxlength="12" placeholder="+" aria-label="After number <?= $i + 1 ?>"></td>
+        <td><input name="stat_label[]" value="<?= e((string)$r['label']) ?>" maxlength="60" placeholder="Trade visitors" aria-label="Label <?= $i + 1 ?>"></td></tr>
+    <?php endfor; ?>
+    </tbody></table>
   </section>
   <div class="savebar"><button class="btn btn--primary">Save home page</button> <a class="btn btn--ghost" href="<?= e(url()) ?>" target="_blank" rel="noopener">View home page ↗</a></div>
 </form>

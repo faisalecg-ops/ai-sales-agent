@@ -3,9 +3,11 @@
 require_perm('settings');
 
 $colourFields = [
-    'primary' => ['Main colour', 'Labels, buttons, the top line. Usually the exhibition\'s brand colour.'],
-    'secondary' => ['Second colour', 'Dark areas: top strip, event panel, footer.'],
+    'primary' => ['Main colour', 'Category labels, links, “view all”. Usually the exhibition\'s brand colour.'],
+    'secondary' => ['Second colour', 'Headlines, buttons and dark areas: top strip, event panel, counters, footer.'],
     'accent' => ['Link colour', 'Links inside articles.'],
+    'highlight' => ['Highlight colour', 'Call-to-action buttons (Register, Visit website), the stripe, counter labels.'],
+    'highlight_ink' => ['Text on the highlight colour', 'Usually very dark or white — whichever reads best on the highlight.'],
     'background' => ['Page background', ''],
     'surface' => ['Soft background', 'Boxes such as the newsletter and courtesy box.'],
     'text' => ['Text', ''],
@@ -42,6 +44,8 @@ if (is_post()) {
     $new['radius'] = max(0, min(24, (int)in('radius')));
     $new['slider_shade'] = max(0, min(85, (int)in('slider_shade')));
     $new['preset'] = (string)in('preset', 'custom');
+    $new['band'] = (bool)in('band');
+    $new['motion'] = (bool)in('motion');
     if ($new !== $t) {
         Settings::set('theme_previous', $t);
         Settings::set('theme', $new);
@@ -63,7 +67,9 @@ $fonts = Settings::fonts();
 $fontJs = [];
 foreach ($fonts as $k => $f) {
     $fontJs[$k] = ['stack' => $f['stack'], 'family' => trim(explode(',', $f['stack'])[0], "' "),
-        'files' => array_map(static fn($w) => [$w, url('assets/fonts/' . $k . '-latin-' . $w . '-normal.woff2')], $f['weights'])];
+        'variable' => !empty($f['variable']), 'stretch' => $f['stretch'] ?? '100%', 'weight' => $f['head_weight'] ?? 700,
+        'files' => !empty($f['variable']) ? [['100 900', url('assets/fonts/' . $k . '-latin-variable.woff2')]]
+            : array_map(static fn($w) => [$w, url('assets/fonts/' . $k . '-latin-' . $w . '-normal.woff2')], $f['weights'])];
 }
 
 ob_start(); ?>
@@ -112,6 +118,8 @@ ob_start(); ?>
         <?= f_text('radius', 'Corner roundness of images and boxes (px)', (string)$t['radius'], '', ['type' => 'range', 'min' => 0, 'max' => 24, 'data-var' => 'radius']) ?>
         <?= f_text('slider_shade', 'Darkening over slider pictures (%)', (string)$t['slider_shade'], 'More darkening makes the white text easier to read.', ['type' => 'range', 'min' => 0, 'max' => 85, 'data-var' => 'shade']) ?>
       </div>
+      <?= f_check('band', 'Show the slanted stripe under the header and above the footer', !empty($t['band'])) ?>
+      <?= f_check('motion', 'Scroll animations (sections rise in, figures count up, the stripe draws across)', !array_key_exists('motion', $t) || !empty($t['motion']), 'Always off for visitors whose device asks for less motion.') ?>
       <p class="help">Fonts are stored on your own website, so pages load fast with no outside font service.</p>
     </section>
     <div class="savebar">

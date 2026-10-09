@@ -22,7 +22,7 @@ $compact = !empty($compact);
     </div>
   <?php endif; ?>
   <div class="event-panel__cta">
-    <?php if ($r = Event::get('register_url')): ?><a class="btn btn--light" href="<?= e($r) ?>"><?= e(t('register_visit')) ?></a><?php endif; ?>
+    <?php if ($r = Event::get('register_url')): ?><a class="btn btn--cta" href="<?= e($r) ?>"><?= e(t('register_visit')) ?></a><?php endif; ?>
     <?php if ($s = Event::get('book_stand_url')): ?><a class="btn btn--outline-light" href="<?= e($s) ?>"><?= e(t('book_stand')) ?></a><?php endif; ?>
   </div>
 </section>

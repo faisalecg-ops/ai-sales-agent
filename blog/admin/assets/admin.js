@@ -297,7 +297,7 @@
     var loadFont = function (key) {
       var d = doc(), f = fonts[key]; if (!d || !f || d.getElementById('pf-' + key)) return;
       var st = d.createElement('style'); st.id = 'pf-' + key;
-      st.textContent = f.files.map(function (w) { return "@font-face{font-family:'" + f.family + "';font-weight:" + w[0] + ";font-display:swap;src:url(" + w[1] + ") format('woff2')}"; }).join('');
+      st.textContent = f.files.map(function (w) { return "@font-face{font-family:'" + f.family + "';font-weight:" + w[0] + ";" + (f.variable ? "font-stretch:62% 125%;" : "") + "font-display:swap;src:url(" + w[1] + ") format('woff2')}"; }).join('');
       d.head.appendChild(st);
     };
     var lum = function (hex) { var c = [1, 3, 5].map(function (i) { var v = parseInt(hex.substr(i, 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
@@ -305,15 +305,16 @@
     var val = function (k) { return ($('[data-hex="' + k + '"]') || {}).value || ''; };
     var contrast = function () {
       var checks = [['text', 'background', 'Body text on the background', 4.5], ['muted', 'background', 'Grey text on the background', 4.5], ['primary', 'background', 'Main colour on the background', 3],
-        ['#FFFFFF', 'primary', 'White text on the main colour (buttons)', 4.5], ['#FFFFFF', 'secondary', 'White text on the second colour', 4.5]];
+        ['#FFFFFF', 'secondary', 'White text on the second colour (buttons, dark areas)', 4.5], ['highlight_ink', 'highlight', 'Text on the highlight colour (call-to-action buttons)', 4.5]];
       var out = '';
       checks.forEach(function (c) { var r = ratio(c[0][0] === '#' ? c[0] : val(c[0]), val(c[1])); if (r < c[3]) out += '<p>⚠ ' + c[2] + ' is hard to read (' + r.toFixed(1) + ':1; needs ' + c[3] + ':1).</p>'; });
       $('[data-contrast]').innerHTML = out || '<p class="ok">✓ All colour pairs are easy to read.</p>';
     };
-    var map = { primary: '--primary', secondary: '--secondary', accent: '--accent', background: '--bg', surface: '--surface', text: '--text', muted: '--muted' };
+    var map = { primary: '--primary', secondary: '--secondary', accent: '--accent', highlight: '--highlight', highlight_ink: '--highlight-ink', background: '--bg', surface: '--surface', text: '--text', muted: '--muted' };
     var applyAll = function () {
       Object.keys(map).forEach(function (k) { setVar(map[k], val(k)); });
-      ['head', 'body'].forEach(function (w) { var s = $('[data-font="' + w + '"]'); if (s && fonts[s.value]) { loadFont(s.value); setVar('--font-' + w, fonts[s.value].stack); } });
+      ['head', 'body'].forEach(function (w) { var s = $('[data-font="' + w + '"]'); if (s && fonts[s.value]) { loadFont(s.value); setVar('--font-' + w, fonts[s.value].stack);
+        if (w === 'head') { setVar('--head-stretch', fonts[s.value].stretch || '100%'); setVar('--head-weight', fonts[s.value].weight || 700); } } });
       var shape = ($('[data-var="btn"]') || {}).value; setVar('--btn-radius', shape === 'pill' ? '999px' : shape === 'rounded' ? '6px' : '0px');
       var rad = $('[data-var="radius"]'); if (rad) setVar('--radius', rad.value + 'px');
       var sh = $('[data-var="shade"]'); if (sh) setVar('--shade', sh.value / 100);
@@ -322,6 +323,7 @@
         var hdr = $('[data-bodyclass="hdr"]').value, cards = $('[data-bodyclass="cards"]').value;
         d.body.className = d.body.className.replace(/\bhdr-\w+\b/g, '').replace(/\bcards-\w+\b/g, '') + ' hdr-' + hdr + ' cards-' + cards;
         if (hdr === 'transparent' && d.querySelector('.slider')) d.body.classList.add('hdr-over'); else d.body.classList.remove('hdr-over');
+        var band = $('input[type=checkbox][name="band"]'); if (band) d.body.classList.toggle('has-band', band.checked);
       }
       contrast();
     };
@@ -337,7 +339,7 @@
         $('[data-presetname]').value = b.getAttribute('data-key'); applyAll();
       });
     });
-    $$('select,input[type=range]', bf).forEach(function (s) { s.addEventListener('input', applyAll); s.addEventListener('change', applyAll); });
+    $$('select,input[type=range],input[type=checkbox]', bf).forEach(function (s) { s.addEventListener('input', applyAll); s.addEventListener('change', applyAll); });
     var fit = function () {
       var box = $('.preview-frame'), w = parseInt(frame.getAttribute('data-w') || '1280', 10);
       frame.style.width = w + 'px';
@@ -345,7 +347,7 @@
     };
     $$('[data-pw]').forEach(function (b) { b.addEventListener('click', function () { $$('[data-pw]').forEach(function (x) { x.classList.remove('is-active'); }); b.classList.add('is-active'); frame.setAttribute('data-w', b.getAttribute('data-pw')); fit(); }); });
     window.addEventListener('resize', fit); fit();
-    frame.addEventListener('load', function () { var d = doc(); if (d) { d.querySelectorAll('.reveal').forEach(function (e) { e.classList.add('is-in'); }); } applyAll(); });
+    frame.addEventListener('load', function () { var d = doc(); if (d) { d.querySelectorAll('.reveal,.band').forEach(function (e) { e.classList.add('is-in'); }); d.documentElement.classList.remove('anim'); } applyAll(); });
     contrast();
   }
 })();

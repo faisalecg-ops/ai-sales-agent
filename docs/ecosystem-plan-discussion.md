@@ -281,6 +281,14 @@ default, rate limits and a signed "article published" webhook, page cache,
 WebP image sizes, cron. Language files ready for Urdu (right-to-left) later.
 Technical correction: PHP 8.1 or newer is required (not 8.0).
 
+**Version 1.1 (9 October 2026, owner's choice):** The Economist is the
+*structure* reference only. Colours, font, style and animation follow the
+Build Asia website (buildasia.ecgateway.net, live later at buildasia.net):
+navy / royal blue / amber, Archivo with wide headlines, the slanted
+amber-navy stripe, a counter strip with figures that count up (edited in Home
+page builder), rise-and-fade scroll motion, a header that tightens on scroll.
+Notes for the website chat: `docs/notes-for-buildasia-website.md`.
+
 ## 6b. Still open
 
 - (Social agent, later) Same logins as the sales agent or separate? AI image

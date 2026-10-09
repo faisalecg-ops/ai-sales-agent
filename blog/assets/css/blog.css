@@ -11,7 +11,8 @@ img{height:auto}
 a{color:inherit;text-decoration:none}
 a:hover{color:var(--primary)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-h1,h2,h3,h4{font-family:var(--font-head);line-height:1.15;margin:0 0 .5em;font-weight:700;letter-spacing:-.01em}
+h1,h2,h3,h4{font-family:var(--font-head);font-stretch:var(--head-stretch,100%);line-height:1.12;margin:0 0 .5em;font-weight:var(--head-weight,700);letter-spacing:-.01em;color:var(--heading,inherit)}
+h2{font-weight:min(var(--head-weight,700),800)}h3,h4{font-weight:min(var(--head-weight,700),750)}
 p{margin:0 0 1em}
 button,input,textarea,select{font:inherit;color:inherit}
 .sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -29,16 +30,19 @@ button,input,textarea,select{font:inherit;color:inherit}
 @media (min-width:900px){.section{margin-block:56px}}
 
 /* Buttons ---------------------------------------------------------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border:2px solid transparent;border-radius:var(--btn-radius);font-family:var(--font-body);font-weight:600;font-size:.95rem;line-height:1.2;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .2s}
-.btn:active{transform:translateY(1px)}
-.btn--primary{background:var(--primary);color:#fff}
-.btn--primary:hover{background:color-mix(in srgb,var(--primary) 85%,#000);color:#fff}
-.btn--ghost{border-color:currentColor;color:var(--text);background:transparent}
-.btn--ghost:hover{background:var(--text);color:var(--bg)}
-.btn--light{background:#fff;color:var(--secondary)}
-.btn--light:hover{background:var(--primary);color:#fff}
-.btn--outline-light{border-color:rgba(255,255,255,.7);color:#fff}
-.btn--outline-light:hover{background:#fff;color:var(--secondary)}
+.btn{--b-bg:var(--secondary);--b-fg:#fff;--b-bd:var(--secondary);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:.6em 1.25em;border:2px solid var(--b-bd);border-radius:var(--btn-radius);background:var(--b-bg);color:var(--b-fg);font-family:var(--font-body);font-weight:700;font-size:.97rem;font-stretch:105%;line-height:1.15;cursor:pointer;transition:background-color .15s,color .15s,border-color .15s,transform .15s}
+.btn:hover{color:var(--b-fg);transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn--primary{--b-bg:var(--secondary);--b-bd:var(--secondary)}
+.btn--primary:hover{--b-bg:var(--primary);--b-bd:var(--primary)}
+.btn--cta{--b-bg:var(--highlight);--b-fg:var(--highlight-ink);--b-bd:var(--highlight)}
+.btn--cta:hover{--b-bg:color-mix(in srgb,var(--highlight) 82%,#fff);--b-bd:color-mix(in srgb,var(--highlight) 82%,#fff)}
+.btn--ghost{--b-bg:transparent;--b-fg:var(--secondary);--b-bd:color-mix(in srgb,var(--secondary) 25%,transparent)}
+.btn--ghost:hover{--b-bd:var(--secondary)}
+.btn--light{--b-bg:#fff;--b-fg:var(--secondary);--b-bd:#fff}
+.btn--light:hover{--b-bg:var(--highlight);--b-fg:var(--highlight-ink);--b-bd:var(--highlight)}
+.btn--outline-light{--b-bg:transparent;--b-fg:#fff;--b-bd:rgba(255,255,255,.6)}
+.btn--outline-light:hover{--b-bg:rgba(255,255,255,.08);--b-bd:#fff}
 
 /* Top strip and masthead ------------------------------------------- */
 .topbar{background:var(--secondary);color:#fff;font-size:.82rem}
@@ -340,14 +344,11 @@ button,input,textarea,select{font:inherit;color:inherit}
 .totop.is-shown{opacity:.85;visibility:visible;transform:none}
 .totop:hover{opacity:1;color:var(--bg);background:var(--primary)}
 
-/* Gentle reveal on scroll (only when the script runs) ---------------- */
-.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
-.js .reveal.is-in{opacity:1;transform:none}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-  .js .reveal{opacity:1;transform:none}
+  html.anim .reveal,html.anim .band{opacity:1!important;transform:none!important}
   .slide__img{transform:none!important}
 }
 
@@ -355,3 +356,102 @@ button,input,textarea,select{font:inherit;color:inherit}
   .topbar,.masthead__tools,.nav,.share,.sponsor,.courtesy__cta,.comments,.related,.footer,.totop,.post__side{display:none!important}
   body{font-size:12pt}
 }
+
+/* =====================================================================
+   Build Asia style layer — colours flow, signature stripe, counters and
+   motion taken from the Build Asia website (buildasia.net).
+   ===================================================================== */
+:root{--ease-out:cubic-bezier(.16,.84,.3,1);--rv-dist:34px}
+@media (max-width:760px){:root{--rv-dist:20px}}
+:root{--heading:var(--secondary)}
+.card__title,.most-read a,.page-title,.post__title,.newsletter .section-h{color:var(--heading)}
+.event-panel__title,.slide__title,.stats h2{color:#fff}
+.card:hover .card__title a{color:var(--primary)}
+
+/* Top strip: deep navy, event name in the highlight colour */
+.topbar{background:color-mix(in srgb,var(--secondary) 78%,#000)}
+.topbar__event strong{color:var(--highlight);font-stretch:var(--head-stretch,100%)}
+
+/* Header: sticks to the top and tightens once the page scrolls */
+.masthead{position:sticky;top:0;border-top:0;transition:box-shadow .2s}
+.has-band .masthead{border-bottom:0}
+body:not(.has-band) .masthead{border-top:4px solid var(--primary)}
+.masthead__in{transition:min-height .3s ease}
+.brand__logo{max-height:54px;transition:max-height .3s ease}
+html.header-compact .masthead{box-shadow:0 8px 24px -16px color-mix(in srgb,var(--secondary) 55%,transparent)}
+html.header-compact .masthead__in{min-height:58px}
+html.header-compact .brand__logo{max-height:40px}
+.hdr-over .masthead{position:absolute}
+@media (max-width:1000px){.hdr-over .masthead{position:sticky}}
+.brand__box{background:var(--secondary);font-family:var(--font-head);font-stretch:var(--head-stretch,100%);font-weight:var(--head-weight,700)}
+.brand__blog{font-style:normal;font-weight:700;color:var(--primary);font-stretch:var(--head-stretch,100%)}
+.nav__list a:hover{border-bottom-color:var(--highlight)}
+
+/* The signature stripe: a slanted highlight block, a primary bar, then the second colour */
+.band{display:none;height:10px;background:linear-gradient(115deg,var(--highlight) 0 22%,transparent 22.05%),linear-gradient(115deg,transparent 23.5%,var(--primary) 23.55% 74%,transparent 74.05%),var(--secondary)}
+.has-band .band{display:block}
+.band--masthead{position:sticky;top:auto;z-index:29}
+.band--foot{height:14px}
+
+/* Section headings: a short highlight bar leads the rule */
+.section-h{border-top:0;padding-top:13px;background:linear-gradient(90deg,var(--highlight) 0 56px,var(--secondary) 56px) top left/100% 3px no-repeat;color:var(--secondary)}
+.more{color:var(--primary);border-bottom:2px solid var(--highlight);padding-bottom:1px}
+.more:hover{border-bottom-color:var(--primary)}
+.fly{color:var(--primary)}
+.most-read__n{color:var(--primary);font-stretch:var(--head-stretch,100%);font-weight:900}
+
+/* Cards lift gently */
+.card{transition:transform .35s var(--ease-out)}
+.card--standard:hover,.card--side:hover{transform:translateY(-3px)}
+.card__media{box-shadow:0 1px 2px color-mix(in srgb,var(--secondary) 8%,transparent)}
+
+/* Event panel: navy with a slanted highlight edge */
+.event-panel{position:relative;overflow:hidden;border-top:0;padding-inline-start:clamp(48px,8vw,120px)}
+.event-panel::before{content:"";position:absolute;inset-inline-start:0;top:-60px;bottom:-60px;width:clamp(30px,6vw,90px);background:var(--highlight);clip-path:polygon(0 0,100% 0,45% 100%,0 100%);transform:translate3d(0,var(--py,0px),0)}
+.event-panel .fly--light{color:var(--highlight);opacity:1}
+.countdown__cell{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.04)}
+.countdown__n{font-family:var(--font-head);font-stretch:var(--head-stretch,100%);font-weight:900}
+@media (max-width:600px){.event-panel{padding-inline-start:36px}.event-panel::before{width:16px;clip-path:none}}
+
+/* Counter strip */
+.stats{position:relative;overflow:hidden;background:var(--secondary);color:#fff;padding-block:clamp(36px,5vw,60px)}
+.stats::before{content:"";position:absolute;inset-inline-start:0;top:-60px;bottom:-60px;width:clamp(40px,7vw,120px);background:var(--highlight);clip-path:polygon(0 0,100% 0,45% 100%,0 100%);transform:translate3d(0,calc(var(--py,0px) * -1),0)}
+.stats__in{padding-inline-start:clamp(48px,8vw,130px)}
+.stats__caption{font-weight:700;color:color-mix(in srgb,#fff 70%,var(--secondary));margin-bottom:1.1rem}
+.stats__grid{margin:0;display:flex;flex-wrap:wrap;gap:1.6rem clamp(2rem,5vw,4.5rem)}
+.stat{flex:0 1 auto;min-width:0}
+.stat{display:flex;flex-direction:column-reverse;gap:.2rem;margin:0}
+.stat__value{margin:0;white-space:nowrap;font:900 clamp(2rem,3.6vw,3.1rem)/1 var(--font-head);font-stretch:118%;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat__suffix--long{font-size:.5em;font-stretch:105%;letter-spacing:0;margin-inline-start:.15em}
+.stat__label{font-weight:650;color:var(--highlight);font-size:1rem}
+@media (max-width:600px){.stats::before{width:18px;clip-path:none}.stats__in{padding-inline-start:36px}}
+
+.courtesy{border-inline-start-color:var(--highlight)}
+.courtesy__title{color:var(--primary)}
+.prose blockquote{border-inline-start-color:var(--highlight)}
+.prose li::marker{color:var(--highlight)}
+.prose>p:first-of-type::first-letter{color:var(--secondary);font-stretch:var(--head-stretch,100%)}
+.tags a:hover{border-color:var(--secondary);background:var(--secondary)}
+.share__btn:hover{background:var(--secondary);border-color:var(--secondary)}
+.social a:hover{background:var(--highlight);border-color:var(--highlight);color:var(--highlight-ink)}
+.slider__btn:hover{background:var(--highlight);border-color:var(--highlight);color:var(--highlight-ink)}
+.slider__dot.is-active{background:var(--highlight)}
+.footer{margin-top:0;background:var(--secondary)}
+.footer__dates{color:var(--highlight)}
+.main{padding-bottom:64px}
+
+/* Motion: rise and fade in a short stagger, the stripe draws itself across.
+   Only when the head script has added .anim to <html> — never with "reduce motion". */
+html.anim .reveal:not(.is-in){opacity:0;transform:translate3d(0,var(--rv-dist),0)}
+html.anim .reveal{transition:opacity .85s var(--ease-out),transform .85s var(--ease-out),box-shadow .35s;transition-delay:var(--rv-delay,0ms)}
+@media (min-width:900px){html.anim .grid>.reveal:not(.is-in){transform:translate3d(0,var(--rv-dist),0) scale(.97)}}
+html.anim .band{transform:scaleX(0);transform-origin:left center;transition:transform 1.2s var(--ease-out)}
+html[dir="rtl"].anim .band{transform-origin:right center}
+html.anim .band.is-in{transform:scaleX(1)}
+@keyframes ba-rise{from{opacity:0;transform:translate3d(0,26px,0)}to{opacity:1;transform:none}}
+html.anim .page-head>*,html.anim .post__head>*{animation:ba-rise .9s var(--ease-out) both}
+html.anim .page-head>:nth-child(2),html.anim .post__head>:nth-child(2){animation-delay:.1s}
+html.anim .page-head>:nth-child(3),html.anim .post__head>:nth-child(3){animation-delay:.2s}
+html.anim .post__head>:nth-child(4){animation-delay:.3s}
+@media (prefers-reduced-motion:reduce){.event-panel::before,.stats::before{transform:none!important}}
+@media (max-width:520px){.countdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-width:340px}.countdown__cell{min-width:0;padding:8px 2px}.countdown__l{font-size:.6rem;letter-spacing:.04em}}

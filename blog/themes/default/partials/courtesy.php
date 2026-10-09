@@ -19,7 +19,7 @@ $dates = Event::dates();
       <p class="courtesy__when"><?= e($dates) ?><?= $dates !== '' && Event::place() !== '' ? ' · ' : '' ?><?= e(Event::place()) ?></p>
     <?php endif; ?>
     <div class="courtesy__cta">
-      <?php if ($site): ?><a class="btn btn--primary" href="<?= e($site) ?>"><?= e(t('visit_website')) ?></a><?php endif; ?>
+      <?php if ($site): ?><a class="btn btn--cta" href="<?= e($site) ?>"><?= e(t('visit_website')) ?></a><?php endif; ?>
       <?php if ($r = Event::get('register_url')): ?><a class="btn btn--ghost" href="<?= e($r) ?>"><?= e(t('register_visit')) ?></a><?php endif; ?>
       <?php if ($s = Event::get('book_stand_url')): ?><a class="btn btn--ghost" href="<?= e($s) ?>"><?= e(t('book_stand')) ?></a><?php endif; ?>
     </div>
