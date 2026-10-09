@@ -15,8 +15,8 @@ Read this before any task on this project.
   213 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
   `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
   `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
-  a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — in
-  GitHub only, NOT installed live, and not asked for by the owner. Read
+  a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — the
+  owner installed it on the live sales agent on 9 Oct 2026. Read
   `docs/sales-agent-status-2026-10-09.md` before any sales agent work.
   Never change the sales agent without the owner's explicit approval.
 - **Next: the Social Media Agent at `/social`** — still discussion only. Build

@@ -2,17 +2,25 @@
 
 Read this before any work on the sales agent.
 
-## 1. Live platform: unchanged
+## 1. Live platform: event-facts upgrade INSTALLED (9 October 2026)
 
-Nothing has been installed on salesagent.ecgateway.net. The live sales agent is
-exactly as delivered (1,179 tests, upgrade package and fresh-install package).
+**Update, 9 October 2026 evening:** the owner installed
+`salesagent-upgrade-2026-10-event-facts.zip` on the live sales agent
+(salesagent.ecgateway.net). He also gave this note to the sales agent chat,
+which ran its own tests successfully. The live sales agent is now the delivered
+version **plus** the change below. GitHub and the live server match.
 
-## 2. GitHub: one small sales agent change, not installed
+After uploading, two steps must be done in the live admin. Confirm both:
+**Database upgrade** (step `2026_10_event_facts`), and filling in
+**Exhibitions → edit → Dates & venue** for each exhibition.
+
+## 2. The change
 
 Commit `6fae771` ("Event Blog API and cron; sales agent: show dates/venue fields
 and read-only event facts endpoint") was made in the Event Blog chat so each
 event blog could read show dates and venue from the sales agent. The owner had
-not specifically asked for it. It is kept in the repository but **not installed**.
+not specifically asked for it at first; he accepted it and installed it on
+9 October 2026.
 
 Three files changed:
 
@@ -60,20 +68,17 @@ email are untouched, and what the assistant says is unchanged. All 1,179
 acceptance tests pass with the change.
 
 - Upgrade note: `docs/upgrade-2026-10-event-facts.md`.
-- Upgrade file: `salesagent-upgrade-2026-10-event-facts.zip` (not installed).
+- Upgrade file: `salesagent-upgrade-2026-10-event-facts.zip` (installed live, 9 Oct 2026).
 
 ## 3. Rules for future sales agent work
 
 - **Always start from this GitHub repository, never an old zip.** An old zip
-  lacks these three changes, and uploading it would silently remove them.
-- **To install the change:** upload the three files, run **Database upgrade**
-  in the admin, then fill in **Exhibitions → edit → Dates & venue**.
-- **To remove the change:** undo commit `6fae771` for these three files only;
-  the same commit also contains blog files, which must stay. No database
-  clean-up is needed unless the upgrade was installed. If it was, the seven
-  columns may be dropped, but leaving them is harmless.
-- **The Event Blog does not need this change.** Without it, each blog's event
-  facts are typed in the blog admin (Event & courtesy).
+  lacks these three changes; uploading it now would break the live **Dates &
+  venue** card and the blogs' event facts.
+- Any new sales agent package (upgrade or fresh install) must include these
+  three files and the `2026_10_event_facts` upgrade step.
+- **The Event Blog does not depend on it.** Anything typed in a blog's own
+  admin (Event & courtesy) takes priority over the sales agent's facts.
 
 ## 4. Wider picture
 
