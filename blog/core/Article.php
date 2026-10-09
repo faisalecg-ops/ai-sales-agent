@@ -61,7 +61,7 @@ final class Article
         $old = $id ? self::find($id) : null;
         $row = [];
         foreach (['title', 'excerpt', 'body', 'category_id', 'author_id', 'image_id', 'seo_title', 'meta_description',
-                     'share_image_id', 'is_featured', 'featured_order', 'lang', 'external_ref', 'review_note'] as $k) {
+                     'share_image_id', 'is_featured', 'featured_order', 'lang', 'external_ref', 'review_note', 'sources'] as $k) {
             if (array_key_exists($k, $data)) {
                 $row[$k] = $data[$k];
             }

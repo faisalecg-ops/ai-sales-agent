@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS {p}articles (
   source           ENUM('admin','api') NOT NULL DEFAULT 'admin',
   api_key_id       INT UNSIGNED NULL,
   external_ref     VARCHAR(120) NULL,           -- the social agent's own id for this article
+  sources          TEXT NULL,                   -- JSON list of source addresses the writer used
   review_note      TEXT NULL,
   approved_by      INT UNSIGNED NULL,
   created_by       INT UNSIGNED NULL,
