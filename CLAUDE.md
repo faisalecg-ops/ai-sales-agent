@@ -12,7 +12,11 @@ Read this before any task on this project.
   `/social`. **This is discussion only — build nothing for it until the owner
   approves the final plan in writing.** Everything agreed so far, plus the
   open questions, is in `docs/ecosystem-plan-discussion.md`. Read it before
-  discussing the blog or the social agent.
+  discussing the blog or the social agent. The end of the earlier chat is
+  saved word for word in `docs/reference/previous-chat-2026-10-09.md`.
+- Event websites are on cPanel **shared** hosting. The owner wants blog
+  options (comments, sponsor reports, newsletter, language, design)
+  **controlled from the blog admin panel**, not fixed in code.
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.

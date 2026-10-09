@@ -224,22 +224,34 @@ newsletters, country landing pages.
 
 ---
 
-## 6. Open questions — answer before the final plan
+## 6. Answers given in the new chat (9 October 2026)
 
-1. **Hosting of event websites**: built with what (WordPress, plain PHP,
-   HTML)? Same server as the sales agent? cPanel with PHP 8 and MySQL? Can a
-   database and a `/blog` folder be created on each?
-2. **Comments on articles**: off (recommended at first) or on with approval?
-3. **Sponsor banners**: image + link + dates + click count enough, or also a
-   sponsor report to send them?
-4. **Newsletter sign-up** on the blog: yes/no (same consent and unsubscribe
-   rules as the sales agent)?
-5. **Languages**: English only, or Urdu too?
-6. **Design**: reference sites the owner likes; each event's logos, colours,
-   main menu links.
-7. (Social agent) Same logins as the sales agent or separate? AI image
-   generation wanted (extra cost)? Which social platforms per event? Target
-   number of articles per event per week?
+1. **Hosting**: event websites are on **cPanel shared hosting** (not the
+   sales agent's dedicated server). The blog must run within shared-hosting
+   limits: PHP 8 + MySQL, cron via cPanel, file-based page cache, PHP GD for
+   images, no long-running processes. Still to confirm per site: PHP ≥ 8.0,
+   a new MySQL database allowed, cron allowed, and whether the main site is
+   WordPress or plain HTML/PHP (so `/blog` does not clash with its rewrite
+   rules).
+2–6. Owner's answer: **"all controlled in admin panel."** Therefore:
+   - **Comments**: built in, switch in the admin (off / on with approval).
+   - **Sponsor reports**: views and clicks in the admin, plus a downloadable
+     report per sponsor; switchable.
+   - **Newsletter sign-up**: built in, switch in the admin, same consent and
+     unsubscribe rules as the sales agent.
+   - **Languages**: language set in the admin (scope to confirm — see below).
+   - **Design**: fully in the admin (branding, colours, fonts, styles as in
+     §3.3); logos and colours supplied per event at installation.
+
+## 6a. Still open
+
+- Languages: interface language only (English default, Urdu option with
+  right-to-left layout), or articles in two languages side by side? The
+  second is much larger work.
+- Main event sites: WordPress or plain HTML/PHP?
+- (Social agent, later) Same logins as the sales agent or separate? AI image
+  generation wanted (extra cost)? Which social platforms per event? Target
+  number of articles per event per week?
 
 ## 7. Next step
 
