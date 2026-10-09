@@ -17,7 +17,8 @@ final class Cache
 
     private static function file(string $key): string
     {
-        return self::dir() . '/' . hash('sha1', $key) . '.html';
+        // The database name and prefix keep two installations sharing one folder apart.
+        return self::dir() . '/' . hash('sha1', $key . '|' . cfg('db.name', '') . '|' . cfg('prefix', '')) . '.html';
     }
 
     public static function enabled(): bool

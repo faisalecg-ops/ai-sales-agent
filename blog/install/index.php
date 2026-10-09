@@ -19,7 +19,7 @@ if (blog_installed()) {
 }
 
 $checks = [
-    'PHP 8.0 or newer'                 => version_compare(PHP_VERSION, '8.0.0', '>='),
+    'PHP 8.1 or newer'                 => version_compare(PHP_VERSION, '8.1.0', '>='),
     'MySQLi (database)'                => extension_loaded('mysqli'),
     'GD (image resizing)'              => extension_loaded('gd'),
     'mbstring (text)'                  => extension_loaded('mbstring'),

@@ -264,8 +264,9 @@ button,input,textarea,select{font:inherit;color:inherit}
 .toc--inline ol{margin-top:8px}
 
 .prose{font-size:1.1rem;line-height:1.72}
+.prose>*{margin-block:0}
 .prose>*+*{margin-top:1.1em}
-.prose p{margin:0}
+.prose h2+*,.prose h3+*,.prose h4+*{margin-top:.55em}
 .prose>p:first-of-type::first-letter{float:inline-start;font-family:var(--font-head);font-size:3.6em;line-height:.85;font-weight:700;margin:.08em .1em 0 0;color:var(--text)}
 .prose h2{font-size:1.65rem;margin-top:1.8em;margin-bottom:0;scroll-margin-top:20px}
 .prose h3{font-size:1.3rem;margin-top:1.5em;margin-bottom:0;scroll-margin-top:20px}

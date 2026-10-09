@@ -7,16 +7,23 @@ Read this before any task on this project.
 - The **Sales Agent is complete** (website chat, WhatsApp, follow-ups,
   research, prospecting, analytics, reorganised admin). 1,179 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
-- The owner is now **planning a new ecosystem**: a standalone Event Blog on
-  each event website at `/blog` (Phase 1), then a Social Media Agent at
-  `/social`. **This is discussion only — build nothing for it until the owner
-  approves the final plan in writing.** Everything agreed so far, plus the
-  open questions, is in `docs/ecosystem-plan-discussion.md`. Read it before
-  discussing the blog or the social agent. The end of the earlier chat is
-  saved word for word in `docs/reference/previous-chat-2026-10-09.md`.
-- Event websites are on cPanel **shared** hosting. The owner wants blog
-  options (comments, sponsor reports, newsletter, language, design)
-  **controlled from the blog admin panel**, not fixed in code.
+- **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
+  "Event Blog — Phase 1 Plan"). Code in `blog/` — a standalone PHP 8.1+ /
+  MySQLi script installed per event website at `/blog` on cPanel **shared**
+  hosting, table prefix `blog_`. Every reader option (comments, newsletter,
+  sponsor reports, branding, language) is a setting in the blog admin.
+  213 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
+  `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
+  `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
+  a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`).
+- **Next: the Social Media Agent at `/social`** — still discussion only. Build
+  nothing for it until the owner approves its plan in writing. Agreed points
+  and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
+  of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.
+- Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's
+  new site is being built in a separate chat (review copy at
+  buildasia.ecgateway.net, then buildasia.net); Pharma Asia
+  (pharmaasia.com.pk) is due for renovation, not yet started.
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.
@@ -100,6 +107,8 @@ See `docs/universal-rules.md` for the full text. In short:
 - Tests: `php tests/acceptance.php` (start MariaDB first). The suite
   truncates the database it runs on — never point it at a live installation.
 - Beginner's user manual: `docs/user-manual.html`.
-- Ecosystem plan under discussion: `docs/ecosystem-plan-discussion.md`;
+- Event Blog: `blog/` (see Current status). Its API is the only way the
+  Social Media Agent writes into a blog.
+- Ecosystem plan: `docs/ecosystem-plan-discussion.md`;
   the owner's draft (not agreed, reference only):
   `docs/reference/marketing-agent-plan-draft.md`.

@@ -118,12 +118,12 @@ $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat
 </footer>
 
 <a href="#top" class="totop" aria-label="Back to top"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></a>
-<script>window.BLOG={beacon:<?= json_encode(url('go/beacon')) ?>,article:<?= (int)($articleId ?? 0) ?>,copied:<?= json_encode(t('link_copied')) ?>};</script>
+<script>window.BLOG={beacon:<?= json_encode(url('go/beacon'), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>,article:<?= (int)($articleId ?? 0) ?>,copied:<?= json_encode(t('link_copied')) ?>};</script>
 <script src="<?= e(asset('js/blog.js')) ?>" defer></script>
 <?php if ($chat && empty($isPreview)): ?>
 <script>
 /* The sales agent chat loads after the page has finished, so it never slows the page. */
-window.addEventListener('load',function(){setTimeout(function(){var s=document.createElement('script');s.src=<?= json_encode(rtrim((string)Settings::get('chat_base_url', ''), '/') . '/widget/widget.js') ?>;s.async=true;s.setAttribute('data-agent',<?= json_encode((string)Settings::get('chat_agent', '')) ?>);document.body.appendChild(s);},800);});
+window.addEventListener('load',function(){setTimeout(function(){var s=document.createElement('script');s.src=<?= json_encode(rtrim((string)Settings::get('chat_base_url', ''), '/') . '/widget/widget.js', JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;s.async=true;s.setAttribute('data-agent',<?= json_encode((string)Settings::get('chat_agent', ''), JSON_HEX_TAG) ?>);document.body.appendChild(s);},800);});
 </script>
 <?php endif; ?>
 </body>

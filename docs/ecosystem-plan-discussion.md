@@ -1,8 +1,10 @@
 # Exhibition Marketing Ecosystem — plan under discussion
 
-**Status: DISCUSSION ONLY. Nothing in this document may be built until the
-owner approves the final plan in writing ("go ahead", "develop", etc.).**
-Last updated: 9 October 2026, from the discussion of 8–9 October 2026.
+**Status (9 October 2026): Phase 1 — the Event Blog — was approved in writing
+("Approved", 9 Oct 2026) and is BUILT (`blog/`, version 1.0.0). The Social
+Media Agent (§4) is still DISCUSSION ONLY: build nothing for it until the
+owner approves its plan in writing.**
+Last updated: 9 October 2026.
 
 This document hands the discussion over to a new chat. Read it together with
 `CLAUDE.md` (standing rules) before saying or doing anything about the blog or
@@ -256,8 +258,28 @@ newsletters, country landing pages.
 **Final Phase 1 plan written** for owner and management approval as a Claude
 doc: "Event Blog — Phase 1 Plan"
 (https://claude.ai/code/artifact/6938893a-3a85-485f-992c-f5f6faddfa91).
-Awaiting written approval. Asked the owner: first install on Build Asia's new
-site, or on Pharma Asia's current site for earlier review?
+Approved by the owner on 9 October 2026 ("Approved"), with The Economist
+(economist.com) as the design reference — used for the default look: white
+pages, serif headlines, red section labels, fine rules. Still to answer: first
+install on Build Asia's new site, or on Pharma Asia's current site?
+
+## 6c. What was built (Phase 1, 9 October 2026)
+
+Everything in §3 and the Phase 1 plan: home page builder (slider with expiry,
+featured, latest, category rows, sponsor banners in five positions with
+rotation, event panel with countdown, most read, tags, newsletter), branding
+with live preview / readability check / undo and eight self-hosted fonts,
+event facts from the sales agent with manual override, header button +
+"Courtesy of" box + footer credit, link library with link check before
+approval and weekly broken-link check, full SEO (clean addresses, 301s,
+Open Graph/X cards, JSON-LD Article/Breadcrumb/Organization/Event/WebSite,
+sitemap with images, RSS), chat on every page (loads after the page),
+comments with approval, newsletter with double opt-in and consent record,
+sponsor reports (printable/PDF and spreadsheet), roles (admin, approver,
+editor, author), revisions, scheduling, API v1 with hashed keys, drafts-only
+default, rate limits and a signed "article published" webhook, page cache,
+WebP image sizes, cron. Language files ready for Urdu (right-to-left) later.
+Technical correction: PHP 8.1 or newer is required (not 8.0).
 
 ## 6b. Still open
 
