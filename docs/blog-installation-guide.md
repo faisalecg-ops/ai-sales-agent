@@ -11,7 +11,7 @@ its own admin and its own content.
 
 ## What you need
 
-- The package **event-blog-1.1.0.zip**.
+- The package **event-blog-1.2.0.zip**.
 - cPanel access for the event website.
 - The exhibition's logo (PNG, ideally with a transparent background, plus a
   white version for dark backgrounds), its brand colours, and the addresses
@@ -47,7 +47,7 @@ account name in front, e.g. `cpaneluser_buildasia_blog`).
 cPanel → **File Manager** → open `public_html` (the main website's folder):
 
 1. Create a folder named **`blog`**.
-2. Open it, **Upload** `event-blog-1.1.0.zip`, then right-click it → **Extract**.
+2. Open it, **Upload** `event-blog-1.2.0.zip`, then right-click it → **Extract**.
 3. Delete the zip file afterwards.
 
 You should now see `public_html/blog/index.php`, `admin`, `assets` and the
@@ -86,12 +86,18 @@ from the sales agent and checks links once a week.
 
 ## Step 6 — Set up the blog in its admin (10 minutes)
 
-Sign in at **https://the-event-website/blog/admin/**. The dashboard shows a
-**Finish setting up** list. Work through it:
+Sign in at **https://the-event-website/blog/admin/**.
+
+**For Build Asia, start with Settings → Starter content → Import.** In about a
+minute it adds six categories and 21 researched articles, the logo, menus,
+counter figures, slider, link library and the event details — so most of the
+list below is already done. Check the event details, then switch on the chat.
+
+The dashboard shows a **Finish setting up** list. Work through it:
 
 | Page | What to do |
 |---|---|
-| **Branding** | Upload the logos and the tab icon. Pick colours (or a preset) and fonts. Watch the live preview, then save. |
+| **Branding** | Upload the logos and the tab icon. Pick a complete look (Build Asia, Corporate, Editorial, Medical / Pharma, Modern minimal) or set colours and fonts yourself. Watch the live preview, then save. |
 | **Event & courtesy** | Check the dates, venue and the three website addresses (main site, register, book a stand), contact details and social media pages. |
 | **Link library** | Add the approved addresses: register, book a stand, exhibitor list, conference, sponsorship, venue. |
 | **Menus** | Add the categories to the header menu ("Quick add" lists them) and main-site pages to the footer. |
@@ -158,7 +164,7 @@ database) as it is — the blog carries on unchanged under the new site.
 
 ## Updating the blog later
 
-Upload the new **event-blog-1.1.0.zip** into `public_html/blog` and extract it,
+Upload the new **event-blog-1.2.0.zip** into `public_html/blog` and extract it,
 replacing files. Your settings (`config/config.php`), uploaded images
 (`uploads/`) and saved data are not in the package, so they are never
 overwritten. Then open the admin once: any database changes are applied

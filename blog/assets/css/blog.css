@@ -455,3 +455,24 @@ html.anim .page-head>:nth-child(3),html.anim .post__head>:nth-child(3){animation
 html.anim .post__head>:nth-child(4){animation-delay:.3s}
 @media (prefers-reduced-motion:reduce){.event-panel::before,.stats::before{transform:none!important}}
 @media (max-width:520px){.countdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-width:340px}.countdown__cell{min-width:0;padding:8px 2px}.countdown__l{font-size:.6rem;letter-spacing:.04em}}
+
+/* Gentle motion: a soft fade and short rise only — no scale, no drift, the stripe simply appears */
+html.anim[data-motion="gentle"] .reveal:not(.is-in){transform:translate3d(0,10px,0)!important}
+html.anim[data-motion="gentle"] .reveal{transition-duration:.6s}
+html.anim[data-motion="gentle"] .band{transform:none;transition:none}
+html[data-motion="gentle"] .card--standard:hover,html[data-motion="gentle"] .card--side:hover{transform:none}
+html[data-motion="gentle"] .slide__img,html[data-motion="off"] .slide__img{transform:none!important;transition:none}
+html[data-motion="off"] .card--standard:hover,html[data-motion="off"] .card--side:hover{transform:none}
+/* Search folds into its icon on medium screens, so a full menu fits on one line */
+@media (min-width:1001px) and (max-width:1680px){
+  .masthead .search{border-color:transparent;background:transparent}
+  .masthead .search input{width:0;padding:8px 0;transition:width .25s,padding .25s}
+  .masthead .search:focus-within{border-color:color-mix(in srgb,var(--text) 25%,transparent);background:var(--bg)}
+  .masthead .search:focus-within input{width:170px;padding:8px 10px}
+  .nav__list{gap:4px 18px;font-size:.92rem}
+}
+.nav__list{flex-wrap:nowrap}
+.nav__list a{white-space:nowrap}
+@media (max-width:1000px){.nav__list{flex-wrap:wrap}}
+.masthead__tools{flex-shrink:0}
+.visit{white-space:nowrap}

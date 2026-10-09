@@ -1,0 +1,632 @@
+{
+ "name": "Build Asia — starter content",
+ "version": "2026-10-09",
+ "description": "Six real-world categories and 21 researched starter articles for the Build Asia blog, with cover images, the official logo, the link library, counter figures, menus, slider and event details. Facts checked against published sources and Build Asia's approved information on 9 October 2026.",
+ "author": {
+  "name": "Build Asia Editorial Desk",
+  "title": "Build Asia",
+  "bio": "News, analysis and practical guides on Pakistan's building and construction industry, from the team behind Build Asia, Pakistan's international building materials and construction machinery exhibition."
+ },
+ "settings_if_empty": {
+  "site_name": "Build Asia Blog",
+  "site_tagline": "News and insight for Pakistan's building and construction industry",
+  "event_name": "Build Asia",
+  "event_tagline": "International Building Materials & Construction Machinery Show",
+  "event_start": "2027-03-18",
+  "event_end": "2027-03-20",
+  "event_venue": "Karachi Expo Centre",
+  "event_city": "Karachi",
+  "event_country": "Pakistan",
+  "main_site_url": "https://buildasia.net",
+  "register_url": "https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web",
+  "book_stand_url": "https://buildasia.net/contact/?enquiry=stand",
+  "contact_address": "Ecommerce Gateway Pakistan (Pvt) Ltd, 8 Kokan Society, Dr Azhar Hussain Road, near Kokan Park, off Shaheed-e-Millat Road, Karachi 74000, Pakistan",
+  "contact_phone": "(92-21) 111-222-444",
+  "contact_email": "info@buildasia.net",
+  "organization_name": "Build Asia",
+  "seo_home_title": "Construction industry news and insight from Pakistan | Build Asia Blog",
+  "seo_home_description": "Market data, building materials, machinery, housing and sustainable building in Pakistan — news and practical guides from Build Asia.",
+  "stats_caption": "{event} in numbers — the January 2026 Karachi edition",
+  "chat_agent": "buildasia",
+  "chat_base_url": "https://salesagent.ecgateway.net",
+  "mail_from_name": "Build Asia Secretariat",
+  "mail_from_email": "info@buildasia.net"
+ },
+ "social_links": {
+  "facebook": "https://facebook.com/buildasia",
+  "x": "https://twitter.com/BuildAsia",
+  "linkedin": "https://linkedin.com/in/buildasia/"
+ },
+ "stats": [
+  {
+   "value": 32000,
+   "suffix": "+",
+   "label": "Trade visitors"
+  },
+  {
+   "value": 350,
+   "suffix": "+",
+   "label": "Exhibitors"
+  },
+  {
+   "value": 21,
+   "suffix": "+",
+   "label": "Countries"
+  },
+  {
+   "value": 190000,
+   "suffix": "+ sq ft",
+   "label": "Exhibition space"
+  }
+ ],
+ "branding": {
+  "logo_light": "buildasia-logo.png",
+  "logo_dark": "buildasia-logo-white.png",
+  "favicon": "buildasia-logo.png"
+ },
+ "categories": [
+  {
+   "slug": "market-insights",
+   "name": "Market Insights",
+   "description": "Data and analysis on Pakistan's construction economy: cement, steel, investment, imports and the outlook for builders and suppliers."
+  },
+  {
+   "slug": "construction-machinery",
+   "name": "Construction Machinery",
+   "description": "Cranes, earthmoving and lifting equipment: market trends, buying decisions, rental and site safety."
+  },
+  {
+   "slug": "building-materials",
+   "name": "Building Materials",
+   "description": "Cement, steel, stone, paints, waterproofing, wood and finishes — the products that make Pakistan's buildings."
+  },
+  {
+   "slug": "housing-real-estate",
+   "name": "Housing & Real Estate",
+   "description": "Housing need, affordable building systems, property finance and REITs in Pakistan."
+  },
+  {
+   "slug": "sustainable-building",
+   "name": "Sustainable Building",
+   "description": "Energy efficiency, solar, heat-resilient design and green construction for Pakistan's climate."
+  },
+  {
+   "slug": "exhibition-news",
+   "name": "Exhibition News",
+   "description": "Build Asia dates, results, conference themes and guides for visitors and exhibitors."
+  }
+ ],
+ "links": [
+  {
+   "label": "Register to visit (E-Pass)",
+   "url": "https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web",
+   "kind": "register",
+   "keywords": "register, visitor pass, e-pass, register online"
+  },
+  {
+   "label": "Book a stand",
+   "url": "https://buildasia.net/contact/?enquiry=stand",
+   "kind": "stand",
+   "keywords": "book a stand, exhibit, stand booking"
+  },
+  {
+   "label": "Exhibitor profile",
+   "url": "https://buildasia.net/exhibit-profile/",
+   "kind": "exhibitors",
+   "keywords": "exhibitor profile, exhibitor categories, who exhibits"
+  },
+  {
+   "label": "Visitor profile",
+   "url": "https://buildasia.net/visitor-profile/",
+   "kind": "other",
+   "keywords": "visitor profile, who visits"
+  },
+  {
+   "label": "Build Asia Karachi 2027",
+   "url": "https://buildasia.net/karachi/",
+   "kind": "other",
+   "keywords": "build asia 2027, karachi edition"
+  },
+  {
+   "label": "Exhibitors at Build Asia Karachi",
+   "url": "https://buildasia.net/karachi/exhibitors/",
+   "kind": "exhibitors",
+   "keywords": "exhibitor list, exhibitors"
+  },
+  {
+   "label": "Travel and hotels — Karachi",
+   "url": "https://buildasia.net/karachi/travel/",
+   "kind": "venue",
+   "keywords": "travel, hotels, venue, karachi expo centre"
+  },
+  {
+   "label": "Photo gallery",
+   "url": "https://buildasia.net/gallery/",
+   "kind": "other",
+   "keywords": "gallery, photos"
+  },
+  {
+   "label": "About Build Asia",
+   "url": "https://buildasia.net/about/",
+   "kind": "other",
+   "keywords": "about build asia, organiser"
+  },
+  {
+   "label": "Contact the Build Asia team",
+   "url": "https://buildasia.net/contact/",
+   "kind": "other",
+   "keywords": "contact, secretariat"
+  }
+ ],
+ "main_menu": [
+  {
+   "label": "Market Insights",
+   "cat": "market-insights"
+  },
+  {
+   "label": "Machinery",
+   "cat": "construction-machinery"
+  },
+  {
+   "label": "Materials",
+   "cat": "building-materials"
+  },
+  {
+   "label": "Housing",
+   "cat": "housing-real-estate"
+  },
+  {
+   "label": "Sustainability",
+   "cat": "sustainable-building"
+  },
+  {
+   "label": "Build Asia News",
+   "cat": "exhibition-news"
+  }
+ ],
+ "footer_menu": [
+  {
+   "label": "About Build Asia",
+   "url": "https://buildasia.net/about/"
+  },
+  {
+   "label": "Exhibitor profile",
+   "url": "https://buildasia.net/exhibit-profile/"
+  },
+  {
+   "label": "Visitor profile",
+   "url": "https://buildasia.net/visitor-profile/"
+  },
+  {
+   "label": "Book a stand",
+   "url": "https://buildasia.net/contact/?enquiry=stand"
+  },
+  {
+   "label": "Gallery",
+   "url": "https://buildasia.net/gallery/"
+  },
+  {
+   "label": "Contact",
+   "url": "https://buildasia.net/contact/"
+  }
+ ],
+ "slides": [
+  {
+   "image": "slide-build-asia-2027.jpg",
+   "headline": "Build Asia 2027 · 18–20 March",
+   "text": "Pakistan's international building materials and construction machinery show, Karachi Expo Centre.",
+   "button_label": "Register to visit",
+   "button_url": "https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web",
+   "ends_at": "2027-03-20 13:00:00"
+  },
+  {
+   "image": "slide-industry-insights.jpg",
+   "headline": "Insight for the people who build Pakistan",
+   "text": "Market data, materials, machinery and practical guides for builders, suppliers and investors.",
+   "button_label": "Latest articles",
+   "button_url": "{{blog}}latest"
+  }
+ ],
+ "articles": [
+  {
+   "slug": "cement-sales-fy26-what-the-numbers-say",
+   "category": "market-insights",
+   "featured": 2,
+   "title": "Cement sales rise 7.2% in FY26: what the numbers say about building activity",
+   "excerpt": "Pakistan’s cement makers despatched 50.5 million tonnes in 2025-26, led by a 9.5% jump at home. A closer look at what the figures tell builders and suppliers.",
+   "tags": [
+    "Cement",
+    "Market data",
+    "FY26"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Cement dispatches rise 7.21% to 50.515 million tonnes in FY26\", 4 July 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/07/04/cement-dispatches-rise-721percent-to-50515-million-tonnes-in-fy26"
+    }
+   ],
+   "body": "<p>Cement is the most reliable early signal of how much is actually being built in Pakistan. Every housing scheme, road and factory floor starts with it, and the industry reports its despatches every month. That makes the full-year figures for 2025-26 worth a careful look.</p>\n<h2>The headline numbers</h2>\n<p>According to figures reported by the All Pakistan Cement Manufacturers Association (APCMA), total despatches reached <strong>50.515 million tonnes</strong> in FY26, up <strong>7.21%</strong> from 47.116 million tonnes the year before.</p>\n<table>\n<thead><tr><th>FY26</th><th>Million tonnes</th><th>Change on FY25</th></tr></thead>\n<tbody>\n<tr><td>Total despatches</td><td>50.515</td><td>+7.21%</td></tr>\n<tr><td>Domestic sales</td><td>41.507</td><td>+9.5%</td></tr>\n<tr><td>Exports</td><td>9.008</td><td>−2.19%</td></tr>\n</tbody>\n</table>\n<p>The growth came from home. Domestic sales rose by 3.6 million tonnes while exports slipped slightly — a sign that demand from local construction, rather than overseas buyers, carried the year.</p>\n<h2>North and south tell different stories</h2>\n<p>Mills in the north sold <strong>34.72 million tonnes</strong> at home, up 10.83%, while their exports fell by more than half. Mills in the south grew domestic sales more slowly (up 3.18% to 6.79 million tonnes) but increased exports by 9.36% to 8.23 million tonnes, helped by their access to the ports.</p>\n<h2>A strong finish to the year</h2>\n<p>June 2026 was particularly busy: despatches rose <strong>18.38%</strong> year on year to 4.33 million tonnes, with domestic sales up 26.78%. An APCMA spokesperson said demand was “expected to remain strong” in the coming months, while noting that high fuel and energy costs continue to weigh on the sector.</p>\n<h2>What it means for the supply chain</h2>\n<ul>\n<li><strong>Builders and contractors</strong> can read rising domestic despatches as evidence that projects are moving from planning to the ground.</li>\n<li><strong>Suppliers of steel, aggregates, construction chemicals and machinery</strong> usually follow cement: higher pours mean more rebar, admixtures, pumps and mixers.</li>\n<li><strong>Energy costs</strong> remain the industry’s main pressure point — one reason efficient kilns, waste-heat recovery and alternative fuels keep coming up in industry discussions.</li>\n</ul>\n<p>Cement producers, admixture suppliers and the equipment makers who serve them meet buyers at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi. Companies in the supply chain can see the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a> to judge whether the audience fits.</p>",
+   "image": "cover-cement-sales-fy26-what-the-numbers-say.jpg"
+  },
+  {
+   "slug": "construction-grows-fy26-economic-survey",
+   "category": "market-insights",
+   "title": "Construction grows 5.7% in FY26 as Pakistan’s economy picks up",
+   "excerpt": "The Economic Survey 2025-26 puts construction growth at 5.73%, ahead of industry as a whole. What drove it, and why it matters for the year ahead.",
+   "tags": [
+    "Economy",
+    "Market data",
+    "FY26"
+   ],
+   "sources": [
+    {
+     "title": "Asia News Network, \"Pakistan economy grows 3.7pc in FY26 — fastest in four years, but short of target\", 12 June 2026",
+     "url": "https://asianews.network/pakistan-economy-grows-3-7pc-in-fy26-fastest-in-four-years-but-short-of-target/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Cement dispatches rise 7.21% to 50.515 million tonnes in FY26\", 4 July 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/07/04/cement-dispatches-rise-721percent-to-50515-million-tonnes-in-fy26"
+    }
+   ],
+   "body": "<p>When the Finance Minister, Muhammad Aurangzeb, released the Pakistan Economic Survey 2025-26 in Islamabad on 11 June 2026, construction stood out as one of the brighter spots in the provisional figures.</p>\n<h2>The provisional figures</h2>\n<table>\n<thead><tr><th>FY26 (provisional)</th><th>Growth</th></tr></thead>\n<tbody>\n<tr><td>GDP</td><td>3.7%</td></tr>\n<tr><td>Industry</td><td>3.51%</td></tr>\n<tr><td><strong>Construction</strong></td><td><strong>5.73%</strong></td></tr>\n<tr><td>Large-scale manufacturing</td><td>6.1%</td></tr>\n<tr><td>Services</td><td>4.09%</td></tr>\n<tr><td>Agriculture</td><td>2.89%</td></tr>\n</tbody>\n</table>\n<p>GDP growth of 3.7% was the fastest in four years, though below the 4.2% target. Within industry, construction grew well ahead of the sector average and was described as a positive contributor.</p>\n<h2>It matches what the factories saw</h2>\n<p>The survey figure is consistent with the cement industry’s own numbers: domestic cement sales rose 9.5% over the same year, to 41.5 million tonnes (<a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">see our analysis of the FY26 cement figures</a>). Large-scale manufacturing, which includes many building-material producers, grew 6.1% — its best result in four years, with 16 of 22 sub-sectors growing.</p>\n<h2>Why it matters</h2>\n<p>Construction is one of the economy’s largest employers and pulls dozens of other industries with it, from steel and glass to transport and finance. Faster growth in construction usually means:</p>\n<ul>\n<li>more demand for building materials and finishing products;</li>\n<li>more investment in machinery and equipment by contractors;</li>\n<li>more work for architects, engineers, consultants and skilled trades.</li>\n</ul>\n<p>The figures are provisional and will be revised, but the direction is clear. For companies planning their next year, the question is less whether demand exists than where it will come from: housing, infrastructure, industrial buildings or energy-efficient retrofits.</p>\n<p>Those conversations happen in person at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, where builders, developers and government agencies meet suppliers. Trade visitors can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register online</a> before the show.</p>",
+   "image": "cover-construction-grows-fy26-economic-survey.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "five-numbers-construction-outlook-2027",
+   "category": "market-insights",
+   "title": "Five numbers that shape Pakistan’s construction outlook for 2027",
+   "excerpt": "Growth, cement, housing need, mortgages and solar: five figures every builder, supplier and investor should keep in mind going into 2027.",
+   "tags": [
+    "Outlook",
+    "Market data",
+    "Housing"
+   ],
+   "sources": [
+    {
+     "title": "Asia News Network, \"Pakistan economy grows 3.7pc in FY26 — fastest in four years, but short of target\", 12 June 2026",
+     "url": "https://asianews.network/pakistan-economy-grows-3-7pc-in-fy26-fastest-in-four-years-but-short-of-target/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Cement dispatches rise 7.21% to 50.515 million tonnes in FY26\", 4 July 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/07/04/cement-dispatches-rise-721percent-to-50515-million-tonnes-in-fy26"
+    },
+    {
+     "title": "Business Recorder, opinion, 20 November 2025 (figures from PMRC, UN-Habitat and the ACASH Report 2023)",
+     "url": "https://www.brecorder.com/news/40393310"
+    },
+    {
+     "title": "ProPakistani, \"Pakistan's solar boom reaches 7,000 MW as govt moves to replace net metering\", 17 July 2026",
+     "url": "https://propakistani.pk/2026/07/17/pakistans-solar-boom-reaches-7000-mw-as-govt-moves-to-replace-net-metering/"
+    }
+   ],
+   "body": "<p>Forecasts come and go, but a handful of published figures explain most of what will happen in Pakistan’s building industry next year. Here are five worth keeping in view.</p>\n<h2>1. 5.73% — construction growth in FY26</h2>\n<p>The Economic Survey 2025-26 puts provisional construction growth at 5.73%, ahead of industry overall (3.51%). <a href=\"{{a:construction-grows-fy26-economic-survey}}\">Read more on the survey figures.</a></p>\n<h2>2. 50.5 million tonnes — cement despatched in FY26</h2>\n<p>Total despatches rose 7.21%, and domestic sales 9.5%, to 41.5 million tonnes. Cement is the earliest hard signal of building activity. <a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">See the full breakdown.</a></p>\n<h2>3. About 1.06 million — new homes needed every year</h2>\n<p>Figures compiled from the Pakistan Mortgage Refinance Company, UN-Habitat and the ACASH Report put the annual increase in housing need at about 1.06 million units. In cities alone, about 350,000 new units are needed each year, but only around 150,000 are built. <a href=\"{{a:pakistan-housing-gap-numbers}}\">More on the housing gap.</a></p>\n<h2>4. 0.44% — mortgage finance as a share of GDP</h2>\n<p>The same sources put mortgage lending at just 0.44% of GDP. Most families still build or buy with savings, which keeps a large part of demand slow and incremental. Any growth in housing finance would change the pace of the market.</p>\n<h2>5. About 7,000 MW — rooftop solar under net metering</h2>\n<p>Net-metered solar grew from 190 MW in FY2020 to about 6,978 MW by FY2026, according to the Power Division’s energy adviser. Buildings are becoming power producers, which changes how roofs, wiring and structures are designed. <a href=\"{{a:rooftop-solar-7000-mw-building-design}}\">How solar is reshaping building design.</a></p>\n<h2>Reading them together</h2>\n<p>The picture is of an industry growing again, with large unmet demand for homes, limited finance, and a fast shift towards energy-conscious buildings. Companies that offer affordable systems, faster building methods and energy-saving products are best placed for it.</p>",
+   "image": "cover-five-numbers-construction-outlook-2027.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "construction-machinery-imports-rise",
+   "category": "construction-machinery",
+   "featured": 3,
+   "title": "Construction machinery imports jump as contractors re-equip",
+   "excerpt": "Imports of construction and mining machinery rose to $138 million in FY25, and the first months of FY26 point higher again. What the trend says about the market.",
+   "tags": [
+    "Machinery",
+    "Imports",
+    "Market data"
+   ],
+   "sources": [
+    {
+     "title": "PACRA, Sector Study: Machinery, January 2026",
+     "url": "https://www.pacra.com/view/storage/app/PACRA%20Research%20-%20Machinery%20-%20Jan%2726_1767447674.pdf"
+    }
+   ],
+   "body": "<p>Pakistan builds with imported machines. Excavators, cranes, pumps and batching plants largely come from abroad, so import figures are a good guide to how confident contractors feel about the work ahead.</p>\n<h2>What the figures show</h2>\n<p>According to PACRA’s machinery sector study (January 2026), imports of construction and mining machinery were:</p>\n<table>\n<thead><tr><th>Period</th><th>USD million</th></tr></thead>\n<tbody>\n<tr><td>FY23</td><td>85</td></tr>\n<tr><td>FY24</td><td>94</td></tr>\n<tr><td>FY25</td><td>138</td></tr>\n<tr><td>First five months of FY26</td><td>98</td></tr>\n</tbody>\n</table>\n<p>That is a rise of roughly 47% in FY25 alone, and the first five months of FY26 already reached about 70% of the previous full year.</p>\n<h2>Part of a wider machinery upturn</h2>\n<p>All machinery imports rose to about <strong>$9.6 billion</strong> in FY25 — around 16.5% of the country’s total imports — and were up about 20% year on year in the first five months of FY26. PACRA noted they may exceed $10 billion in FY26. Construction and mining machinery is still a small share of that total, but its share has been growing.</p>\n<h2>What is driving it</h2>\n<p>PACRA points to several supports for demand: easing inflation (around 5.6% in December 2025), a lower policy rate (about 10.5%) that makes equipment finance cheaper, and a larger federal development budget. It also notes that most demand is met by imports and that local producers face stiff competition.</p>\n<h2>What it means for buyers and sellers</h2>\n<ul>\n<li><strong>Contractors</strong> are replacing ageing fleets as financing costs ease. <a href=\"{{a:buy-rent-or-lease-construction-equipment}}\">Our guide to buying, renting or leasing</a> covers the trade-offs.</li>\n<li><strong>Dealers and manufacturers</strong> face buyers who compare total cost of ownership, after-sales support and spare-parts availability, not just the purchase price.</li>\n<li><strong>Service companies</strong> — maintenance, parts, training and telematics — grow with every machine sold.</li>\n</ul>\n<p>Build Asia has a dedicated outdoor area for heavy machinery, more than 50,000 sq ft at the last Karachi edition, where buyers can see equipment working rather than in a brochure.</p>",
+   "image": "cover-construction-machinery-imports-rise.jpg"
+  },
+  {
+   "slug": "buy-rent-or-lease-construction-equipment",
+   "category": "construction-machinery",
+   "title": "Buy, rent or lease? A practical guide to construction equipment decisions",
+   "excerpt": "How contractors can decide whether to own, rent or lease each machine — and the questions to ask suppliers before signing.",
+   "tags": [
+    "Machinery",
+    "Contractors",
+    "Guide"
+   ],
+   "sources": [],
+   "body": "<p>Every contractor faces the same question with each machine: buy it, rent it when needed, or lease it over several years? There is no single right answer, but there is a sound way to decide.</p>\n<h2>Start with utilisation</h2>\n<p>The most important number is how many days a year the machine will actually work for you. A machine that works most of the year on your own projects usually costs less to own. One that is needed for a few weeks on a single job is almost always cheaper to rent.</p>\n<h2>When buying makes sense</h2>\n<ul>\n<li>You have a steady pipeline of work that needs the machine for most of the year.</li>\n<li>You have operators and maintenance staff who can look after it.</li>\n<li>The machine holds its value well and has a good resale market.</li>\n<li>Financing is available at a rate your projects can carry.</li>\n</ul>\n<h2>When renting makes sense</h2>\n<ul>\n<li>The need is short or occasional — a crane for a lift, a piling rig for foundations.</li>\n<li>You want the latest model without tying up capital.</li>\n<li>You would rather not manage transport, servicing and storage.</li>\n</ul>\n<h2>When leasing makes sense</h2>\n<p>Leasing sits in between: predictable monthly payments, no large upfront outlay, and often the option to buy at the end. It suits companies with steady work but limited cash to spare, and lease payments can be easier to plan for than a loan.</p>\n<h2>Questions to ask any supplier</h2>\n<ol>\n<li>What is the total cost over the period, including servicing, insurance and transport?</li>\n<li>How quickly are spare parts available locally, and where?</li>\n<li>Is operator training included?</li>\n<li>What happens if the machine breaks down mid-project — is a replacement provided?</li>\n<li>For used machines: what are the working hours, and is there a service record?</li>\n</ol>\n<h2>Think in fleets, not machines</h2>\n<p>Many contractors own the machines they use every day — excavators, loaders, mixers — and rent the specialist ones. Reviewing the mix once a year keeps money from sitting in idle equipment.</p>\n<p>Dealers, rental companies and finance providers can be compared side by side at Build Asia’s machinery halls and outdoor display. <a href=\"{{a:construction-machinery-imports-rise}}\">Read why contractors are re-equipping.</a></p>",
+   "image": "cover-buy-rent-or-lease-construction-equipment.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "heavy-machinery-site-safety-checklist",
+   "category": "construction-machinery",
+   "title": "Heavy machinery on site: a safety checklist for contractors",
+   "excerpt": "Most machinery accidents are preventable. A practical daily checklist for site managers, operators and the people working around them.",
+   "tags": [
+    "Safety",
+    "Machinery",
+    "Guide"
+   ],
+   "sources": [],
+   "body": "<p>Heavy machines make construction possible at scale — and they are behind many of the most serious accidents on building sites. Most of those accidents follow the same few patterns, which means most can be prevented with routine habits.</p>\n<h2>Before work starts each day</h2>\n<ul>\n<li><strong>Walk-around inspection:</strong> tyres or tracks, hydraulic hoses, leaks, lights, mirrors, horn and reversing alarm.</li>\n<li><strong>Check the operator:</strong> trained and authorised for that machine, rested, and wearing the right protective equipment.</li>\n<li><strong>Check the ground:</strong> soft soil, slopes, trenches and buried services change what a machine can safely do.</li>\n<li><strong>Check overhead:</strong> power lines are a leading cause of fatal accidents with cranes, tippers and excavators.</li>\n</ul>\n<h2>Keep people and machines apart</h2>\n<ul>\n<li>Mark exclusion zones around working machines and lifting areas.</li>\n<li>Use a trained banksman (signaller) whenever a machine reverses or visibility is limited.</li>\n<li>Plan walkways so workers do not cross the machine’s path.</li>\n<li>Never allow passengers or riding on buckets and forks.</li>\n</ul>\n<h2>Lifting operations</h2>\n<ul>\n<li>Know the load weight and the crane’s capacity at that radius — not just its maximum.</li>\n<li>Inspect slings, chains and hooks before each lift.</li>\n<li>Stop lifting in high wind.</li>\n</ul>\n<h2>Maintenance and records</h2>\n<p>Keep a service log for every machine and act on faults immediately. A machine that is “nearly fine” should not be on site. Lock out machines during maintenance so they cannot be started.</p>\n<h2>Build a safety culture</h2>\n<p>A short daily briefing, near-miss reporting without blame, and visible commitment from site management do more than any poster. Safety is also good business: accidents stop work, damage equipment and harm a company’s reputation.</p>\n<p>Fire-fighting, safety and security equipment suppliers are among the exhibitor categories at Build Asia. <a href=\"{{a:buy-rent-or-lease-construction-equipment}}\">See also: buy, rent or lease?</a></p>",
+   "image": "cover-heavy-machinery-site-safety-checklist.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-marble-granite-mechanised-quarrying",
+   "category": "building-materials",
+   "featured": 4,
+   "title": "Pakistan’s marble and granite: vast reserves, and the push to quarry them better",
+   "excerpt": "Reserves are estimated at 30 billion tonnes, yet exports average about $37 million a year. Mechanised quarrying is starting to change that.",
+   "tags": [
+    "Marble",
+    "Stone",
+    "Exports"
+   ],
+   "sources": [
+    {
+     "title": "APP / Wealth Pakistan, \"135 mines in Pakistan adopt mechanized mining techniques\", 19 October 2025",
+     "url": "https://www.app.com.pk/?p=1088564"
+    }
+   ],
+   "body": "<p>Pakistan sits on some of the world’s most varied stone. Marble and granite deposits run across Khyber Pakhtunkhwa, Balochistan, Sindh, Punjab, Gilgit-Baltistan and Azad Jammu and Kashmir, with reserves estimated at around <strong>30 billion tonnes</strong>.</p>\n<p>Yet the industry’s export earnings are modest: marble exports have averaged about <strong>$37 million a year</strong> over the past five years, mostly as raw or semi-processed blocks. The gap between potential and earnings comes down largely to how stone is taken out of the ground.</p>\n<h2>The cost of blasting</h2>\n<p>Traditional quarrying often relies on blasting, which shatters much of the stone and leaves blocks of irregular size. According to official documents reported by Wealth Pakistan, waste at quarries that have modernised has fallen from <strong>nearly 85% to about 45%</strong>.</p>\n<h2>Mechanised quarrying is spreading</h2>\n<p>The Pakistan Stone Development Company (PASDEC) reports that <strong>135 operational mines</strong> have adopted mechanised techniques with its help — controlled cutting of standard square blocks instead of blasting. The programme has drawn about Rs 1.16 billion in combined public and private investment and created more than 800 jobs. PASDEC has also provided around Rs 1 billion in subsidies to miners over the past decade.</p>\n<h2>Why block quality matters</h2>\n<ul>\n<li><strong>Standard blocks</strong> can be cut efficiently into slabs and tiles, increasing value per tonne.</li>\n<li><strong>Less waste</strong> means more saleable stone from the same deposit.</li>\n<li><strong>Value addition</strong> — polishing, cutting to size, finished products — is where export margins are made.</li>\n</ul>\n<h2>Opportunities along the chain</h2>\n<p>The shift opens doors for suppliers of wire saws, cutting and polishing lines, block handling equipment, and the training that goes with them — and for buyers who want consistent, export-grade stone from Pakistan.</p>\n<p>Stonefair Asia runs alongside Build Asia, bringing quarry owners, processors and machinery suppliers together. Marble, granite and ceramic producers, and quarrying and finishing machinery suppliers, are core <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor categories</a>.</p>",
+   "image": "cover-pakistan-marble-granite-mechanised-quarrying.jpg"
+  },
+  {
+   "slug": "paints-and-coatings-market-room-to-grow",
+   "category": "building-materials",
+   "title": "Paints and coatings: a market with room to grow",
+   "excerpt": "Pakistan uses about 1.2 kg of paint per person a year — low by international standards. What that means for decorative and protective coatings.",
+   "tags": [
+    "Paints",
+    "Coatings",
+    "Market data"
+   ],
+   "sources": [
+    {
+     "title": "U.S. International Trade Administration, \"Pakistan Paints and Coatings\", market intelligence, 14 August 2023",
+     "url": "https://www.trade.gov/market-intelligence/pakistan-paints-and-coatings"
+    }
+   ],
+   "body": "<p>Paint is the last product a building receives and the first thing people see. In Pakistan it is also a market with a lot of room left to grow.</p>\n<h2>The size of the market</h2>\n<p>The U.S. International Trade Administration estimated Pakistan’s paints and coatings market at about <strong>$400 million</strong>, with local production of around 0.25 million tonnes according to the Pakistan Coating Association, and expected growth of <strong>3.5% to 4% a year</strong>. Its market note dates from August 2023, so current figures may differ, but the structure it describes still holds.</p>\n<h2>Low use per person</h2>\n<p>Consumption is about <strong>1.2 kg per person per year</strong>, for a population of over 240 million. That is low by international standards, which means that as incomes rise, more homes are finished and more buildings are maintained, demand has a long way to grow.</p>\n<h2>Where the demand comes from</h2>\n<ul>\n<li><strong>Architectural (decorative) paint</strong> for homes, offices and public buildings — the largest use.</li>\n<li><strong>Protective and industrial coatings</strong> for steel structures, bridges, factories and pipelines.</li>\n<li><strong>Wood coatings</strong> for furniture, doors and fittings.</li>\n<li><strong>Infrastructure</strong> — dams, roads and government-funded housing.</li>\n</ul>\n<h2>Trends to watch</h2>\n<ul>\n<li><strong>Water-based paints</strong> with low solvent content, better for indoor air and painters’ health.</li>\n<li><strong>Heat-reflective roof and wall coatings</strong>, increasingly relevant in hot cities (<a href=\"{{a:designing-for-heat-karachi-lessons}}\">see our piece on designing for heat</a>).</li>\n<li><strong>Waterproof and anti-fungal coatings</strong> for humid coastal areas and monsoon seasons.</li>\n<li><strong>Protective coatings for steel</strong>, as more buildings use steel frames.</li>\n</ul>\n<p>Paints, varnishes and coatings are one of Build Asia’s exhibitor categories, alongside the construction chemicals and waterproofing products that often go with them.</p>",
+   "image": "cover-paints-and-coatings-market-room-to-grow.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "furniture-exports-germany-overtakes-us",
+   "category": "building-materials",
+   "title": "Furniture exports: Germany overtakes the US as the top market",
+   "excerpt": "Pakistan’s furniture exports are small but finding buyers in Europe. A look at the latest figures and what holds the sector back.",
+   "tags": [
+    "Furniture",
+    "Wood",
+    "Exports"
+   ],
+   "sources": [
+    {
+     "title": "PACRA, Sector Study: Furniture & Fixtures, March 2026",
+     "url": "https://pacra.com/view/storage/app/PACRA%20Research%20-%20Furniture%20&%20Fixtures%20-%20Mar%2726_1772963696.pdf"
+    }
+   ],
+   "body": "<p>Pakistani furniture makers have a reputation for craftsmanship, especially in carved hardwood. Turning that into exports has proved harder, but the latest figures show where buyers are.</p>\n<h2>The figures</h2>\n<p>According to PACRA’s furniture sector study (March 2026), exports of furniture (HS code 9403) were:</p>\n<table>\n<thead><tr><th>Period</th><th>Exports, USD million</th><th>Imports, USD million</th></tr></thead>\n<tbody>\n<tr><td>FY23</td><td>9.0</td><td>4.1</td></tr>\n<tr><td>FY24</td><td>8.4</td><td>3.0</td></tr>\n<tr><td>FY25</td><td>7.9</td><td>5.9</td></tr>\n<tr><td>Jul–Jan FY26</td><td>4.8</td><td>4.8</td></tr>\n</tbody>\n</table>\n<h2>Where it goes</h2>\n<p>In FY25 the United States (26.7%) and Germany (25.8%) together took more than half of exports. In the first seven months of FY26, <strong>Germany became the largest market at 27.5%</strong>, followed by the US (18.5%), the UK (16.7%), the UAE (8.6%) and Canada (3.0%).</p>\n<h2>What holds the sector back</h2>\n<ul>\n<li><strong>Raw materials:</strong> forest cover is only about 5% of the country, and local timber supplies have been depleted. Makers increasingly use chipboard, metal and imported wood, which raises costs.</li>\n<li><strong>Fragmentation:</strong> the sector is made up of many small workshops and a handful of large firms, which makes it hard to meet large export orders consistently.</li>\n<li><strong>Rising imports:</strong> imports nearly doubled in FY25, as new homes and offices sought modern designs.</li>\n</ul>\n<h2>Opportunities</h2>\n<p>PACRA links furniture demand to residential and commercial construction, urbanisation and a growing middle class. Easier interest rates should help. For manufacturers, the openings lie in modern designs for new apartments and offices, consistent quality for export, and partnerships with suppliers of panel processing and finishing machinery.</p>\n<p>Furniture Asia runs alongside Build Asia, and home and office furniture, kitchen cabinets, wood and timber, and lamination machines are all exhibitor categories.</p>",
+   "image": "cover-furniture-exports-germany-overtakes-us.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "waterproofing-before-monsoon-checklist",
+   "category": "building-materials",
+   "title": "Waterproofing before the monsoon: a checklist for owners and builders",
+   "excerpt": "Most leaks start at roofs, joints and wet areas. What to check, which systems to consider, and the questions to ask an applicator.",
+   "tags": [
+    "Waterproofing",
+    "Construction chemicals",
+    "Guide"
+   ],
+   "sources": [],
+   "body": "<p>Water is the slowest and most expensive enemy of a building. Leaks damage plaster and paint, rust reinforcement inside concrete, and grow mould that affects health. Most problems start in a few predictable places — which means they can be prevented.</p>\n<h2>Where to look first</h2>\n<ul>\n<li><strong>Roofs:</strong> cracks, ponding water, blocked drains, and the joint where roof meets parapet.</li>\n<li><strong>Bathrooms and kitchens:</strong> around drains, pipe entries and the base of walls.</li>\n<li><strong>Basements and water tanks:</strong> water pushing in from the soil or out from the tank.</li>\n<li><strong>External walls:</strong> hairline cracks, window and door frames, and where services enter the building.</li>\n<li><strong>Expansion joints</strong> in larger buildings, which need flexible sealants.</li>\n</ul>\n<h2>Common systems, in plain words</h2>\n<ul>\n<li><strong>Cementitious coatings:</strong> brushed or troweled on; suit tanks, basements and wet areas.</li>\n<li><strong>Liquid membranes</strong> (acrylic, polyurethane): form a seamless flexible skin; suit roofs.</li>\n<li><strong>Bituminous membranes:</strong> sheets laid on roofs and foundations; durable but need careful laying.</li>\n<li><strong>Crystalline admixtures:</strong> added to concrete so it seals its own pores.</li>\n<li><strong>Sealants:</strong> for joints, frames and pipe entries.</li>\n</ul>\n<h2>Questions to ask an applicator</h2>\n<ol>\n<li>How will the surface be prepared? Most failures come from poor preparation, not poor products.</li>\n<li>Is the system suited to our roof — exposed to sun, walked on, or covered?</li>\n<li>How thick will the coating be, and how many coats?</li>\n<li>What guarantee is given, and who gives it — the applicator or the manufacturer?</li>\n<li>Will you do a flood test on the roof before handing over?</li>\n</ol>\n<h2>Design it in from the start</h2>\n<p>The cheapest waterproofing is the one planned at design stage: proper roof slopes, enough drains, details at every joint, and good concrete. Repairs after leaks start always cost more.</p>\n<p>Waterproofing, insulation, sealants and adhesives, and construction chemicals are all exhibitor categories at Build Asia. <a href=\"{{a:paints-and-coatings-market-room-to-grow}}\">See also: the paints and coatings market.</a></p>",
+   "image": "cover-waterproofing-before-monsoon-checklist.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-housing-gap-numbers",
+   "category": "housing-real-estate",
+   "featured": 5,
+   "title": "Pakistan’s housing gap: the numbers behind the shortage",
+   "excerpt": "Need grows by about a million homes a year, cities build fewer than half of what they need, and mortgages are just 0.44% of GDP.",
+   "tags": [
+    "Housing",
+    "Affordable housing",
+    "Finance"
+   ],
+   "sources": [
+    {
+     "title": "Business Recorder, opinion, 20 November 2025 (figures from PMRC, UN-Habitat and the ACASH Report 2023)",
+     "url": "https://www.brecorder.com/news/40393310"
+    }
+   ],
+   "body": "<p>Housing is the single largest driver of construction in Pakistan, and the gap between need and supply is the defining fact of the market. Figures compiled from the Pakistan Mortgage Refinance Company (PMRC), UN-Habitat and the ACASH Report (2023) show its shape.</p>\n<h2>The headline gap</h2>\n<ul>\n<li>National need is put at about <strong>38.3 million</strong> housing units against a supply of about <strong>36.2 million</strong> — a shortfall of around <strong>2.1 million</strong> units.</li>\n<li>Need grows by about <strong>1.06 million units a year</strong>, driven by population growth and new households.</li>\n<li>In urban areas about <strong>350,000</strong> new units are needed each year, but only about <strong>150,000</strong> are built.</li>\n<li>About <strong>13 million households</strong> are overcrowded — 6 million in towns and cities and 7 million in rural areas.</li>\n</ul>\n<h2>Who needs homes</h2>\n<p>Most of the need is at the lower end of the market: about 217,000 units a year for lower-income households, 87,500 for lower-middle-income and 35,000 for higher-income households. In rural areas, much of the need is about quality — replacing homes that are unsafe or inadequate.</p>\n<h2>The finance problem</h2>\n<p>Mortgage lending is only about <strong>0.44% of GDP</strong>. Without long-term finance, most families build slowly from savings, one room or one floor at a time. That shapes the whole supply chain: materials are bought in small quantities, and construction stretches over years.</p>\n<h2>What could close the gap</h2>\n<ul>\n<li><strong>Affordable design:</strong> smaller, well-planned units on serviced plots.</li>\n<li><strong>Faster building systems:</strong> prefabrication and <a href=\"{{a:light-gauge-steel-framing-low-rise-homes}}\">light gauge steel framing</a> can cut time on site.</li>\n<li><strong>Finance:</strong> more mortgage lending, and new investment routes such as <a href=\"{{a:reits-pakistan-real-estate-investment}}\">REITs</a>.</li>\n<li><strong>Better use of land:</strong> mid-rise apartments in cities rather than ever-wider sprawl.</li>\n</ul>\n<p>Affordable housing was one of the themes of the PROPTECH Convention at the last Build Asia. Builders, developers, banks and housing finance companies are all part of the show’s audience.</p>",
+   "image": "cover-pakistan-housing-gap-numbers.jpg"
+  },
+  {
+   "slug": "reits-pakistan-real-estate-investment",
+   "category": "housing-real-estate",
+   "title": "REITs come of age: 29 schemes and a seventh listing on the PSX",
+   "excerpt": "Real estate investment trusts are giving developers a new source of money and investors a way into property. Where the market stands in 2026.",
+   "tags": [
+    "REITs",
+    "Real estate",
+    "Finance"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"SECP approves PSX listing of Naya Nazimabad Apartments REIT\", 18 August 2026",
+     "url": "https://propakistani.pk/2026/08/18/secp-approves-psx-listing-of-naya-nazimabad-apartments-reit/"
+    }
+   ],
+   "body": "<p>For most investors in Pakistan, putting money into property has meant buying a plot or a flat. Real estate investment trusts (REITs) offer another way: buying units in a fund that owns or develops property, traded like shares.</p>\n<h2>Where the market stands</h2>\n<p>According to a report on the approval of the Naya Nazimabad Apartments REIT in August 2026, Pakistan has <strong>29 registered REIT schemes</strong>, of which <strong>six are listed</strong> on the Pakistan Stock Exchange. The Naya Nazimabad Apartments REIT is set to become the seventh.</p>\n<h2>A developmental REIT</h2>\n<p>The Naya Nazimabad scheme is a closed-end <strong>developmental REIT</strong> under the REIT Regulations, 2022 — it raises money to build, rather than only to own finished buildings. The public offering covers 44.06 million units, 15% of the scheme, with 75% offered to institutional and high-net-worth investors and 25% to retail investors through book building. The SECP described it as the 13th public offering it had approved in 2026.</p>\n<h2>Why it matters for construction</h2>\n<ul>\n<li><strong>Developers</strong> get access to money from many investors, not just bank loans or advance payments from buyers.</li>\n<li><strong>Buyers</strong> can see a project funded before it is sold off-plan, which can reduce the risk of stalled schemes.</li>\n<li><strong>Investors</strong> can own a share of property with smaller sums, and sell their units on the exchange.</li>\n<li><strong>Transparency</strong> improves, because listed REITs must report regularly to the regulator and investors.</li>\n</ul>\n<h2>Things to keep in mind</h2>\n<p>REIT units can fall in value, and developmental REITs carry construction risk. As with any investment, investors should read the offering document and take professional advice.</p>\n<p>REITs and tokenisation were on the agenda of the PROPTECH Convention at Build Asia 2026. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what the conference covered.</a></p>",
+   "image": "cover-reits-pakistan-real-estate-investment.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "light-gauge-steel-framing-low-rise-homes",
+   "category": "housing-real-estate",
+   "title": "Light gauge steel framing: a faster way to build low-rise homes?",
+   "excerpt": "Light, termite-proof and quick to assemble, light gauge steel is being tested for affordable housing in Pakistan. How it works and where it fits.",
+   "tags": [
+    "Prefabrication",
+    "Steel",
+    "Affordable housing"
+   ],
+   "sources": [
+    {
+     "title": "NED University of Engineering & Technology, Center for Affordable Housing and Sustainable Built Environment (CAHSBE), \"Light Gauge Steel for Low Rise Buildings\"",
+     "url": "https://cahsbe.neduet.edu.pk/LGS"
+    }
+   ],
+   "body": "<p>Most homes in Pakistan are built from brick, block and reinforced concrete — strong and familiar, but slow, heavy and labour-intensive. Light gauge steel (LGS) framing offers a different approach for low-rise buildings, and it is being studied seriously for affordable housing.</p>\n<h2>What it is</h2>\n<p>LGS framing uses thin, cold-formed steel sections — studs, joists and trusses — screwed together into wall and roof frames, then clad with boards and insulation. Sections are factory-made to exact sizes, so assembly on site is fast and precise.</p>\n<h2>The benefits</h2>\n<p>NED University’s Center for Affordable Housing and Sustainable Built Environment (CAHSBE) describes LGS as an attractive alternative to traditional reinforced concrete for low-rise buildings. It notes that:</p>\n<ul>\n<li>sections are light enough to carry by hand, and allow quick building without heavy tools or equipment;</li>\n<li>steel is non-combustible, which is a code requirement for some types of structures;</li>\n<li>it does not rot, warp or suffer termite attack;</li>\n<li>frames are easy to modify later.</li>\n</ul>\n<h2>Being tested in Pakistan</h2>\n<p>CAHSBE worked with the construction industry to build an affordable model house using LGS on the NED campus, and the university reports that LGS was considered as one of the technologies for the Naya Pakistan Housing initiative. Final-year engineering students at NED compare LGS designs with reinforced concrete alternatives for cost and time to completion.</p>\n<h2>Questions for anyone considering it</h2>\n<ol>\n<li><strong>Approvals:</strong> does the local building authority accept the system for this use?</li>\n<li><strong>Corrosion:</strong> what galvanising and detailing protect the steel, especially near the coast?</li>\n<li><strong>Heat and sound:</strong> what insulation and boards are used, and how does the home perform in summer?</li>\n<li><strong>Skills:</strong> are trained installers available, and who supervises them?</li>\n<li><strong>Cost:</strong> how does the full cost — including finishes — compare with a conventional build?</li>\n</ol>\n<p>Light gauge steel framing has featured in Build Asia’s past conference programme, and pre-fabricated building components, pre-engineered steel buildings and prefab housing systems remain core exhibitor categories. <a href=\"{{a:pakistan-housing-gap-numbers}}\">Why faster building matters: the housing gap.</a></p>",
+   "image": "cover-light-gauge-steel-framing-low-rise-homes.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "buildings-electricity-energy-conservation-building-code",
+   "category": "sustainable-building",
+   "featured": 6,
+   "title": "Buildings use about 60% of Pakistan’s electricity. Can a building code change that?",
+   "excerpt": "The federal government wants the Energy Conservation Building Code 2023 applied to new construction. What the code is for, and what it means for designers and suppliers.",
+   "tags": [
+    "Energy efficiency",
+    "ECBC",
+    "Policy"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Energy ministry links building code to power efficiency standards\", 30 May 2025",
+     "url": "https://profit.pakistantoday.com.pk/2025/05/30/energy-ministry-links-building-code-to-power-efficiency-standards"
+    }
+   ],
+   "body": "<p>Every summer, Pakistan’s grid is pushed to its limit by one thing above all: keeping buildings cool. According to the Federal Energy Minister, Sardar Awais Ahmed Khan Leghari, buildings account for <strong>about 60% of electricity use</strong> in the country.</p>\n<h2>The push for the code</h2>\n<p>In May 2025 the minister wrote to provincial Chief Ministers and federal officials urging them to adopt the <strong>Energy Conservation Building Code 2023 (ECBC-2023)</strong> as the national standard for new construction. His letters called for:</p>\n<ul>\n<li>ECBC-2023 to apply across all development plans;</li>\n<li>compliance by all government-funded projects under the Public Sector Development Programme;</li>\n<li>provinces to build it into their planning — with a proposal to link approval of future projects to compliance;</li>\n<li>efficient electrical systems in all new buildings.</li>\n</ul>\n<h2>What an energy code does</h2>\n<p>An energy conservation building code sets minimum standards for how much energy a building may use — typically through the building envelope (walls, roofs, windows and insulation), lighting, air-conditioning and electrical systems. The idea is simple: decisions made at design stage lock in a building’s electricity bills for decades.</p>\n<h2>What it means in practice</h2>\n<ul>\n<li><strong>Architects and engineers</strong> will need to show compliance at design stage, especially on public projects.</li>\n<li><strong>Developers</strong> can market lower running costs to buyers and tenants facing high tariffs.</li>\n<li><strong>Suppliers</strong> of insulation, high-performance glazing, reflective roofing, efficient air-conditioning, LED lighting and building controls stand to see demand grow.</li>\n</ul>\n<h2>The open questions</h2>\n<p>The success of any code depends on enforcement by local building authorities, on training for designers and inspectors, and on materials being available at prices builders can afford. Those are the conversations the industry will need to have over the coming years.</p>\n<p>Energy-efficient buildings and green construction practices are among the opportunity areas highlighted at Build Asia. <a href=\"{{a:rooftop-solar-7000-mw-building-design}}\">See also: how rooftop solar is changing building design.</a></p>",
+   "image": "cover-buildings-electricity-energy-conservation-building-code.jpg"
+  },
+  {
+   "slug": "rooftop-solar-7000-mw-building-design",
+   "category": "sustainable-building",
+   "title": "7,000 MW on the rooftops: how solar is reshaping building design",
+   "excerpt": "Net-metered solar grew 37-fold in six years. Roofs, structures and wiring now have to be designed for panels from day one.",
+   "tags": [
+    "Solar",
+    "Energy",
+    "Design"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"Pakistan's solar boom reaches 7,000 MW as govt moves to replace net metering\", 17 July 2026",
+     "url": "https://propakistani.pk/2026/07/17/pakistans-solar-boom-reaches-7000-mw-as-govt-moves-to-replace-net-metering/"
+    }
+   ],
+   "body": "<p>Pakistan’s rooftops have changed faster than almost anyone expected. Solar generation under net metering grew from <strong>190 MW in FY2020 to about 6,978 MW by FY2026</strong> — nearly 37 times in six years — according to figures presented by Syed Faizan Ali, Energy Adviser to the Power Division.</p>\n<h2>Why it happened</h2>\n<p>The same presentation set out the drivers: electricity tariffs rose about <strong>140%</strong> between FY2021 and FY2025, while the rupee lost about 75% of its value and imported solar panel prices fell by about <strong>60%</strong>. For many homes and businesses, generating their own power became the obvious choice.</p>\n<h2>The rules are changing</h2>\n<p>Under the Prosumer Regulations 2026, which took effect on 8 February 2026, new consumers move to <strong>net billing</strong>: electricity they export to the grid is paid at a lower reference price rather than credited one-for-one. Consumers with 2015 net-metering agreements keep their terms until their contracts expire. The result is that it now pays to use more of your own solar power on site — which puts more weight on batteries and on efficient buildings.</p>\n<h2>What this means for building design</h2>\n<ul>\n<li><strong>Roofs:</strong> plan clear, shade-free areas, the right orientation, and safe access for cleaning and maintenance.</li>\n<li><strong>Structure:</strong> design for the weight of panels and mounting frames, and for wind loads.</li>\n<li><strong>Waterproofing:</strong> mounting penetrations are a common source of leaks if not detailed properly.</li>\n<li><strong>Electrical:</strong> space for inverters and batteries, proper earthing, and cable routes planned in advance.</li>\n<li><strong>Efficiency first:</strong> every unit of electricity saved by insulation and shading is one the panels do not need to produce.</li>\n</ul>\n<h2>Opportunities across the industry</h2>\n<p>Solar installers, inverter and battery suppliers, cable makers, roofing and waterproofing companies, and structural engineers all have a part in getting rooftop solar right. Generators, the solar industry, UPS systems and electrical cables are exhibitor categories at Build Asia. <a href=\"{{a:buildings-electricity-energy-conservation-building-code}}\">Read about the energy building code.</a></p>",
+   "image": "cover-rooftop-solar-7000-mw-building-design.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "designing-for-heat-karachi-lessons",
+   "category": "sustainable-building",
+   "title": "Designing for heat: lessons from Karachi’s heatwaves",
+   "excerpt": "From 2015 to 2024, deadly heatwaves have shown how buildings and cities can trap heat. What architects, builders and planners can do about it.",
+   "tags": [
+    "Climate",
+    "Design",
+    "Karachi"
+   ],
+   "sources": [
+    {
+     "title": "Dialogue Earth, \"Karachi turns into heat trap\", 24 June 2015",
+     "url": "https://dialogue.earth/en/climate/karachi-turns-into-heat-trap/"
+    },
+    {
+     "title": "Bloomberg via BNN Bloomberg, \"Karachi sees a surge in deaths as heat wave sears Pakistan\", 27 June 2024",
+     "url": "https://bnnbloomberg.ca/karachi-sees-a-surge-in-deaths-as-heat-wave-sears-pakistan-1.2090293"
+    }
+   ],
+   "body": "<p>Karachi normally relies on its sea breeze, which the Pakistan Meteorological Department says keeps temperatures nearly 15°C lower than they would otherwise be. When that breeze fails during a heatwave, the city’s buildings and streets become part of the problem.</p>\n<h2>What the heatwaves showed</h2>\n<p>In June 2015 a heatwave lasting five to six days killed more than 750 people in the city, according to official reports at the time. In June 2024 Karachi reached 44°C, more than 7°C above normal, and the Edhi Foundation reported receiving 568 bodies over five days — far above its usual daily average — while officials disputed how many deaths were due to heat. The Sindh health department reported more than 2,100 heatstroke cases across the province that month. In both years, power cuts left many people without fans or cooling.</p>\n<h2>How cities trap heat</h2>\n<p>Experts quoted after the 2015 heatwave pointed to the way the city is built:</p>\n<ul>\n<li><strong>High-rise buildings closing natural wind corridors</strong>, according to urban planner Farhan Anwar;</li>\n<li><strong>concrete surfaces</strong> that absorb heat by day and release it at night, so the city cannot “breathe”;</li>\n<li><strong>too few trees</strong> to cool the air.</li>\n</ul>\n<h2>What design can do</h2>\n<ul>\n<li><strong>Cool and green roofs:</strong> reflective coatings or planted roofs reduce heat entering top floors. Anwar proposed greening roofs and pointed to cities that now require roof gardens or solar panels.</li>\n<li><strong>Shading:</strong> deep window reveals, shades and verandas — features of traditional South Asian architecture.</li>\n<li><strong>Ventilation:</strong> orientation and openings that use the sea breeze, and layouts that keep air moving between buildings.</li>\n<li><strong>Insulation:</strong> keeps heat out, and keeps homes bearable during power cuts.</li>\n<li><strong>Trees and water:</strong> neem trees and revived natural drainage channels were among the measures suggested.</li>\n</ul>\n<h2>A shared responsibility</h2>\n<p>No single building fixes a city’s heat, but every building either adds to it or helps. Planners, architects, developers and material suppliers all have a part — and the same measures cut electricity bills, as the <a href=\"{{a:buildings-electricity-energy-conservation-building-code}}\">energy building code</a> aims to do.</p>\n<p>Insulation, reflective coatings, glazing and shading products are among the materials on show at Build Asia in Karachi.</p>",
+   "image": "cover-designing-for-heat-karachi-lessons.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "build-asia-2027-what-to-expect",
+   "category": "exhibition-news",
+   "featured": 1,
+   "title": "Build Asia 2027: 18–20 March at Karachi Expo Centre — what to expect",
+   "excerpt": "The 21st Build Asia brings building materials, construction machinery, property and stone together in Karachi. Dates, who exhibits, who visits, and how to take part.",
+   "tags": [
+    "Build Asia 2027",
+    "Karachi",
+    "Exhibition"
+   ],
+   "sources": [],
+   "body": "<p>The <strong>21st Build Asia International Exhibition and Conference</strong> takes place from <strong>18 to 20 March 2027</strong> at the <strong>Karachi Expo Centre</strong>, open daily from 10:00 to 18:00. It is Pakistan’s international building materials and construction machinery show, organised by Ecommerce Gateway Pakistan (Pvt) Ltd, a member of UFI, the Global Association of the Exhibition Industry.</p>\n<figure>{{img:buildasia-21-karachi-2027-banner.jpg|Build Asia 2027 — 18–20 March, Karachi Expo Centre}}<figcaption>The official banner of the 21st edition.</figcaption></figure>\n<h2>Why it matters</h2>\n<p>Build Asia is where Pakistan’s construction industry meets in one place: manufacturers, importers and distributors on one side; builders, developers, contractors, architects, engineers and government agencies on the other. It is also a gateway for international companies looking at Pakistan and the region, and for local firms seeking joint-venture partners and technology transfer.</p>\n<h2>What is on show</h2>\n<p>Exhibitors cover the whole building chain, including:</p>\n<ul>\n<li>cranes, earthmoving and hoisting machinery, drilling and mining equipment;</li>\n<li>pre-fabricated building components, pre-engineered steel buildings and prefab housing;</li>\n<li>steel, cement and concrete technology, construction chemicals;</li>\n<li>marble, granite, ceramics and tiles; wood and timber;</li>\n<li>paints and coatings, aluminium and PVC windows and doors, glazing and facades;</li>\n<li>pumps, pipes, cables, generators, solar and electrical systems;</li>\n<li>furniture, lighting, fire safety and security systems;</li>\n<li>builders, developers, banks, housing finance and real estate services.</li>\n</ul>\n<p>Co-located shows including Stonefair Asia and Furniture Asia run alongside. See the full <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>\n<h2>Who visits</h2>\n<p>The audience includes architects, engineers and town planners; builders, contractors and developers; interior designers; distributors and investors; government authorities and decision-makers; associations; consultants; real estate professionals; and foreign companies seeking joint ventures. See the <a href=\"https://buildasia.net/visitor-profile/\">visitor profile</a>.</p>\n<h2>How to take part</h2>\n<ul>\n<li><strong>Visiting:</strong> trade and corporate visitors can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register online</a>; anyone who has not registered can register at the on-site desks.</li>\n<li><strong>Exhibiting:</strong> stands are available as ready-built shell scheme or bare space. <a href=\"{{a:exhibiting-shell-scheme-or-bare-space}}\">Which is right for you?</a> To enquire, <a href=\"https://buildasia.net/contact/?enquiry=stand\">book a stand</a>.</li>\n</ul>\n<p>The last Karachi edition drew more than 32,000 trade visitors and 350 exhibitors from over 21 countries. <a href=\"{{a:build-asia-2026-in-numbers}}\">See the results.</a></p>",
+   "image": "cover-build-asia-2027-what-to-expect.jpg"
+  },
+  {
+   "slug": "build-asia-2026-in-numbers",
+   "category": "exhibition-news",
+   "title": "Build Asia 2026 in numbers: 32,000 visitors, 350 exhibitors, 21 countries",
+   "excerpt": "The figures from the post-show report of the January 2026 Karachi edition, and who opened and supported it.",
+   "tags": [
+    "Build Asia 2026",
+    "Results",
+    "Karachi"
+   ],
+   "sources": [],
+   "body": "<p>The most recent Karachi edition of Build Asia was held from <strong>22 to 24 January 2026</strong> at the Karachi Expo Centre. These are the figures from its post-show report.</p>\n<table>\n<thead><tr><th>Build Asia Karachi 2026</th><th></th></tr></thead>\n<tbody>\n<tr><td>Trade visitors</td><td>32,000+</td></tr>\n<tr><td>Exhibitors, international and local</td><td>350+</td></tr>\n<tr><td>Countries taking part</td><td>21+</td></tr>\n<tr><td>Indoor exhibition space</td><td>190,000+ sq ft (about 18,000 m²)</td></tr>\n<tr><td>Outdoor area for heavy machinery</td><td>50,000+ sq ft (about 5,000 m²)</td></tr>\n</tbody>\n</table>\n<h2>Opening and closing</h2>\n<p>The edition was inaugurated by senior figures from the Association of Builders and Developers, together with the Consuls General of Oman and Iran, the Deputy Trade Representative of the Russian Federation Trade Mission, and the Principal Secretary to the Governor of Sindh. The closing ceremony was attended by the Minister for Local Government, Sindh.</p>\n<h2>Supporters</h2>\n<p>The event was supported by the Ministry of Industries and Production, the Trade Development Authority of Pakistan and the Pakistan Engineering Council. Build Asia’s supporters also include PASDEC, the All Pakistan Marble Industries Association, the All Karachi Marble Industries Association and the Karachi Chamber of Commerce and Industry.</p>\n<h2>Alongside the exhibition</h2>\n<p>The PROPTECH Convention ran with the show, covering housing, finance, design and technology in real estate. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what it covered.</a></p>\n<h2>Next edition</h2>\n<p>The 21st edition takes place from 18 to 20 March 2027 at the Karachi Expo Centre. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a> Photos from past editions are in the <a href=\"https://buildasia.net/gallery/\">gallery</a>.</p>",
+   "image": "cover-build-asia-2026-in-numbers.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "planning-your-visit-build-asia-karachi",
+   "category": "exhibition-news",
+   "title": "Planning your visit to Build Asia: a guide for trade visitors",
+   "excerpt": "Registration, opening hours, getting the most from three days at the show, and help for visitors coming from abroad.",
+   "tags": [
+    "Visitors",
+    "Guide",
+    "Build Asia 2027"
+   ],
+   "sources": [],
+   "body": "<p>Three days at a large trade show go quickly. A little planning turns a walk around the halls into meetings that move your projects forward.</p>\n<h2>The essentials</h2>\n<ul>\n<li><strong>Dates:</strong> 18–20 March 2027</li>\n<li><strong>Hours:</strong> 10:00 to 18:00 each day</li>\n<li><strong>Venue:</strong> Karachi Expo Centre, Main University Road, Gulshan-e-Iqbal, Karachi</li>\n<li><strong>Who can attend:</strong> trade and corporate visitors</li>\n</ul>\n<h2>Register before you go</h2>\n<p><a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">Register online</a> for your visitor pass to save time at the entrance. If you have not registered, you can still register at the on-site desks.</p>\n<h2>Make a plan</h2>\n<ol>\n<li><strong>List what you need:</strong> products to source, problems to solve, suppliers to compare.</li>\n<li><strong>Check who is exhibiting</strong> and mark the stands to visit first.</li>\n<li><strong>Book meetings</strong> with key suppliers in advance — their senior people are busy during show days.</li>\n<li><strong>Bring drawings or specifications</strong> for current projects, so suppliers can give useful answers.</li>\n<li><strong>Leave time to explore:</strong> the best finds are often stands you did not plan to visit.</li>\n<li><strong>Visit the outdoor area</strong> to see heavy machinery in person.</li>\n</ol>\n<h2>Coming from abroad</h2>\n<p>Recommended hotels are in the city centre, about 20–30 minutes from the Karachi Expo Centre. The organisers offer foreign visitor facilitation; contact details and travel information are on the <a href=\"https://buildasia.net/karachi/travel/\">travel page</a>.</p>\n<h2>After the show</h2>\n<p>Follow up within a week while conversations are fresh: send your requirements, ask for quotations and samples, and arrange site or factory visits with the suppliers that impressed you.</p>\n<p>Questions? Contact the Build Asia Secretariat at info@buildasia.net or (92-21) 111-222-444. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a></p>",
+   "image": "cover-planning-your-visit-build-asia-karachi.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "exhibiting-shell-scheme-or-bare-space",
+   "category": "exhibition-news",
+   "title": "Exhibiting at Build Asia: shell scheme or bare space?",
+   "excerpt": "The two ways to take a stand, what each includes, and how to choose — plus tips for a stand that brings business.",
+   "tags": [
+    "Exhibitors",
+    "Guide",
+    "Build Asia 2027"
+   ],
+   "sources": [],
+   "body": "<p>Companies taking part in Build Asia choose between two kinds of stand. The right choice depends on what you are showing, your budget, and how you want to be seen.</p>\n<h2>Shell scheme: ready to use</h2>\n<p>A shell scheme stand is ready-built. The structure, fascia board with your company name, and basic furniture are supplied, so you arrive to a finished space and only need to bring products and graphics. Shell scheme starts at <strong>9 square metres</strong> and increases in 9 m² steps (9, 18, 27 …).</p>\n<p><strong>Best for:</strong> first-time exhibitors, smaller products, distributors, service companies, and anyone who wants a simple, predictable setup.</p>\n<h2>Bare space: your own design</h2>\n<p>Bare space is floor area only. You design and build your own stand, usually with a contractor. Bare space starts at <strong>18 square metres</strong> and increases in 9 m² steps (18, 27, 36 …).</p>\n<p><strong>Best for:</strong> established brands that want a distinctive presence, companies displaying large machinery, and anyone with a stand design they reuse across shows.</p>\n<p>Both options include a 200-word company profile in the official exhibition catalogue. Heavy machinery can also be shown in the outdoor area.</p>\n<h2>Tips for a stand that brings business</h2>\n<ol>\n<li><strong>Set a goal:</strong> leads, distributors, launches or brand awareness — and design for it.</li>\n<li><strong>Show, don’t just tell:</strong> working products, samples people can touch, and short demonstrations draw crowds.</li>\n<li><strong>Keep the message short:</strong> visitors should know what you do from the aisle in three seconds.</li>\n<li><strong>Staff it with decision-makers</strong> who can answer technical and commercial questions.</li>\n<li><strong>Capture every lead</strong> with notes on what the visitor needs.</li>\n<li><strong>Invite your customers</strong> before the show and give them a reason to come.</li>\n<li><strong>Follow up within a week.</strong></li>\n</ol>\n<p>Check whether your products fit the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>, then <a href=\"https://buildasia.net/contact/?enquiry=stand\">book a stand</a> for 18–20 March 2027.</p>",
+   "image": "cover-exhibiting-shell-scheme-or-bare-space.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "proptech-convention-2026-conference-themes",
+   "category": "exhibition-news",
+   "title": "PROPTECH Convention 2026: what the conference covered",
+   "excerpt": "Affordable housing, REITs and tokenisation, digital payments, branded residences and women leaders — the themes from Build Asia’s 2026 conference.",
+   "tags": [
+    "Conference",
+    "Proptech",
+    "Real estate"
+   ],
+   "sources": [],
+   "body": "<p>Alongside the exhibition, Build Asia runs a conference programme. At the January 2026 edition in Karachi, the <strong>PROPTECH Convention</strong> brought together developers, REIT managers, bankers — including speakers from the State Bank of Pakistan — architects and international real estate firms.</p>\n<h2>The themes</h2>\n<ul>\n<li><strong>Affordable housing</strong> — how to deliver homes most families can actually buy. <a href=\"{{a:pakistan-housing-gap-numbers}}\">The numbers behind the housing gap.</a></li>\n<li><strong>Responsible coastal development</strong> — building near the sea without damaging it.</li>\n<li><strong>Branded residences</strong> — the future of developments carrying hotel and lifestyle brands.</li>\n<li><strong>What buyers want versus what the market offers</strong> — closing the gap between product and demand.</li>\n<li><strong>REITs and tokenisation</strong> — new ways to fund and invest in property. <a href=\"{{a:reits-pakistan-real-estate-investment}}\">Where Pakistan’s REIT market stands.</a></li>\n<li><strong>Digital payments</strong> integrated with property technology platforms.</li>\n<li><strong>Design and structure</strong>.</li>\n<li><strong>Industrial growth in Karachi</strong>.</li>\n<li><strong>Women leaders across industries</strong>.</li>\n<li><strong>Non-banking financial businesses</strong> in real estate.</li>\n<li><strong>Social media</strong> and its role in scaling real estate businesses.</li>\n</ul>\n<h2>Why proptech matters</h2>\n<p>Technology is changing how property is financed, marketed, sold and managed — from online listings and digital payments to fractional investment. For an industry where most transactions have been slow and paper-based, these changes can improve transparency and widen access to investment.</p>\n<h2>2027</h2>\n<p>The conference programme for Build Asia 2027 (18–20 March, Karachi Expo Centre) is expected to be announced shortly. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a></p>",
+   "image": "cover-proptech-convention-2026-conference-themes.jpg",
+   "featured": 0
+  }
+ ]
+}

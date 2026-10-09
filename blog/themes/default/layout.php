@@ -15,14 +15,14 @@ $upcoming = Event::isUpcoming();
 $dates = Event::dates();
 $chat = Settings::get('chat_enabled', false) && trim((string)Settings::get('chat_agent', '')) !== '';
 ?><!doctype html>
-<html lang="<?= e(Lang::locale()) ?>" dir="<?= e(Lang::dir()) ?>">
+<html lang="<?= e(Lang::locale()) ?>" dir="<?= e(Lang::dir()) ?>" data-motion="<?= e(Theme::motion($theme)) ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?= Seo::head($seo) ?>
 <?= Theme::preloadFonts($theme) ?>
 <style><?= Theme::css($theme) ?></style>
-<?php if (!array_key_exists('motion', $theme) || !empty($theme['motion'])): ?>
+<?php if (Theme::motion($theme) !== 'off'): ?>
 <script>/* Scroll animations only where they can run properly — never for visitors who prefer reduced motion. Safety net: show everything if the page script has not started within 2.5 s. */
 (function(){var r=document.documentElement;if((window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)||!('IntersectionObserver' in window))return;r.classList.add('anim');setTimeout(function(){if(!window.__blogMotion)r.classList.remove('anim');},2500);})();</script>
 <?php endif; ?>

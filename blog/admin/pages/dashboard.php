@@ -19,6 +19,7 @@ $setup = [];
 if (Auth::can('settings')) {
     $lastCron = (string)Settings::get('last_cron', '');
     $setup = [
+        ['Articles published (or load the starter content)', (int)db()->value("SELECT COUNT(*) FROM {p}articles WHERE status = 'published'") > 0, aurl('starter')],
         ['Logo uploaded', (int)Settings::get('logo_light', 0) > 0, aurl('branding')],
         ['Event dates and venue', Event::dates() !== '' && Event::get('event_venue') !== '', aurl('event')],
         ['Main event website address', Event::get('main_site_url') !== '', aurl('event')],

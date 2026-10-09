@@ -141,10 +141,23 @@ final class Theme
         return $css;
     }
 
+    /** full | gentle | off — accepts the older on/off value too. */
+    public static function motion(array $t): string
+    {
+        $m = $t['motion'] ?? 'full';
+        if ($m === true) {
+            return 'full';
+        }
+        if ($m === false) {
+            return 'off';
+        }
+        return in_array($m, ['full', 'gentle', 'off'], true) ? $m : 'full';
+    }
+
     public static function bodyClasses(array $t): string
     {
         $h = in_array($t['header_style'], ['light', 'dark', 'transparent'], true) ? $t['header_style'] : 'light';
         $c = in_array($t['card_style'], ['rule', 'bordered', 'shadow'], true) ? $t['card_style'] : 'rule';
-        return 'hdr-' . $h . ' cards-' . $c . (!empty($t['band']) ? ' has-band' : '') . (!array_key_exists('motion', $t) || !empty($t['motion']) ? ' motion-on' : '');
+        return 'hdr-' . $h . ' cards-' . $c . (!empty($t['band']) ? ' has-band' : '') . (self::motion($t) !== 'off' ? ' motion-on' : '');
     }
 }

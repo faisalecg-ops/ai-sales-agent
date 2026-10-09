@@ -207,6 +207,7 @@ function admin_menu(): array
         ],
         'Settings' => [
             ['settings', 'Readers & general', 'settings', 0],
+            ['starter', 'Starter content', 'settings', 0],
             ['seo', 'SEO & Google', 'settings', 0],
             ['chat', 'Sales agent chat', 'settings', 0],
             ['email', 'Email', 'settings', 0],

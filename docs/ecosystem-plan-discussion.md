@@ -289,6 +289,19 @@ amber-navy stripe, a counter strip with figures that count up (edited in Home
 page builder), rise-and-fade scroll motion, a header that tightens on scroll.
 Notes for the website chat: `docs/notes-for-buildasia-website.md`.
 
+**Version 1.2 (9 October 2026):** five complete looks (Build Asia, Corporate,
+Editorial, Medical / Pharma, Modern minimal) and three motion levels (Full,
+Gentle, Off) in Branding. **Starter content** (Settings → Starter content):
+the Build Asia pack in `blog/content-packs/buildasia/` — six categories, 21
+researched articles (3–5 per category), each citing its sources (APCMA via
+Profit, Economic Survey 2025-26, PACRA machinery and furniture studies,
+PMRC/UN-Habitat housing figures, SECP REIT approval, PASDEC, ITA paints,
+NED-CAHSBE, Energy Ministry on ECBC, Power Division on solar, Karachi
+heatwave reporting) or the sales agent's approved Build Asia knowledge;
+branded cover images; the official logo and 2027 banner from the website
+zip; link library; counters; menus; slider. Imports only fill what is
+empty; safe to run twice.
+
 ## 6b. Still open
 
 - (Social agent, later) Same logins as the sales agent or separate? AI image

@@ -152,7 +152,7 @@ final class Settings
             'card_style'  => 'rule',      // rule | bordered | shadow
             'slider_shade'=> 45,          // % darkening over slider images
             'band'        => true,        // the slanted stripe under the header and above the footer
-            'motion'      => true,        // scroll animations (always off for "reduce motion" visitors)
+            'motion'      => 'full',      // full | gentle | off (always off for "reduce motion" visitors)
         ];
     }
 
@@ -164,8 +164,51 @@ final class Settings
             'navy'      => ['label' => 'Corporate navy', 'primary' => '#0B3D91', 'secondary' => '#0A1F44', 'accent' => '#0B3D91', 'highlight' => '#F2A900', 'highlight_ink' => '#1A1300', 'background' => '#FFFFFF', 'surface' => '#F3F5F9', 'text' => '#111827', 'muted' => '#4B5563'],
             'forest'    => ['label' => 'Industry green', 'primary' => '#0F7B45', 'secondary' => '#123524', 'accent' => '#0F7B45', 'highlight' => '#E0A100', 'highlight_ink' => '#1A1300', 'background' => '#FFFFFF', 'surface' => '#F2F6F3', 'text' => '#121A15', 'muted' => '#4D5A52'],
             'teal'      => ['label' => 'Health teal',    'primary' => '#00808A', 'secondary' => '#0E3B43', 'accent' => '#00808A', 'highlight' => '#F28C28', 'highlight_ink' => '#1F1000', 'background' => '#FFFFFF', 'surface' => '#F0F6F7', 'text' => '#0F1F22', 'muted' => '#4A5A5D'],
+            'minimal'   => ['label' => 'Black & white',  'primary' => '#111111', 'secondary' => '#111111', 'accent' => '#1D4ED8', 'highlight' => '#111111', 'highlight_ink' => '#FFFFFF', 'background' => '#FFFFFF', 'surface' => '#F4F4F4', 'text' => '#111111', 'muted' => '#555555'],
             'graphite'  => ['label' => 'Graphite',       'primary' => '#D14900', 'secondary' => '#1C1C1E', 'accent' => '#2563EB', 'highlight' => '#D14900', 'highlight_ink' => '#FFFFFF', 'background' => '#FFFFFF', 'surface' => '#F4F4F5', 'text' => '#18181B', 'muted' => '#52525B'],
         ];
+    }
+
+    /**
+     * Complete looks: colours, fonts and style together, applied in one click
+     * in Branding (each can be adjusted afterwards).
+     */
+    public static function looks(): array
+    {
+        return [
+            'buildasia' => ['label' => 'Build Asia', 'note' => 'Navy and amber, Archivo, slanted stripe, full motion — like buildasia.net',
+                'colours' => 'buildasia', 'heading_font' => 'archivo', 'body_font' => 'archivo', 'header_style' => 'light',
+                'button_shape' => 'rounded', 'radius' => 8, 'card_style' => 'rule', 'slider_shade' => 45, 'band' => true, 'motion' => 'full'],
+            'corporate' => ['label' => 'Corporate', 'note' => 'Navy and gold, clean modern font, boxed cards, dark header',
+                'colours' => 'navy', 'heading_font' => 'inter', 'body_font' => 'inter', 'header_style' => 'dark',
+                'button_shape' => 'rounded', 'radius' => 6, 'card_style' => 'bordered', 'slider_shade' => 50, 'band' => false, 'motion' => 'gentle'],
+            'editorial' => ['label' => 'Editorial', 'note' => 'Red and black, newspaper serif, fine lines — like The Economist',
+                'colours' => 'editorial', 'heading_font' => 'source-serif-4', 'body_font' => 'inter', 'header_style' => 'light',
+                'button_shape' => 'square', 'radius' => 2, 'card_style' => 'rule', 'slider_shade' => 45, 'band' => false, 'motion' => 'gentle'],
+            'medical'   => ['label' => 'Medical / Pharma', 'note' => 'Teal and orange, friendly font, soft shadows — for Pharma Asia or Health Asia',
+                'colours' => 'teal', 'heading_font' => 'source-sans-3', 'body_font' => 'source-sans-3', 'header_style' => 'light',
+                'button_shape' => 'pill', 'radius' => 12, 'card_style' => 'shadow', 'slider_shade' => 40, 'band' => false, 'motion' => 'gentle'],
+            'minimal'   => ['label' => 'Modern minimal', 'note' => 'Black and white, clean font, square corners, no stripe',
+                'colours' => 'minimal', 'heading_font' => 'inter', 'body_font' => 'inter', 'header_style' => 'light',
+                'button_shape' => 'square', 'radius' => 0, 'card_style' => 'rule', 'slider_shade' => 50, 'band' => false, 'motion' => 'gentle'],
+        ];
+    }
+
+    /** A complete look as theme values. */
+    public static function lookTheme(string $key): ?array
+    {
+        $l = self::looks()[$key] ?? null;
+        if (!$l) {
+            return null;
+        }
+        $c = self::presets()[$l['colours']];
+        unset($c['label']);
+        $t = array_merge(self::defaultTheme(), $c);
+        foreach (['heading_font', 'body_font', 'header_style', 'button_shape', 'radius', 'card_style', 'slider_shade', 'band', 'motion'] as $k) {
+            $t[$k] = $l[$k];
+        }
+        $t['preset'] = $l['colours'];
+        return $t;
     }
 
     public static function fonts(): array
@@ -230,6 +273,16 @@ final class Settings
     public static function theme(): array
     {
         $theme = self::get('theme');
-        return array_merge(self::defaultTheme(), is_array($theme) ? $theme : []);
+        $t = array_merge(self::defaultTheme(), is_array($theme) ? $theme : []);
+        // Older saves stored motion as on/off.
+        if ($t['motion'] === true) {
+            $t['motion'] = 'full';
+        } elseif ($t['motion'] === false) {
+            $t['motion'] = 'off';
+        }
+        if (!in_array($t['motion'], ['full', 'gentle', 'off'], true)) {
+            $t['motion'] = 'full';
+        }
+        return $t;
     }
 }

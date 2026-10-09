@@ -72,7 +72,16 @@ $t['heading_font'] = 'source-serif-4';
 T::has(Theme::css($t), 'source-serif-4-latin-700-normal.woff2', 'Other fonts from the list still work');
 T::ok(Theme::warnings(array_merge(Settings::defaultTheme(), ['highlight_ink' => '#FFFFFF'])) !== [], 'White text on amber buttons is flagged as hard to read');
 T::has(Theme::bodyClasses(Settings::defaultTheme()), 'has-band', 'The slanted stripe is on by default');
-T::lacks(Theme::bodyClasses(array_merge(Settings::defaultTheme(), ['band' => false, 'motion' => false])), 'motion-on', 'Stripe and motion can be switched off');
+T::lacks(Theme::bodyClasses(array_merge(Settings::defaultTheme(), ['band' => false, 'motion' => 'off'])), 'motion-on', 'Stripe and motion can be switched off');
+T::eq(count(Settings::looks()), 5, 'Five complete looks are offered');
+$allReadable = true;
+foreach (array_keys(Settings::looks()) as $lk) {
+    $allReadable = $allReadable && Theme::warnings(Settings::lookTheme($lk)) === [];
+}
+T::ok($allReadable, 'Every complete look passes the readability check');
+T::eq(Settings::lookTheme('medical')['heading_font'], 'source-sans-3', 'A look sets fonts as well as colours');
+T::eq(Settings::lookTheme('corporate')['motion'], 'gentle', 'A look sets the motion level');
+T::eq([Theme::motion(['motion' => true]), Theme::motion(['motion' => false]), Theme::motion(['motion' => 'gentle'])], ['full', 'off', 'gentle'], 'Older on/off motion settings still work');
 Settings::setMany(['event_start' => '2027-01-14', 'event_end' => '2027-01-16', 'event_venue' => 'Expo Centre', 'event_city' => 'Karachi']);
 T::eq(Event::dates(), '14–16 January 2027', 'Show dates read naturally');
 Settings::set('event_end', '2027-02-02');
@@ -337,6 +346,7 @@ T::has($home['body'], 'Visit Build Asia', 'The header links to the main website'
 T::lacks($home['body'], 'class="stats', 'The counter strip stays hidden until figures are entered');
 T::has($home['body'], 'prefers-reduced-motion: reduce', 'Animations are never started for visitors who prefer less motion');
 T::has($home['body'], 'class="band band--masthead"', 'The signature stripe sits under the header');
+T::has($home['body'], 'data-motion="full"', 'The page carries the chosen motion level');
 Settings::setMany(['stats_caption' => '{event} in numbers', 'stats' => [['value' => 32000, 'suffix' => '+', 'label' => 'Trade visitors'], ['value' => 190000, 'suffix' => '+ sq ft', 'label' => 'Exhibition space'], ['value' => 0, 'suffix' => '', 'label' => 'Empty row']]]);
 Cache::clear();
 $withStats = http('GET', '/')['body'];
@@ -497,6 +507,40 @@ for ($i = 0, $limited = false; $i < 65 && !$limited; $i++) {
     $limited = http('GET', '/api/v1/ping', $auth($drafts))['status'] === 429;
 }
 T::ok($limited, 'A key is limited to 60 requests a minute');
+
+// =====================================================================
+T::section('Starter content (Build Asia pack)');
+reset_blog();
+$admin = make_user('admin');
+Auth::actAs($admin);
+Settings::set('event_venue', 'Typed by the team');
+$packs = ContentPack::available();
+T::ok(isset($packs['buildasia']), 'The Build Asia starter pack is included');
+$pk = $packs['buildasia'];
+$perCat = array_count_values(array_column($pk['articles'], 'category'));
+T::ok(count($pk['categories']) >= 5 && min($perCat) >= 3 && max($perCat) <= 5, 'It has real categories with 3–5 articles each');
+$res = ContentPack::import('buildasia', ['publish' => true, 'settings' => true]);
+T::ok($res['ok'], 'It imports');
+T::eq((int)db()->value("SELECT COUNT(*) FROM {p}articles WHERE status = 'published'"), count($pk['articles']), 'All its articles are published');
+$flagged = 0;
+$leftover = 0;
+$noSources = 0;
+foreach (db()->all('SELECT body, sources, image_id FROM {p}articles') as $row) {
+    $flagged += LinkPolicy::review($row['body'], json_decode((string)$row['sources'], true) ?: [])['flagged'];
+    $leftover += preg_match('/\{\{/', $row['body']);
+    $noSources += $row['image_id'] ? 0 : 1;
+}
+T::eq($flagged, 0, 'Every link in the articles follows the link rules');
+T::eq($leftover, 0, 'All internal article links are resolved');
+T::eq($noSources, 0, 'Every article has a cover image');
+T::ok(str_contains((string)db()->value("SELECT body FROM {p}articles WHERE slug = 'cement-sales-fy26-what-the-numbers-say'"), '<h2>Sources</h2>'), 'Researched articles list their sources');
+T::eq(Settings::get('event_venue'), 'Typed by the team', 'Settings the team already typed are kept');
+T::eq(Settings::get('event_start'), '2027-03-18', 'Empty event details are filled in');
+T::ok((int)Settings::get('logo_light', 0) > 0 && count((array)Settings::get('main_menu', [])) === 6, 'The logo and header menu are filled in');
+$again = ContentPack::import('buildasia', ['publish' => true, 'settings' => true]);
+T::eq((int)db()->value('SELECT COUNT(*) FROM {p}articles'), count($pk['articles']), 'Importing twice does not duplicate anything');
+Cache::clear();
+T::eq(http('GET', '/market-insights/cement-sales-fy26-what-the-numbers-say')['status'], 200, 'A starter article opens on the blog');
 
 // =====================================================================
 T::section('Scheduled tasks');

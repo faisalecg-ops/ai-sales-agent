@@ -340,6 +340,21 @@
       });
     });
     $$('select,input[type=range],input[type=checkbox]', bf).forEach(function (s) { s.addEventListener('input', applyAll); s.addEventListener('change', applyAll); });
+    $$('[data-look]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = JSON.parse(b.getAttribute('data-look'));
+        Object.keys(map).forEach(function (k) { if (t[k]) { $('[data-hex="' + k + '"]').value = t[k]; $('[data-colour="' + k + '"]').value = t[k]; } });
+        $('[data-presetname]').value = t.preset;
+        var set = function (sel, v) { var el = $(sel); if (el) el.value = v; };
+        set('[data-font="head"]', t.heading_font); set('[data-font="body"]', t.body_font);
+        set('[data-bodyclass="hdr"]', t.header_style); set('[data-bodyclass="cards"]', t.card_style);
+        set('[data-var="btn"]', t.button_shape); set('[data-var="radius"]', t.radius); set('[data-var="shade"]', t.slider_shade);
+        set('[data-motion]', t.motion);
+        var band = $('input[type=checkbox][name="band"]'); if (band) band.checked = !!t.band;
+        $$('[data-look]').forEach(function (x) { x.classList.toggle('is-active', x === b); });
+        applyAll();
+      });
+    });
     var fit = function () {
       var box = $('.preview-frame'), w = parseInt(frame.getAttribute('data-w') || '1280', 10);
       frame.style.width = w + 'px';

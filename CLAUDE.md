@@ -8,11 +8,11 @@ Read this before any task on this project.
   research, prospecting, analytics, reorganised admin). 1,179 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
 - **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
-  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.1, Build Asia website look) — a standalone PHP 8.1+ /
+  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.2: Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`) — a standalone PHP 8.1+ /
   MySQLi script installed per event website at `/blog` on cPanel **shared**
   hosting, table prefix `blog_`. Every reader option (comments, newsletter,
   sponsor reports, branding, language) is a setting in the blog admin.
-  226 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
+  245 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
   `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
   `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
   a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — the

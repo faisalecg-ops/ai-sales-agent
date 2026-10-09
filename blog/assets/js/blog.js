@@ -17,6 +17,15 @@
     });
   }
 
+  // Folded search: the icon opens the box first
+  var sf = document.querySelector('.masthead .search');
+  if (sf) {
+    sf.addEventListener('submit', function (e) {
+      var q = sf.querySelector('input');
+      if (q && q.value.trim() === '') { e.preventDefault(); q.focus(); }
+    });
+  }
+
   // Hero slider
   var slider = document.querySelector('[data-slider]');
   if (slider) {
@@ -164,6 +173,7 @@
     });
 
     var fine = window.matchMedia('(min-width: 900px) and (pointer: fine)');
+    if (doc.getAttribute('data-motion') === 'gentle') fine = { matches: false };
     var layers = Array.prototype.slice.call(document.querySelectorAll('.event-panel, .stats'));
     var ticking = false;
     var drift = function () {

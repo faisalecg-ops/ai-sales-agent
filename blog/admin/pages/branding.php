@@ -45,7 +45,7 @@ if (is_post()) {
     $new['slider_shade'] = max(0, min(85, (int)in('slider_shade')));
     $new['preset'] = (string)in('preset', 'custom');
     $new['band'] = (bool)in('band');
-    $new['motion'] = (bool)in('motion');
+    $new['motion'] = in_array(in('motion'), ['full', 'gentle', 'off'], true) ? (string)in('motion') : 'full';
     if ($new !== $t) {
         Settings::set('theme_previous', $t);
         Settings::set('theme', $new);
@@ -90,6 +90,19 @@ ob_start(); ?>
     </section>
 
     <section class="card">
+      <h2>Complete looks</h2>
+      <p class="help">One click sets colours, fonts and style together. Adjust anything afterwards, then save.</p>
+      <div class="looks">
+        <?php foreach (Settings::looks() as $k => $l): $lt = Settings::lookTheme($k); ?>
+          <button type="button" class="look" data-look='<?= e(json_encode($lt)) ?>'>
+            <span class="look__swatch"><span style="background:<?= e($lt['secondary']) ?>"></span><span style="background:<?= e($lt['primary']) ?>"></span><span style="background:<?= e($lt['highlight']) ?>"></span></span>
+            <strong><?= e($l['label']) ?></strong><span class="look__note"><?= e($l['note']) ?></span>
+          </button>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Colours</h2>
       <div class="presets"><span class="small">Start from:</span>
         <?php foreach (Settings::presets() as $k => $p): ?>
@@ -119,7 +132,7 @@ ob_start(); ?>
         <?= f_text('slider_shade', 'Darkening over slider pictures (%)', (string)$t['slider_shade'], 'More darkening makes the white text easier to read.', ['type' => 'range', 'min' => 0, 'max' => 85, 'data-var' => 'shade']) ?>
       </div>
       <?= f_check('band', 'Show the slanted stripe under the header and above the footer', !empty($t['band'])) ?>
-      <?= f_check('motion', 'Scroll animations (sections rise in, figures count up, the stripe draws across)', !array_key_exists('motion', $t) || !empty($t['motion']), 'Always off for visitors whose device asks for less motion.') ?>
+      <?= f_select('motion', 'Motion', ['full' => 'Full — sections rise in, figures count up, the stripe draws across, panels drift (like the website)', 'gentle' => 'Gentle — a soft fade only', 'off' => 'Off — no animation'], Theme::motion($t), 'Always off for visitors whose device asks for less motion.', ['data-motion' => true]) ?>
       <p class="help">Fonts are stored on your own website, so pages load fast with no outside font service.</p>
     </section>
     <div class="savebar">
