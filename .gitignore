@@ -6,3 +6,11 @@ storage/logs/*
 storage/uploads/*
 !storage/uploads/.gitkeep
 .DS_Store
+# Event Blog runtime files
+blog/config/config.php
+blog/storage/*
+!blog/storage/.htaccess
+!blog/storage/.keep
+blog/uploads/*
+!blog/uploads/.htaccess
+!blog/uploads/index.html

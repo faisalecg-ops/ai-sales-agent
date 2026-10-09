@@ -1,0 +1,101 @@
+<?php
+/**
+ * English wording for the public blog.
+ *
+ * To add a language later, copy this file (for example to ur.php), translate
+ * the right-hand side, and set _meta: name, locale and dir ('rtl' for Urdu).
+ * Then choose the language in Admin → Settings. Missing lines fall back to
+ * English, so a partial translation never breaks the site.
+ */
+return [
+    '_meta' => ['name' => 'English', 'locale' => 'en', 'dir' => 'ltr'],
+
+    'skip_to_content'   => 'Skip to content',
+    'menu'              => 'Menu',
+    'close'             => 'Close',
+    'search'            => 'Search',
+    'search_placeholder'=> 'Search articles',
+    'search_results'    => 'Search results for “{q}”',
+    'search_none'       => 'No articles match “{q}”. Try other words.',
+    'search_short'      => 'Type at least two letters to search.',
+    'home'              => 'Home',
+    'blog'              => 'Blog',
+    'latest'            => 'Latest',
+    'featured'          => 'Featured',
+    'most_read'         => 'Most read',
+    'topics'            => 'Topics',
+    'tags'              => 'Tags',
+    'read_more'         => 'Read more',
+    'view_all'          => 'View all',
+    'min_read'          => '{n} min read',
+    'by'                => 'By {name}',
+    'published_on'      => 'Published {date}',
+    'updated_on'        => 'Updated {date}',
+    'related'           => 'Related articles',
+    'share'             => 'Share',
+    'share_on'          => 'Share on {site}',
+    'copy_link'         => 'Copy link',
+    'link_copied'       => 'Link copied',
+    'contents'          => 'In this article',
+    'page_n'            => 'Page {n}',
+    'newer'             => 'Newer',
+    'older'             => 'Older',
+    'no_articles'       => 'No articles here yet.',
+    'articles_in'       => 'Articles in {name}',
+    'articles_tagged'   => 'Articles tagged “{name}”',
+    'articles_by'       => 'Articles by {name}',
+    'not_found_title'   => 'Page not found',
+    'not_found_text'    => 'The page you were looking for has moved or no longer exists.',
+    'back_home'         => 'Back to the blog home page',
+    'sponsored'         => 'Sponsored',
+    'sponsor_label'     => 'Sponsor',
+    'preview_banner'    => 'Preview — this article is not published. Only signed-in editors can see this page.',
+
+    // Event
+    'countdown_title'   => 'Countdown to the show',
+    'days'              => 'Days',
+    'hours'             => 'Hours',
+    'minutes'           => 'Minutes',
+    'seconds'           => 'Seconds',
+    'register_visit'    => 'Register to visit',
+    'book_stand'        => 'Book a stand',
+    'visit_website'     => 'Visit website',
+    'show_on_now'       => 'The show is on now',
+    'show_dates'        => 'Dates',
+    'show_venue'        => 'Venue',
+
+    // Comments
+    'comments'          => 'Comments',
+    'comments_none'     => 'No comments yet.',
+    'comment_leave'     => 'Leave a comment',
+    'comment_note'      => 'Comments appear after approval. Your email is never shown.',
+    'your_name'         => 'Your name',
+    'your_email'        => 'Your email',
+    'your_comment'      => 'Your comment',
+    'send_comment'      => 'Send comment',
+    'comment_thanks'    => 'Thank you. Your comment will appear once it has been approved.',
+    'comment_missing'   => 'Please fill in your name, a valid email and your comment.',
+    'too_many'          => 'Too many attempts. Please try again later.',
+
+    // Newsletter
+    'nl_email'          => 'Your email address',
+    'nl_name'           => 'Your name (optional)',
+    'nl_button'         => 'Subscribe',
+    'nl_thanks'         => 'Thank you. Please check your inbox and confirm your subscription.',
+    'nl_bad_email'      => 'Please enter a valid email address.',
+    'nl_need_consent'   => 'Please tick the consent box to subscribe.',
+    'nl_confirmed'      => 'Your subscription is confirmed. Thank you!',
+    'nl_unsubscribed'   => 'You have been unsubscribed and will not receive further emails.',
+    'nl_bad_link'       => 'This link is not valid or has expired.',
+    'nl_mail_subject'   => 'Please confirm your subscription — {event}',
+    'nl_mail_intro'     => "Thank you for subscribing to updates from {event}.\nPlease confirm your email address:",
+    'nl_mail_button'    => 'Confirm my subscription',
+    'nl_mail_ignore'    => 'If you did not ask for this, ignore this email and you will not be subscribed.',
+    'nl_mail_body'      => "Thank you for subscribing to updates from {event}.\n\nPlease confirm your email address by opening this link:\n{link}\n\nIf you did not ask for this, ignore this email and you will not be subscribed.",
+
+    // Footer
+    'footer_rights'     => '© {year} {name}. All rights reserved.',
+    'footer_follow'     => 'Follow',
+    'footer_contact'    => 'Contact',
+    'rss'               => 'RSS feed',
+];
