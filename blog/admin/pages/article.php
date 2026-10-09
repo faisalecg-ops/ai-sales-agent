@@ -148,8 +148,8 @@ ob_start(); ?>
 <?php if ($a && $a['source'] === 'api'): ?>
   <div class="flash flash--info">Written by the <strong>Social Media Agent</strong>. Check the facts, the tone and every link below before approving.<?php if ($sources): ?> The agent says it used these sources: <?php foreach ($sources as $s): ?><a href="<?= e($s) ?>" target="_blank" rel="noopener"><?= e(parse_url((string)$s, PHP_URL_HOST) ?: $s) ?></a> <?php endforeach; ?><?php endif; ?></div>
 <?php endif; ?>
-<?php if ($a && trim((string)$a['review_note']) !== '' && $a['status'] === 'draft'): ?>
-  <div class="flash flash--warn"><strong>Note from the approver:</strong> <?= nl2br(e($a['review_note'])) ?></div>
+<?php if ($a && trim((string)$a['review_note']) !== '' && in_array($a['status'], ['draft', 'pending'], true)): ?>
+  <div class="flash flash--warn"><strong><?= $a['status'] === 'draft' ? 'Note from the approver:' : 'Note:' ?></strong> <?= nl2br(e($a['review_note'])) ?></div>
 <?php endif; ?>
 
 <form method="post" class="editor-page" id="articleForm" data-article="<?= (int)$v['id'] ?>" data-ajax="<?= e(aurl('article', ['id' => $v['id'], 'ajax' => 1])) ?>">

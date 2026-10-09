@@ -667,6 +667,25 @@ final class Migrations
                         ADD COLUMN retry_after DATETIME NULL",
                 ],
             ],
+
+            [
+                'key'   => '2026_10_event_facts',
+                'label' => 'Show dates, venue and booking pages for the event blogs',
+                'check' => static fn(): bool => self::columnExists('agents', 'event_starts_on'),
+                'sql'   => [
+                    // Read by each event's blog (countdown, buttons, Google's
+                    // event listing) through api/event.php. The assistant's own
+                    // answers still come from approved knowledge only.
+                    "ALTER TABLE agents
+                        ADD COLUMN event_starts_on DATE NULL,
+                        ADD COLUMN event_tagline VARCHAR(300) NULL,
+                        ADD COLUMN event_venue VARCHAR(200) NULL,
+                        ADD COLUMN event_city VARCHAR(120) NULL,
+                        ADD COLUMN event_country VARCHAR(96) NULL,
+                        ADD COLUMN register_url VARCHAR(255) NULL,
+                        ADD COLUMN book_stand_url VARCHAR(255) NULL",
+                ],
+            ],
         ];
     }
 

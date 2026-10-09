@@ -221,6 +221,7 @@ final class Article
         }
         if ($to === 'published') {
             $row['publish_at'] = null;
+            $row['review_note'] = null;
             if (!$a['published_at']) {
                 $row['published_at'] = now_utc();
             }

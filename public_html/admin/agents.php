@@ -177,6 +177,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             ? $endsOn : null;
     }
 
+    // Show dates and venue for the event blog; saved once that upgrade has run.
+    if (Migrations::columnExists('agents', 'event_starts_on')) {
+        $startsOn = trim((string)($_POST['event_starts_on'] ?? ''));
+        $values['event_starts_on'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $startsOn) && strtotime($startsOn) !== false ? $startsOn : null;
+        $values['event_tagline']  = Validator::text($_POST['event_tagline'] ?? null, 300);
+        $values['event_venue']    = Validator::text($_POST['event_venue'] ?? null, 200);
+        $values['event_city']     = Validator::text($_POST['event_city'] ?? null, 120);
+        $values['event_country']  = Validator::text($_POST['event_country'] ?? null, 96);
+        $values['register_url']   = Validator::url($_POST['register_url'] ?? null);
+        $values['book_stand_url'] = Validator::url($_POST['book_stand_url'] ?? null);
+        if (($values['event_ends_on'] ?? null) !== null && $values['event_starts_on'] !== null
+            && $values['event_ends_on'] < $values['event_starts_on']) {
+            $errors[] = 'The last day of the exhibition is before the first.';
+        }
+    }
+
     // An agent with no model cannot answer anything, so fall back to the
     // provider's usual one rather than saving something unusable.
     if (($values['llm_model'] ?? '') === '' || $values['llm_model'] === null) {
@@ -342,6 +358,24 @@ if ($editId > 0 || $isNew) {
        . f_select('status', 'Status', ['active' => 'Active', 'disabled' => 'Disabled'], $v('status', 'active'),
             ['hint' => 'Disabling stops the assistant answering anywhere immediately.'])
        . admin_card_close()
+       . admin_card_open('set-show', 'Show dates and venue', 'Used by this exhibition\'s blog for its countdown, buttons and Google listing.')
+       . '<p class="hint" style="margin:0 0 12px">The event blog reads these once a day. They do not change what the assistant says: '
+       . 'its answers still come from approved knowledge only.</p><div class="field-row">'
+       . f_text('event_starts_on', 'First day of the exhibition', $v('event_starts_on'), ['type' => 'date'])
+       . f_text('event_ends_on', 'Last day of the exhibition', $v('event_ends_on'), ['type' => 'date',
+            'hint' => 'No WhatsApp follow-ups are sent after this day.'])
+       . '</div>'
+       . f_text('event_tagline', 'One-line description', $v('event_tagline'), ['max' => 300,
+            'hint' => 'For example: Pakistan\'s largest construction and building materials exhibition.'])
+       . '<div class="field-row">'
+       . f_text('event_venue', 'Venue', $v('event_venue'), ['max' => 200])
+       . f_text('event_city', 'City', $v('event_city'), ['max' => 120])
+       . f_text('event_country', 'Country', $v('event_country'), ['max' => 96])
+       . '</div><div class="field-row">'
+       . f_text('register_url', '"Register to visit" page', $v('register_url'), ['type' => 'url'])
+       . f_text('book_stand_url', '"Book a stand" page', $v('book_stand_url'), ['type' => 'url'])
+       . '</div>'
+       . admin_card_close()
        . admin_card_open('set-covers', 'What this exhibition covers', 'The sectors on show — this decides who is asked about exhibiting.')
        . f_area('exhibition_sectors', 'Sectors shown at this event', $v('exhibition_sectors'), ['rows' => 8,
             'hint' => 'One per line. This decides who gets asked about exhibiting. A cement '
@@ -434,9 +468,8 @@ if ($editId > 0 || $isNew) {
        . f_text('whatsapp_followup_days', 'Wait before following up (days)',
             $v('whatsapp_followup_days', '3'), ['type' => 'number',
             'hint' => 'Days of silence before each follow-up. Between 1 and 14.'])
-       . f_text('event_ends_on', 'Last day of the exhibition', $v('event_ends_on'), ['type' => 'date',
-            'hint' => 'No follow-ups are sent after this day. Replies to people who write to you still are.'])
        . '</div>'
+       . '<p class="hint">No follow-ups are sent after the last day of the exhibition (set under <a href="#set-show">Show dates and venue</a>). Replies to people who write to you still are.</p>'
        . admin_card_close()
        . (array_key_exists('mail_from_email', $a) || $editId === 0 && Migrations::columnExists('agents', 'mail_from_email')
           ? admin_card_open('set-email', 'Prospect emails', 'The name, address and mail server prospect emails are sent from, and how fast.')
@@ -584,7 +617,7 @@ admin_layout_end();
 function admin_settings_nav(array $a): string
 {
     $links = [
-        'set-event' => 'Exhibition', 'set-covers' => 'Sectors', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
+        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
         'set-disclosure' => 'AI notice', 'set-leads' => 'Leads', 'set-reps' => 'Sales reps', 'set-whatsapp' => 'WhatsApp',
     ];
     if (array_key_exists('mail_from_email', $a) || ($a === [] && Migrations::columnExists('agents', 'mail_from_email'))) {

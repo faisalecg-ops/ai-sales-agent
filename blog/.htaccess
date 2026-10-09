@@ -9,6 +9,10 @@ RewriteEngine On
 RewriteRule ^(core|config|storage|lang|themes|tests)(/|$) - [F,L]
 RewriteRule (^|/)\. - [F,L]
 
+# Some cPanel servers drop the Authorization header; pass it on for the API.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 # The API has its own entry point.
 RewriteRule ^api/(.*)$ api/index.php [L,QSA]
 
