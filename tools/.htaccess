@@ -1,0 +1,2 @@
+# Command-line tools. This folder must never be reachable over the web.
+Require all denied

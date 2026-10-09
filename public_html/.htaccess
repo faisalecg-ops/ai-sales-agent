@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------------
+# AI Sales Agent Platform — public folder
+#
+# This file protects the site if anything is ever placed here by mistake,
+# and sets the security headers. The application, configuration and storage
+# folders live OUTSIDE this directory and are not reachable over the web
+# at all, which is the main protection.
+# ---------------------------------------------------------------------
+
+Options -Indexes
+ServerSignature Off
+
+DirectoryIndex index.php index.html
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+    # Sent only over HTTPS, and only once a certificate is installed.
+    <If "%{HTTPS} == 'on'">
+        Header always set Strict-Transport-Security "max-age=31536000"
+    </If>
+</IfModule>
+
+# Never serve files that are not meant to be downloaded.
+<FilesMatch "\.(sql|md|log|ini|sh|bak|inc|json|lock|dist|sample)$">
+    Require all denied
+</FilesMatch>
+
+# Hidden files, including this one.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# The widget is loaded by other websites, so it must be fetchable by them.
+<FilesMatch "widget\.js$">
+    <IfModule mod_headers.c>
+        Header set Access-Control-Allow-Origin "*"
+        Header set Cache-Control "public, max-age=900"
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 15 minutes"
+</IfModule>

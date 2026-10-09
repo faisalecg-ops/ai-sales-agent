@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat widget diagnostic</title>
+<style>
+  :root { --ok:#137a3d; --bad:#a51f1f; --warn:#8a5a1a; --rule:#dfe2e6; --mute:#666e78; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    max-width: 820px; margin: 0 auto; padding: 24px 16px 120px;
+    color: #1a1d23; line-height: 1.5; background: #fff;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--mute); margin: 0 0 20px; font-size: 14px; }
+  .config {
+    background: #f5f7f9; border: 1px solid var(--rule); border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 20px; font-size: 14px;
+  }
+  .config label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .config input {
+    width: 100%; padding: 7px 9px; font-size: 14px; font-family: ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid #b9bec5; border-radius: 4px;
+  }
+  .config .row { margin-bottom: 10px; }
+  button {
+    background: #1f4e79; color: #fff; border: 0; border-radius: 5px;
+    padding: 9px 18px; font-size: 15px; cursor: pointer;
+  }
+  button:disabled { background: #97a3ae; cursor: default; }
+  .test {
+    border-bottom: 1px solid var(--rule); padding: 11px 0 11px 30px;
+    position: relative; font-size: 14.5px;
+  }
+  .test .mark { position: absolute; left: 0; top: 10px; font-size: 16px; font-weight: 700; }
+  .test .name { font-weight: 600; }
+  .test .detail { color: var(--mute); font-size: 13.5px; margin-top: 3px; white-space: pre-wrap; }
+  .pass .mark { color: var(--ok); }
+  .fail .mark { color: var(--bad); }
+  .warn .mark { color: var(--signal); }
+  .run  .mark { color: var(--mute); }
+  .verdict {
+    margin-top: 22px; padding: 14px 16px; border-radius: 6px; font-size: 15px;
+    border-left: 4px solid var(--mute); background: #f5f7f9; display: none;
+  }
+  .verdict.good { border-left-color: var(--ok); background: #eef7f1; }
+  .verdict.bad  { border-left-color: var(--bad); background: #fbefef; }
+  .verdict h2 { font-size: 16px; margin: 0 0 6px; }
+  .verdict p { margin: 0 0 8px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+         background: #eceff2; padding: 1px 5px; border-radius: 3px; }
+  .hint { font-size: 13px; color: var(--mute); margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Chat widget diagnostic</h1>
+<p class="sub">Put this file on the website where the chat should appear, open it, and press Run.
+Send the result to whoever is looking after the platform.</p>
+
+<div class="config">
+  <div class="row">
+    <label for="base">Sales agent address</label>
+    <input id="base" value="https://salesagent.ecgateway.net">
+  </div>
+  <div class="row">
+    <label for="slug">Short code (data-agent)</label>
+    <input id="slug" value="buildasia">
+  </div>
+  <button id="run">Run the checks</button>
+</div>
+
+<div id="results"></div>
+<div class="verdict" id="verdict"></div>
+
+<p class="hint">This page tests from wherever it is opened, so the result reflects what a real
+visitor to this website would experience.</p>
+
+<script>
+(function () {
+  'use strict';
+
+  var resultsEl = document.getElementById('results');
+  var verdictEl = document.getElementById('verdict');
+  var runBtn    = document.getElementById('run');
+
+  function addTest(name) {
+    var d = document.createElement('div');
+    d.className = 'test run';
+    d.innerHTML = '<span class="mark">&#8230;</span><span class="name"></span>' +
+                  '<div class="detail"></div>';
+    d.querySelector('.name').textContent = name;
+    resultsEl.appendChild(d);
+    return {
+      pass: function (msg) { set(d, 'pass', '✓', msg); },
+      fail: function (msg) { set(d, 'fail', '✕', msg); },
+      warn: function (msg) { set(d, 'warn', '!', msg); }
+    };
+  }
+  function set(node, cls, mark, msg) {
+    node.className = 'test ' + cls;
+    node.querySelector('.mark').textContent = mark;
+    node.querySelector('.detail').textContent = msg || '';
+  }
+
+  function verdict(kind, title, html) {
+    verdictEl.className = 'verdict ' + kind;
+    verdictEl.style.display = 'block';
+    verdictEl.innerHTML = '<h2></h2>' + html;
+    verdictEl.querySelector('h2').textContent = title;
+  }
+
+  runBtn.addEventListener('click', function () {
+    runBtn.disabled = true;
+    resultsEl.innerHTML = '';
+    verdictEl.style.display = 'none';
+
+    var BASE = document.getElementById('base').value.replace(/\/+$/, '');
+    var SLUG = document.getElementById('slug').value.trim();
+
+    var t1 = addTest('This page is being served over a secure address');
+    var t2 = addTest('The widget file can be downloaded from the sales agent server');
+    var t3 = addTest('The widget runs and puts the chat bubble on the page');
+    var t4 = addTest('The sales agent server answers requests from this website');
+    var t5 = addTest('This website address is on the allowed list');
+
+    // --- 1. HTTPS -----------------------------------------------------
+    var pageHttps = location.protocol === 'https:';
+    var baseHttps = BASE.indexOf('https://') === 0;
+    if (location.protocol === 'file:') {
+      t1.warn('Opened straight from disk rather than through a website. Upload this file to '
+            + 'the website and open it by its web address, or the results will be misleading.');
+    } else if (pageHttps && baseHttps) {
+      t1.pass(location.origin);
+    } else if (!pageHttps && baseHttps) {
+      t1.fail('This page is on http:// but the sales agent is on https://. Browsers block that '
+            + 'combination silently. Open this page over https://.');
+    } else {
+      t1.warn('Page is ' + location.protocol + ' and the sales agent is ' + (baseHttps ? 'https' : 'http') + '.');
+    }
+
+    // --- 2 and 3. Load the widget the same way a real page would ------
+    var started = Date.now();
+    var s = document.createElement('script');
+    s.src = BASE + '/widget/widget.js?diag=' + started;
+    s.setAttribute('data-agent', SLUG);
+
+    var settled = false;
+    var loadTimer = setTimeout(function () {
+      if (settled) { return; }
+      settled = true;
+      t2.fail('No response after 15 seconds. The address may be wrong, or something on the '
+            + 'server (a firewall such as Imunify360, or a security rule) is holding the request.');
+      t3.fail('Not reached, because the file never arrived.');
+      finish();
+    }, 15000);
+
+    s.onerror = function () {
+      if (settled) { return; }
+      settled = true;
+      clearTimeout(loadTimer);
+      t2.fail('The browser could not load ' + s.src + '\n'
+            + 'Either the address is wrong, the file is missing, or the server refused it. '
+            + 'Open that address directly in a new tab: you should see JavaScript, not an error.');
+      t3.fail('Not reached, because the file never arrived.');
+      finish();
+    };
+
+    s.onload = function () {
+      if (settled) { return; }
+      settled = true;
+      clearTimeout(loadTimer);
+      t2.pass('Downloaded in ' + (Date.now() - started) + ' ms. Version '
+            + (window.__aisaWidgetVersion || 'unknown — this is an older copy, before versions were added'));
+
+      setTimeout(function () {
+        var host = document.querySelector('[data-aisa-widget]');
+        if (host && host.shadowRoot) {
+          t3.pass('The chat bubble is on this page. If you cannot see it, look at the bottom '
+                + 'right corner, and check no ad blocker is hiding it.');
+        } else if (window.__aisaWidgetLoaded) {
+          t3.fail('The widget file ran but did not attach itself. Check the browser console '
+                + '(press F12) for a message beginning [AI Sales Agent].');
+        } else {
+          t3.fail('The widget file downloaded but did not run. It may be an error page saved '
+                + 'with a .js name, or it was altered. Open it directly in a tab and check it '
+                + 'looks like JavaScript.');
+        }
+        checkApi();
+      }, 700);
+    };
+
+    document.head.appendChild(s);
+
+    // --- 4 and 5. Talk to the API exactly as the widget does ----------
+    function checkApi() {
+      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var to = setTimeout(function () { if (ctrl) { ctrl.abort(); } }, 15000);
+
+      fetch(BASE + '/api/session.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: SLUG }),
+        mode: 'cors',
+        credentials: 'omit',
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (r) {
+        clearTimeout(to);
+        return r.text().then(function (raw) {
+          var data = null;
+          try { data = JSON.parse(raw); } catch (e) { /* not JSON */ }
+
+          if (!data) {
+            // A challenge page that reloads itself is the signature of
+            // Imunify360's WebShield splash screen. Worth naming exactly,
+            // because the fix is on the server and not in any of this code.
+            var challenge = /location\.reload|__imunify|webshield|captcha/i.test(raw);
+            if (challenge) {
+              t4.fail('Imunify360 WebShield is intercepting requests to the assistant.\n\n'
+                    + 'Instead of answering, the server returned a holding page that waits and '
+                    + 'reloads itself. That works for a person opening a page, but the chat '
+                    + 'cannot get past it, so the assistant can never reply.\n\n'
+                    + 'The fix is on the server, not in the chat. Someone with WHM root access '
+                    + 'should run:\n\n'
+                    + '    imunify360-agent whitelist domain add '
+                    + (BASE.split('//')[1] || '').split('/')[0] + '\n\n'
+                    + 'Then reload this page and run the checks again.');
+            } else {
+              t4.fail('The server replied with status ' + r.status + ', but not in the expected '
+                    + 'format. The first part of the reply was:\n'
+                    + raw.slice(0, 300)
+                    + '\n\nA page of HTML here usually means a security product intercepted '
+                    + 'the request.');
+            }
+            t5.warn('Could not be checked until the above is resolved.');
+            return finish();
+          }
+
+          t4.pass('Replied with status ' + r.status + '.');
+
+          if (data.ok) {
+            t5.pass('Accepted. The assistant is reachable from ' + location.hostname + '.');
+          } else if (data.error === 'origin_not_allowed'
+                     && data.reason === 'no_allowed_domains_configured') {
+            t5.fail('This agent has no allowed websites set at all, so every request is refused. '
+                  + 'Add this website in the admin panel under Agents.');
+          } else if (data.error === 'origin_not_allowed'
+                     && data.reason === 'no_origin_header') {
+            t5.fail('The browser sent no address with the request, so the server could not tell '
+                  + 'which site it came from. This usually means a proxy or security product '
+                  + 'stripped the header on the way.');
+          } else if (data.error === 'origin_not_allowed') {
+            t5.fail('Refused. "' + location.hostname + '" is not on this agent\'s allowed list.\n'
+                  + 'Add it in the admin panel under Agents, in "Websites allowed to show the chat". '
+                  + 'Note that www.' + location.hostname.replace(/^www\./, '')
+                  + ' and ' + location.hostname.replace(/^www\./, '')
+                  + ' count as different addresses — list both.');
+          } else if (data.error === 'unknown_agent') {
+            t5.fail('The short code "' + SLUG + '" does not match any active agent on the server. '
+                  + 'Either it is spelled differently in the Agents screen, or that agent is '
+                  + 'set to Disabled.');
+          } else {
+            t5.warn('The server refused with: ' + data.error);
+          }
+          finish();
+        });
+      }).catch(function (err) {
+        clearTimeout(to);
+        t4.fail('Could not reach ' + BASE + '/api/session.php\n'
+              + 'Reported as: ' + (err && err.message ? err.message : 'blocked') + '\n\n'
+              + 'This is usually one of: the sales agent server is refusing cross-site requests '
+              + '(a missing CORS header), a firewall such as Imunify360 is blocking them, or the '
+              + 'address is wrong.');
+        t5.warn('Could not be checked.');
+        finish();
+      });
+    }
+
+    function finish() {
+      runBtn.disabled = false;
+      var fails = resultsEl.querySelectorAll('.fail').length;
+      if (fails === 0) {
+        verdict('good', 'Everything passed',
+          '<p>The chat should be working on this website. If you still cannot see the bubble, '
+          + 'it is almost certainly an ad blocker or a browser extension — try a private window.</p>');
+      } else {
+        verdict('bad', fails === 1 ? 'One check failed' : fails + ' checks failed',
+          '<p>Take a screenshot of this whole page, including the text under each failed check, '
+          + 'and send it on. The detail under the first failure is the one that matters.</p>');
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

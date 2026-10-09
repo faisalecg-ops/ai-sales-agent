@@ -1,0 +1,18 @@
+# ---------------------------------------------------------------------
+# Root of the installation.
+#
+# If the application has been installed so that this folder is itself
+# web-accessible (some shared hosts do this), these rules keep the
+# application, configuration and storage folders private.
+#
+# The safer arrangement, described in the deployment guide, is to point
+# the domain at the public_html folder instead, so this never applies.
+# ---------------------------------------------------------------------
+
+Options -Indexes
+
+RedirectMatch 404 ^/(app|config|storage|cron|tools|tests|docs)(/|$)
+
+<FilesMatch "\.(sql|md|log|ini|sh|bak|inc|lock|sample|dist)$">
+    Require all denied
+</FilesMatch>

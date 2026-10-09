@@ -1,0 +1,8 @@
+# Never commit the live configuration (database password, encryption key)
+config/config.php
+# Runtime files
+storage/logs/*
+!storage/logs/.gitkeep
+storage/uploads/*
+!storage/uploads/.gitkeep
+.DS_Store
