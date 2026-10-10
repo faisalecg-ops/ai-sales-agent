@@ -435,6 +435,30 @@ How scheduling works:
   and press "Done".
 - **Failed posts** are shown with the reason and a "Try again" button.
 
+**Decision on 1a and 1b:** wait. Include them in the full plan document for
+approval, and don't build them now.
+
+**The normal cycle (owner, 10 Oct).**
+1. The AI writes the **blog article first**. It is approved and published on the
+   event blog.
+2. From that article, the AI **adapts the content for each social platform**,
+   following that platform's needs:
+   - length;
+   - tone;
+   - hashtags;
+   - image size;
+   - Instagram's caption-only style.
+3. For each post the admin or user sees an **"Include the blog post link"**
+   tick box, ticked by default:
+   - the link carries the platform's tracking tag;
+   - on Instagram, where links in captions don't click, ticking it adds
+     "link in bio" text and shows the link to place in the bio or story.
+4. Then **Post now** or **Schedule**, after approval.
+
+A post can still be made without a blog article (event reminders, show-day
+photos, exhibitor share kits, curated news). The blog-first cycle is the
+default.
+
 **Connecting to the platforms ("like IFTTT, with ID and password").**
 - IFTTT does not hold anyone's password. You log in once on the platform's own
   page and grant permission (OAuth). /social will do the same.
