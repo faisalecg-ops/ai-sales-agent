@@ -325,9 +325,37 @@ international participation in the exhibition.
   - Writer brief: `tools/blog-content-pack/WRITER-BRIEF.md`
   - Article list: `tools/blog-content-pack/NEW-SLUGS.txt`
 
+## 6d. Social agent brainstorm (10 October 2026)
+
+**Owner, 10 Oct:**
+- The blog is done and temporarily live at https://buildasia.ecgateway.net/blog.
+- Use **a single login shared with the sales agent**.
+- A **platform switcher** sits in the top bar: "AI Social Media Expert Agent"
+  jumps to /social, and "AI Sales Agent" goes back.
+
+**Technical facts behind this (checked in the code):**
+- **Shared session:** the sales agent's session cookie (`aisa_admin`, path `/`,
+  `$_SESSION['admin_id']`) is visible to /social on the same domain. Single
+  sign-on and single sign-out therefore need **no change** to the sales agent.
+- **Roles:** sales agent accounts (`admin_users`) only have the role `admin`,
+  with full access.
+- **Proposed access model:**
+  - Sales agent admins enter /social as super admins.
+  - Event social staff get **social-only** accounts in the `sm_` tables. They use
+    the same session but a separate key, so the sales agent ignores them and
+    they cannot open it.
+- **The switcher on the sales agent side is a sales agent change:** one link in
+  its top bar. It needs the owner's explicit approval as a separate small
+  upgrade. Inside /social the switcher is ours.
+
+The brainstorm points and the decisions asked are in the chat of 10 Oct
+(content pillars, event-lifecycle calendar, exhibitor share kit, tracking from
+post to lead, cost control).
+
 ## 6b. Still open
 
-- (Social agent, later) Same logins as the sales agent or separate? AI image
+- (Social agent, later) Same logins as the sales agent or separate? → answered
+  10 Oct: single login (see §6d); the access model still to confirm. AI image
   generation wanted (extra cost)? Which social platforms per event? Target
   number of articles per event per week?
 
