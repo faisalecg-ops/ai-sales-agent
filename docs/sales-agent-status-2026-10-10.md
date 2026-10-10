@@ -7,10 +7,11 @@ sales agent.
 
 - **Live server:** the delivered version plus the event-facts change
   (installed 9 October 2026, see the 9 October note).
-- **This change is not installed yet:** the shared login / staff access
-  upgrade below.
+- **Installed:** the shared login / staff access upgrade below. The owner
+  confirmed on 10 October 2026 that it is installed on the live server and
+  the Database upgrade has been run.
 
-## 2. Shared login, staff per exhibition, platform switch — built, not installed
+## 2. Shared login, staff per exhibition, platform switch — installed 10 Oct 2026
 
 The owner approved it on 10 October 2026. The request is in
 `docs/handover/2026-10-10-shared-login-and-event-access.md`. The end of that

@@ -27,8 +27,11 @@ Read this before any task on this project.
   tests now: `php tests/acceptance.php` (1,201) and `php tests/access-http.php`
   (82, end-to-end staff isolation). New admin pages must use
   `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
-- **Next: the Social Media Agent at `/social`** — still discussion only. Build
-  nothing for it until the owner approves its plan in writing. Agreed points
+- **Next: the Social Media Agent at `/social`.** Its plan is written, waiting for
+  the owner's written approval: Claude doc "AI Social Media Expert Agent — Plan"
+  (https://claude.ai/code/artifact/f54d7319-1688-4ef4-8d69-67690608eebf). It has
+  four stages; Stage 1 is the core cycle with manual posting, for Build Asia.
+  Build nothing until it is approved. Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
   of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.
 - Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's
