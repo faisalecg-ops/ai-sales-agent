@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-admin_require_login();
+admin_require_access('view');
 $agent   = admin_agent();
 $agentId = (int)$agent['id'];
 
@@ -75,6 +75,14 @@ if (!LlmProviderFactory::make((string)$agent['llm_provider'])->isConfigured()) {
                           . 'to check it works.'];
 }
 
+// Staff cannot open Settings or the exhibition's set-up, so point them to
+// the person who can.
+if (!admin_is_super()) {
+    $warnings = array_map(static fn(array $w): array => [$w[0], preg_replace(
+        '/ (Add it under Settings, then use the test button there\s*to check it works|Add them under Agents and embed)\.$/',
+        ' Please tell the administrator.', $w[1]) ?? $w[1]], $warnings);
+}
+
 foreach ($warnings as [$kind, $text]) {
     echo '<div class="alert alert-' . e($kind) . '"><p>' . e($text) . '</p></div>';
 }
@@ -82,11 +90,13 @@ foreach ($warnings as [$kind, $text]) {
 // ---- What is waiting for someone ----
 $waiting = admin_waiting($agentId);
 $todo = [
-    ['leads.php', $waiting['leads'], 'New leads', 'to call or email'],
-    ['whatsapp.php', $waiting['whatsapp'], 'WhatsApp', 'to approve or answer'],
-    ['prospects.php', $waiting['prospects'], 'Prospect emails', 'to approve'],
-    ['review.php', $pending, 'Review queue', 'content to approve'],
+    ['leads.php', $waiting['leads'], 'New leads', 'to call or email', 'view'],
+    ['whatsapp.php', $waiting['whatsapp'], 'WhatsApp', 'to approve or answer', 'manage'],
+    ['prospects.php', $waiting['prospects'], 'Prospect emails', 'to approve', 'manage'],
+    ['review.php', $pending, 'Review queue', 'content to approve', 'manage'],
 ];
+// Only what this person can open.
+$todo = array_values(array_filter($todo, static fn(array $t): bool => admin_can($t[4])));
 echo '<h2 class="dash-h">Waiting for you</h2><div class="todo-row">';
 foreach ($todo as [$href, $n, $label, $what]) {
     echo '<a class="todo' . ($n > 0 ? ' has' : '') . '" href="' . e(url('admin/' . $href)) . '"><b>' . (int)$n . '</b>'

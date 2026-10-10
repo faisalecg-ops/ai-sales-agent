@@ -8,12 +8,32 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-if (admin_user() !== null) {
-    admin_redirect('admin/');
-}
-
 $errors = [];
 $next   = (string)($_GET['next'] ?? '');
+
+/**
+ * Where to go after signing in. A same-site path asked for in ?next= wins
+ * (/social uses this). Otherwise the user's own platform: the sales agent, or
+ * /social for someone who only has access there. Someone with no access at
+ * all reaches the sales agent, which tells them so.
+ */
+$destination = static function (array $user) use ($next): string {
+    if ($next !== '' && str_starts_with($next, '/') && !str_starts_with($next, '//') && !str_contains($next, '\\')) {
+        return $next;
+    }
+    $platforms = Access::platforms((int)$user['id']);
+    if (!$platforms['sales'] && $platforms['social'] && admin_social_installed()) {
+        return url('social/');
+    }
+    return url('admin/');
+};
+
+if (($signedIn = admin_user()) !== null) {
+    header('Location: ' . ((int)($signedIn['must_change_password'] ?? 0) === 1
+        ? url('admin/account.php' . ($next !== '' ? '?next=' . rawurlencode($next) : ''))
+        : $destination($signedIn)));
+    exit;
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     Security::requireCsrf();
@@ -46,12 +66,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             Audit::setActor((string)$user['username']);
             Audit::log('admin_signed_in', null, 'admin_user', (int)$user['id'], 'From ' . $ip);
 
-            // Only same-site paths are accepted as a redirect target.
-            if ($next !== '' && str_starts_with($next, '/') && !str_starts_with($next, '//')) {
-                header('Location: ' . $next);
+            // A new password comes first; then the page that was asked for.
+            if ((int)($user['must_change_password'] ?? 0) === 1) {
+                header('Location: ' . url('admin/account.php' . ($next !== '' ? '?next=' . rawurlencode($next) : '')));
                 exit;
             }
-            admin_redirect('admin/');
+            header('Location: ' . $destination($user));
+            exit;
         }
 
         Security::recordLogin($username, $ip, false);
@@ -62,11 +83,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
    . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-   . '<title>Sign in — AI Sales Agent</title>'
+   . '<title>Sign in</title>'
    . '<link rel="stylesheet" href="' . e(url('assets/admin.css')) . '">'
    . '</head><body class="signin-page"><div class="signin">';
 
-echo '<div class="card"><h1>Sign in</h1>';
+echo '<div class="card"><h1>Sign in</h1>'
+   . '<p class="sub">AI Sales Agent · AI Social Media Expert Agent</p>';
 
 // The most important place for this warning: if the address is wrong, the
 // sign-in button itself does nothing and there is no way to get past it.

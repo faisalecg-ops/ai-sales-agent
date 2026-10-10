@@ -2,10 +2,10 @@
 
 Read this before any task on this project.
 
-## Current status (9 October 2026) — read first
+## Current status (10 October 2026) — read first
 
 - The **Sales Agent is complete** (website chat, WhatsApp, follow-ups,
-  research, prospecting, analytics, reorganised admin). 1,179 acceptance
+  research, prospecting, analytics, reorganised admin). 1,201 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
 - **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
   "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.2.2: Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
@@ -19,10 +19,14 @@ Read this before any task on this project.
   owner installed it on the live sales agent on 9 Oct 2026. Read
   `docs/sales-agent-status-2026-10-09.md` before any sales agent work.
   Never change the sales agent without the owner's explicit approval.
-  **Approved sales agent change (10 Oct 2026), done by the sales agent chat:**
+  **Approved sales agent change (10 Oct 2026) — BUILT, not yet installed:**
   shared login, per-event staff access on both platforms, and the platform
-  switcher. See `docs/handover/2026-10-10-shared-login-and-event-access.md`.
-  /social must wait for that file's "Done" section before building on it.
+  switcher. Read `docs/sales-agent-status-2026-10-10.md`. The contract for
+  /social is the "Done — what /social can rely on" section at the end of
+  `docs/handover/2026-10-10-shared-login-and-event-access.md`. Sales agent
+  tests now: `php tests/acceptance.php` (1,201) and `php tests/access-http.php`
+  (82, end-to-end staff isolation). New admin pages must use
+  `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
 - **Next: the Social Media Agent at `/social`** — still discussion only. Build
   nothing for it until the owner approves its plan in writing. Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end

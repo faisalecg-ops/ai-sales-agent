@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-admin_require_login();
+admin_require_access('view');
 $agent   = admin_agent();
 $agentId = (int)$agent['id'];
 

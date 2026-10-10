@@ -686,6 +686,43 @@ final class Migrations
                         ADD COLUMN book_stand_url VARCHAR(255) NULL",
                 ],
             ],
+
+            // One login for the AI Sales Agent and the AI Social Media Expert
+            // Agent (approved by the owner, 10 October 2026). Every existing
+            // account stays 'admin' — a super admin — so nothing changes for
+            // anyone on the day of the upgrade.
+            [
+                'key'   => '2026_10_staff_role',
+                'label' => 'A second kind of user: staff who see only their own exhibitions',
+                'check' => static fn(): bool => str_contains(strtolower((string)db()->value(
+                    "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = 'role'"
+                )), "'staff'"),
+                'sql'   => [
+                    "ALTER TABLE admin_users MODIFY role ENUM('admin','staff') NOT NULL DEFAULT 'admin'",
+                ],
+            ],
+
+            [
+                'key'   => '2026_10_shared_access',
+                'label' => 'One login for both platforms: which exhibitions each staff user may open',
+                'check' => static fn(): bool => self::tableExists('admin_user_access'),
+                'sql'   => [
+                    // Read by both platforms through app/lib/Access.php. A
+                    // super admin needs no rows: they may open everything.
+                    "CREATE TABLE IF NOT EXISTS admin_user_access (
+                        id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        user_id    INT UNSIGNED NOT NULL,
+                        platform   ENUM('sales','social') NOT NULL,
+                        agent_id   INT UNSIGNED NOT NULL,
+                        role       VARCHAR(32) NOT NULL,
+                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_access (user_id, platform, agent_id),
+                        KEY idx_agent (agent_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                ],
+            ],
         ];
     }
 

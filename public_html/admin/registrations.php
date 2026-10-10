@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-$user    = admin_require_role('admin');
+$user    = admin_require_access('manage');
 $agent   = admin_agent();
 $agentId = (int)$agent['id'];
 $actor   = (string)$user['username'];
@@ -21,6 +21,14 @@ $testResult = null;
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     Security::requireCsrf();
     $action = (string)($_POST['action'] ?? '');
+
+    // The connection is shared by every exhibition, and the event numbers
+    // decide whose visitors are collected — so only the super admin may
+    // change either. A manager could otherwise collect another exhibition's
+    // visitors into their own.
+    if (in_array($action, ['save_connection', 'save_events', 'test'], true) && !admin_is_super()) {
+        admin_not_permitted('Only the super admin can change the registration connection or event numbers.');
+    }
 
     if ($action === 'save_connection') {
         Settings::set('regsource.db_host', Validator::text($_POST['db_host'] ?? null, 160) ?? 'localhost');
@@ -115,6 +123,13 @@ admin_layout_start('Registrations');
 echo '<p class="lede">Visitors who registered for this exhibition, read from the shared '
    . 'registration system. Nothing is written back to it — the platform only reads.</p>';
 
+if (!admin_is_super()) {
+    // Staff see what is collected for their exhibition, not how it is connected.
+    echo '<div class="card"><h2>Connection</h2><p class="lede">'
+       . ($configured ? 'Connected. ' : 'Not set up yet. ')
+       . 'The registration connection and which event numbers belong to ' . e((string)$agent['name'])
+       . ' are managed by the administrator.</p></div>';
+} else {
 // ---- Connection ----
 echo '<div class="card"><div class="card-head"><h2 style="margin:0">Connection</h2>'
    . ($configured ? '<span class="pill pill-ok">Set up</span>' : '<span class="pill pill-warn">Not set up</span>')
@@ -195,6 +210,8 @@ echo '<div class="card"><h2>Which events belong to ' . e((string)$agent['name'])
         'hint' => 'Separate with commas. For Build Asia that is 24 for Karachi and 62 for Lahore.'])
    . '<div class="btn-row"><button class="btn" type="submit">Save</button></div>'
    . '</form></div>';
+
+}
 
 // ---- Collecting ----
 if ($configured && $events) {

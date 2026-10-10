@@ -893,6 +893,50 @@ anything.
 
 ---
 
+## Users: who may open what
+
+One login works on both platforms: the AI Sales Agent and, once it is
+installed, the AI Social Media Expert Agent. **Set-up → Users** is for the
+super admin only.
+
+**Two kinds of user.**
+- **Super admin**: everything, on both platforms and every exhibition,
+  including Settings, Users, Database upgrade, the emergency stop and the
+  exhibitions' set-up.
+- **Staff**: only what you give them, platform by platform and exhibition by
+  exhibition.
+
+**Roles on the AI Sales Agent.**
+- **Manager**: the day-to-day work for that exhibition. That covers content
+  and prices, the review queue, conversations, leads, people, WhatsApp,
+  prospecting, companies, research, standard messages, do-not-contact and its
+  activity log.
+- **Viewer**: reads the dashboard, leads, conversations, people and analytics,
+  and can change nothing.
+
+**Roles on the AI Social Media Expert Agent** (admin, approver, editor,
+viewer) are chosen on the same screen and used by that platform.
+
+**Adding someone.**
+1. Users → **New user**.
+2. Enter their name, email and a username.
+3. Tick the platforms they may use. For each one, choose their exhibitions and
+   a role.
+4. Press **Create user**. A temporary password is shown once. Give it to them;
+   they choose their own the first time they sign in.
+
+**Someone forgot their password.** Open them in Users → **Give a temporary
+password**.
+
+**Someone leaves.** Open them in Users → **Deactivate**. They are signed out
+of both platforms at their next click. Nothing they did is lost.
+
+You cannot deactivate yourself, make yourself staff, or remove the last
+super admin. That way the platform always has someone who can manage it.
+
+Everyone can change their own password under **Your account**, at the bottom
+of the menu.
+
 ## Things that will happen, and what they mean
 
 ### Changing AI provider

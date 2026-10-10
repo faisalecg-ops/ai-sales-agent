@@ -43,19 +43,150 @@ function admin_require_login(): array
         header('Location: ' . url('admin/login.php?next=' . rawurlencode($target)));
         exit;
     }
+
+    // Your own account and signing out are open to everyone signed in, so a
+    // new password can always be chosen and nobody is ever stuck.
+    $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    if (in_array($script, ['account.php', 'logout.php'], true)) {
+        return $user;
+    }
+
+    // A new account, or one given a temporary password, chooses its own
+    // password before anything else.
+    if ((int)($user['must_change_password'] ?? 0) === 1) {
+        header('Location: ' . url('admin/account.php?next=' . rawurlencode((string)($_SERVER['REQUEST_URI'] ?? ''))));
+        exit;
+    }
+
+    // One login serves two platforms. Someone with no access to this one is
+    // sent to the other, or told plainly that they have no access yet.
+    $platforms = Access::platforms((int)$user['id']);
+    if (!$platforms['sales']) {
+        if ($platforms['social'] && admin_social_installed()) {
+            header('Location: ' . url('social/'));
+            exit;
+        }
+        admin_no_access_page($platforms['social']
+            ? 'Your account is for the AI Social Media Expert Agent, which is not installed yet.'
+            : 'Your account has no access yet — ask the administrator.');
+    }
+
+    // Viewers read; they never change anything. Checked here, once, for every
+    // form on every page, against the exhibition the page is working on.
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && !admin_is_super()) {
+        $agent = admin_agent();
+        if (Access::role((int)$user['id'], 'sales', (int)$agent['id']) !== 'manager') {
+            admin_not_permitted('Your access to ' . (string)$agent['name'] . ' is read-only, so nothing was changed.');
+        }
+    }
+
     return $user;
 }
 
+/**
+ * Pages only the super admin may open: platform settings and keys, users,
+ * the database upgrade, the emergency stop, and creating or editing
+ * exhibitions.
+ */
 function admin_require_role(string $role): array
 {
     $user = admin_require_login();
-    if ($role === 'admin' && (string)$user['role'] !== 'admin') {
-        admin_layout_start('Not permitted');
-        echo '<div class="alert alert-error"><p>This page is for administrators only.</p></div>';
-        admin_layout_end();
-        exit;
+    if ($role === 'admin' && !admin_is_super()) {
+        admin_not_permitted('This page is for the super admin only.');
     }
     return $user;
+}
+
+/**
+ * Pages that work on one exhibition. 'view' admits managers and viewers of
+ * the current exhibition; 'manage' admits managers only. The super admin
+ * always passes.
+ */
+function admin_require_access(string $level = 'view'): array
+{
+    $user = admin_require_login();
+    if (!admin_can($level)) {
+        $agent = admin_agent();
+        admin_not_permitted($level === 'view'
+            ? 'You do not have access to this page for ' . (string)$agent['name'] . '.'
+            : 'Your access to ' . (string)$agent['name'] . ' does not include this page.');
+    }
+    return $user;
+}
+
+function admin_is_super(): bool
+{
+    $user = admin_user();
+    return $user !== null && Access::isSuper((int)$user['id']);
+}
+
+/** Can the signed-in user do this on the current exhibition? 'view', 'manage' or 'super'. */
+function admin_can(string $level): bool
+{
+    if (admin_is_super()) {
+        return true;
+    }
+    if ($level === 'super') {
+        return false;
+    }
+    $user  = admin_user();
+    $agent = admin_agent(false);
+    if ($user === null || $agent === null) {
+        return false;
+    }
+    $role = Access::role((int)$user['id'], 'sales', (int)$agent['id']);
+    return $level === 'view' ? in_array($role, ['manager', 'viewer'], true) : $role === 'manager';
+}
+
+/** Has the AI Social Media Expert Agent been installed beside this one? */
+function admin_social_installed(): bool
+{
+    return is_file(dirname(__DIR__) . '/social/index.php');
+}
+
+function admin_not_permitted(string $message): never
+{
+    http_response_code(403);
+    admin_layout_start('Not permitted');
+    echo '<div class="alert alert-error"><p>' . e($message) . '</p></div>'
+       . '<p><a class="btn btn-quiet" href="' . e(url('admin/')) . '">Back to the dashboard</a></p>';
+    admin_layout_end();
+    exit;
+}
+
+/** For an account with nothing it may open here. Deliberately outside the normal page chrome. */
+function admin_no_access_page(string $message): never
+{
+    http_response_code(403);
+    echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+       . '<meta name="viewport" content="width=device-width,initial-scale=1"><title>No access yet</title>'
+       . '<link rel="stylesheet" href="' . e(url('assets/admin.css')) . '"></head>'
+       . '<body class="signin-page"><div class="signin"><div class="card"><h1>No access yet</h1>'
+       . '<p class="lede">' . e($message) . '</p>'
+       . '<p><a class="btn btn-quiet" href="' . e(url('admin/logout.php')) . '">Sign out</a></p>'
+       . '</div></div></body></html>';
+    exit;
+}
+
+/**
+ * The switch between the two platforms. Shown only to people who may use
+ * both, and only once the second platform is installed. The markup is
+ * shared, character for character, with /social.
+ */
+function admin_platform_switch(): string
+{
+    $user = admin_user();
+    if ($user === null || !admin_social_installed()) {
+        return '';
+    }
+    $p = Access::platforms((int)$user['id']);
+    if (!$p['sales'] || !$p['social']) {
+        return '';
+    }
+    return '<nav class="platform-switch" aria-label="Platform">'
+         . '<a href="' . e(url('admin/')) . '" aria-current="page">AI Sales Agent</a>'
+         . '<a href="' . e(url('social/')) . '">AI Social Media Expert Agent</a>'
+         . '</nav>';
 }
 
 // ---------------------------------------------------------------------
@@ -63,7 +194,22 @@ function admin_require_role(string $role): array
 // ---------------------------------------------------------------------
 function admin_agents(): array
 {
-    return db()->all("SELECT * FROM agents WHERE status <> 'deleted' ORDER BY name ASC");
+    $user = admin_user();
+    if ($user === null) {
+        return [];
+    }
+    if (Access::isSuper((int)$user['id'])) {
+        return db()->all("SELECT * FROM agents WHERE status <> 'deleted' ORDER BY name ASC");
+    }
+    $ids = Access::agentIds((int)$user['id'], 'sales');
+    if (!$ids) {
+        return [];
+    }
+    return db()->all(
+        "SELECT * FROM agents WHERE status <> 'deleted' AND id IN (" . implode(',', array_fill(0, count($ids), '?')) . ")
+          ORDER BY name ASC",
+        $ids
+    );
 }
 
 /**
@@ -76,21 +222,41 @@ function admin_agent(bool $required = true): ?array
         return $cached;
     }
 
+    // Staff may only ever be working on an exhibition they were given. The
+    // session's exhibition is shared with /social; one not allowed here is
+    // simply not used here, and the first allowed one is taken instead.
+    $user    = admin_user();
+    $super   = $user !== null && Access::isSuper((int)$user['id']);
+    $allowed = $super ? [] : ($user !== null ? Access::agentIds((int)$user['id'], 'sales') : []);
+    $mayOpen = static fn(int $id): bool => $id > 0 && ($super || in_array($id, $allowed, true));
+
     $requested = isset($_GET['agent']) ? (int)$_GET['agent'] : 0;
-    if ($requested > 0) {
+    if ($mayOpen($requested)) {
         $_SESSION['agent_id'] = $requested;
     }
     $agentId = (int)($_SESSION['agent_id'] ?? 0);
 
-    $agent = $agentId > 0
+    $agent = $mayOpen($agentId)
         ? db()->one("SELECT * FROM agents WHERE id = ? AND status <> 'deleted'", [$agentId])
         : null;
 
     if (!$agent) {
-        $agent = db()->one("SELECT * FROM agents WHERE status <> 'deleted' ORDER BY id ASC LIMIT 1");
+        if ($super) {
+            $agent = db()->one("SELECT * FROM agents WHERE status <> 'deleted' ORDER BY id ASC LIMIT 1");
+        } elseif ($allowed) {
+            $agent = db()->one("SELECT * FROM agents WHERE id = ? AND status <> 'deleted'", [$allowed[0]]);
+        }
         if ($agent) {
             $_SESSION['agent_id'] = (int)$agent['id'];
         }
+    }
+
+    if (!$agent && $required && !$super) {
+        admin_layout_start('No exhibitions');
+        echo '<div class="card"><h2>You have no exhibitions on this platform</h2>'
+           . '<p class="lede">Ask the administrator to give you access to an exhibition.</p></div>';
+        admin_layout_end();
+        exit;
     }
 
     if (!$agent && $required) {
@@ -280,42 +446,48 @@ function admin_layout_start(string $title, array $actions = []): void
     echo '<nav class="side"><div class="side-brand"><strong>AI Sales Agent</strong>'
        . '<span>' . e($agent ? (string)$agent['name'] : 'No agent') . '</span></div>';
 
+    // Each page with the least access that may open it.
     $nav = [
         'Day to day' => [
-            'index.php'         => ['Dashboard', 0],
-            'leads.php'         => ['Leads', $newLeads],
-            'conversations.php' => ['Conversations', 0],
-            'review.php'        => ['Review queue', $pending],
-            'analytics.php'     => ['Analytics', 0],
+            'index.php'         => ['Dashboard', 0, 'view'],
+            'leads.php'         => ['Leads', $newLeads, 'view'],
+            'conversations.php' => ['Conversations', 0, 'view'],
+            'review.php'        => ['Review queue', $pending, 'manage'],
+            'analytics.php'     => ['Analytics', 0, 'view'],
         ],
         'Content' => [
-            'import.php'    => ['Conversation with AI', 0],
-            'knowledge.php' => ['Knowledge', 0],
-            'faqs.php'      => ['FAQs', 0],
-            'pricing.php'   => ['Stand pricing', 0],
-            'sponsorship.php' => ['Sponsorship', 0],
+            'import.php'    => ['Conversation with AI', 0, 'manage'],
+            'knowledge.php' => ['Knowledge', 0, 'manage'],
+            'faqs.php'      => ['FAQs', 0, 'manage'],
+            'pricing.php'   => ['Stand pricing', 0, 'manage'],
+            'sponsorship.php' => ['Sponsorship', 0, 'manage'],
         ],
         'Visitors' => [
-            'person.php'        => ['Find a person', 0],
-            'registrations.php' => ['Registrations', 0],
-            'whatsapp.php'      => ['WhatsApp', $waWaiting],
+            'person.php'        => ['Find a person', 0, 'view'],
+            'registrations.php' => ['Registrations', 0, 'manage'],
+            'whatsapp.php'      => ['WhatsApp', $waWaiting, 'manage'],
         ],
         'Prospecting' => [
-            'prospects.php' => ['Campaigns', $prospectWaiting],
-            'companies.php' => ['Companies', 0],
-            'research.php'  => ['Company research', 0],
+            'prospects.php' => ['Campaigns', $prospectWaiting, 'manage'],
+            'companies.php' => ['Companies', 0, 'manage'],
+            'research.php'  => ['Company research', 0, 'manage'],
         ],
         'Set-up' => [
-            'agents.php'      => ['Agents and embed', 0],
-            'messages.php'    => ['Standard messages', 0],
-            'suppression.php' => ['Do not contact', 0],
-            'activity.php'    => ['Activity log', 0],
-            'settings.php'    => ['Settings', 0],
-            'upgrade.php'     => ['Database upgrade', $upgradesDue],
+            'agents.php'      => ['Agents and embed', 0, 'super'],
+            'messages.php'    => ['Standard messages', 0, 'manage'],
+            'suppression.php' => ['Do not contact', 0, 'manage'],
+            'activity.php'    => ['Activity log', 0, 'manage'],
+            'users.php'       => ['Users', 0, 'super'],
+            'settings.php'    => ['Settings', 0, 'super'],
+            'upgrade.php'     => ['Database upgrade', $upgradesDue, 'super'],
         ],
     ];
 
     foreach ($nav as $group => $links) {
+        $links = array_filter($links, static fn(array $l): bool => $user !== null && admin_can($l[2]));
+        if (!$links) {
+            continue;
+        }
         echo '<div class="side-group"><p>' . e($group) . '</p>';
         foreach ($links as $file => [$label, $tally]) {
             $active = $current === $file ? ' class="is-active"' : '';
@@ -328,12 +500,14 @@ function admin_layout_start(string $title, array $actions = []): void
     }
 
     echo '<div class="side-foot">'
-       . '<p class="muted small" style="margin:0 0 6px">Signed in as ' . e((string)($user['username'] ?? '')) . '</p>'
+       . '<p class="muted small" style="margin:0 0 6px">Signed in as ' . e((string)($user['username'] ?? ''))
+       . ($user !== null ? ' · ' . (admin_is_super() ? 'super admin' : 'staff') : '') . '</p>'
+       . '<a href="' . e(url('admin/account.php')) . '">Your account</a>'
        . '<a href="' . e(url('admin/logout.php')) . '">Sign out</a>'
        . '</div></nav>';
 
     // ---- Main ----
-    echo '<div class="main"><header class="topbar"><h1>' . e($title) . '</h1>';
+    echo '<div class="main"><header class="topbar">' . admin_platform_switch() . '<h1>' . e($title) . '</h1>';
 
     $agents = admin_agents();
     if (count($agents) > 1) {
@@ -480,6 +654,12 @@ function admin_outbound_banner(): string
     }
     if (!$status['stopped']) {
         return '';
+    }
+
+    if (!admin_is_super()) {
+        return '<div class="alert alert-error" role="alert"><p style="margin:0"><strong>All outgoing messages are '
+             . 'stopped.</strong> Nothing is being sent to visitors on any exhibition until the administrator '
+             . 'resumes sending.</p></div>';
     }
 
     $here = ltrim((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '/');

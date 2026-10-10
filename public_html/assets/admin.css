@@ -521,3 +521,11 @@ legend {
 .form-grid .fg-wide { grid-column: 1 / -1; }
 .set-head p:empty { display: none; }
 .add-card > summary { cursor: pointer; }
+
+/* Switch between the two platforms (same markup and styling as /social) */
+.platform-switch{display:inline-flex;border:1px solid var(--line,#d0d5dd);border-radius:999px;overflow:hidden;margin-right:12px;flex-shrink:0}
+.platform-switch a{padding:6px 14px;font-size:13px;font-weight:600;text-decoration:none;color:inherit;white-space:nowrap}
+.platform-switch a[aria-current=page]{background:var(--accent,#1f4fbf);color:#fff}
+@media (max-width:700px){.platform-switch a{padding:6px 10px;font-size:12px}}
+.side-foot a { display: block; margin-top: 4px; }
+.signin .sub { margin: -6px 0 16px; color: var(--ink-soft); font-size: 13.5px; }

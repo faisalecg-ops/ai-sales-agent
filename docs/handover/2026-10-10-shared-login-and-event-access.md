@@ -174,3 +174,167 @@ Put `aria-current="page"` on the link for the platform you are on. On small scre
   - the `Access.php` path and signatures, plus any deviation from this request.
 
   The /social chat will read that section before building.
+
+---
+
+## Done — what /social can rely on
+
+**Built and tested by the sales agent chat, 10 October 2026.** The upgrade is
+in GitHub, but **not yet installed on the live server**: the owner installs
+`salesagent-upgrade-2026-10-shared-access.zip`, then runs Database upgrade.
+Before then, `admin_user_access` does not exist and every account is a super
+admin. `Access.php` handles that without errors: it reports no staff rows.
+
+### Migration steps (run in this order by Database upgrade)
+
+| Key | What it does |
+|---|---|
+| `2026_10_staff_role` | `admin_users.role` becomes `ENUM('admin','staff')`, default `'admin'`. Every existing account stays `'admin'`, a super admin. |
+| `2026_10_shared_access` | Creates `admin_user_access` exactly as in §2.2: same columns, `UNIQUE (user_id, platform, agent_id)` and `KEY idx_agent`. |
+
+A step was added compared with the request, because the `staff` value needed
+its own check. The table step keeps the requested key.
+
+To test whether the upgrade has run: `Migrations::tableExists('admin_user_access')`.
+
+### Final role names (`admin_user_access.role`)
+
+| Platform | Roles | Interpreted by |
+|---|---|---|
+| `sales` | `manager`, `viewer` | the sales agent |
+| `social` | `admin`, `approver`, `editor`, `viewer` | **/social** (stored only; the sales agent never interprets them) |
+
+- The Users screen only ever saves these values. Any other value posted to it
+  is dropped.
+- Labels are available as `Access::SALES_ROLES` and `Access::SOCIAL_ROLES`
+  (key ⇒ label).
+- A super admin needs no rows. `Access::role()` returns `'admin'` for them on
+  both platforms. On `social`, `'admin'` is therefore both the super admin's
+  answer and a storable staff role.
+
+### `app/lib/Access.php`
+
+Require `app/bootstrap.php` first; the class autoloads from `app/lib/`. It
+only `SELECT`s and does not depend on `_admin.php` or any admin page code.
+
+```php
+final class Access
+{
+    public const PLATFORMS    = ['sales', 'social'];
+    public const SALES_ROLES  = ['manager' => '…', 'viewer' => '…'];
+    public const SOCIAL_ROLES = ['admin' => 'Admin', 'approver' => 'Approver', 'editor' => 'Editor', 'viewer' => 'Viewer'];
+
+    public static function isSuper(int $userId): bool;
+    public static function platforms(int $userId): array;   // ['sales' => bool, 'social' => bool]
+    public static function agentIds(int $userId, string $platform): array; // list<int>, in exhibition name order
+    public static function role(int $userId, string $platform, int $agentId): ?string;
+    public static function forget(): void;                   // clears the per-request cache (tests only)
+}
+```
+
+Behaviour worth knowing:
+
+- **Deactivated or unknown users** (`active = 0`, or no row) get `isSuper` =
+  false, both platforms false, `agentIds` = `[]` and `role` = `null`.
+  Signed-in sessions of a deactivated user stop working at the next request
+  on the sales agent. /social should check `active` (or `Access::platforms()`)
+  on every request too.
+- **Deleted exhibitions** (`agents.status = 'deleted'`) are never returned,
+  and their roles are `null`, even if rows remain.
+- **Disabled exhibitions** (`status = 'disabled'`) are still returned, as
+  before. It is up to each platform whether to work on them.
+- **Platform access** comes from rows: a staff user may use a platform when
+  they have at least one row for a live exhibition on it.
+- **Unknown platform names** return `[]` or `null`.
+- **Caching:** results are cached for the rest of the PHP request.
+
+### Session and sign-in contract (unchanged and confirmed by tests)
+
+| Item | Value |
+|---|---|
+| Session cookie | `aisa_admin`, path `/`, started by `Security::startSession('aisa_admin')` |
+| Signed-in user | `$_SESSION['admin_id']` |
+| Current exhibition (shared) | `$_SESSION['agent_id']` |
+| Timeouts | `Security::IDLE_TIMEOUT` (3600 s) and `Security::ABSOLUTE_TIMEOUT` (43200 s), applied by `Security::startSession()` |
+| Sign-in | `/admin/login.php?next=/social/...` returns to that same-site path after signing in. It refuses `//host` and backslash tricks. If the person is already signed in, it redirects straight to `next`. |
+| Forced password change | If `admin_users.must_change_password = 1`, sign-in goes to `/admin/account.php?next=…` first, then continues to `next`. **/social should do the same**: redirect such a user to `/admin/account.php?next=<this page>`. |
+| Sign-out | `/admin/logout.php` destroys the shared session, so both platforms are signed out |
+| Your account | `/admin/account.php` is open to every signed-in user, including people with social access only. Link to it from /social for "change my password". |
+
+Routing as built:
+
+- **After sign-in, with no `next`:** a user with social access but no sales
+  access goes to `/social/`.
+- **Opening any `/admin/` page** (except `account.php` and `logout.php`)
+  without sales access: such a user is redirected to `/social/`.
+- **No access at all:** the user sees "Your account has no access yet — ask
+  the administrator".
+- **Social access only, but /social not installed:** the user is told the
+  social platform is not installed yet.
+
+**/social must not send a signed-in user back to `login.php`.** That would
+loop, because `login.php` sends signed-in users straight on. Show a
+"no access" page instead.
+
+### Exhibition switching
+
+`$_SESSION['agent_id']` is shared.
+
+- The sales agent uses it only when the user is allowed that exhibition on
+  `sales`. Otherwise it takes their first allowed exhibition (in name order)
+  and writes that back to the session.
+- `?agent=<id>` for an exhibition the user may not open is ignored.
+- /social should apply the same rule with `Access::agentIds($id, 'social')`.
+
+### Platform switcher (deviation: also requires /social to be installed)
+
+- **Markup:** exactly as §2.7. The links are built with `url('admin/')` and
+  `url('social/')`, so a subfolder install still works.
+- **CSS:** exactly as §2.7, in `public_html/assets/admin.css`.
+- **Placement:** first child of `header.topbar`, before the `<h1>`.
+- **When it shows:**
+  - the user has both platforms; **and**
+  - `public_html/social/index.php` exists.
+
+  This keeps the owner from clicking a link that 404s before /social is
+  built. Once /social puts its `index.php` in place, the switcher appears
+  with no sales agent change. /social shows its own copy with
+  `aria-current="page"` on its own link.
+
+### Other deviations from the request
+
+- **Password reset.** §2.4 assumed an existing reset mechanism and a
+  `must_change_password` flow. Neither existed (the columns were unused), so
+  both were built:
+  - The Users screen's **"Give a temporary password"** sets a random
+    temporary password, shows it once to the super admin, and sets
+    `must_change_password = 1`.
+  - `/admin/account.php` forces the change, needs at least 12 characters, and
+    clears the flag.
+  - No email-based reset was added.
+- **Super admins on the Users screen.** A super admin can also create another
+  super admin ("Kind of user"). Safeguards:
+  - you cannot deactivate yourself;
+  - you cannot make yourself staff;
+  - you cannot deactivate or demote the last active super admin.
+- **What stays super-admin only, beyond §2.2:**
+  - **Agents and embed** (exhibition set-up, which holds each exhibition's
+    WhatsApp key and SMTP password);
+  - **the registration connection and event numbers** (a manager could
+    otherwise collect another exhibition's visitors);
+  - **resuming after the emergency stop.**
+- **Viewer pages.** Viewers may read the dashboard, leads, conversations,
+  person pages and analytics. Person pages were added to the suggested list
+  because they combine a lead's records.
+- **Viewers cannot submit forms.** Every form submitted by someone who is not
+  a manager on the current exhibition is refused centrally, in
+  `admin_require_login()`.
+
+### Things /social can count on staying true
+
+- **The sales agent never creates, alters or drops `sm_` tables.** A test
+  checks this.
+- **Upgrade and install packages never contain `public_html/social/`,** so
+  installing them never touches /social.
+- **Writes to `admin_users` and `admin_user_access` come only from the sales
+  agent's Users screen and Your account page.** /social only reads them.

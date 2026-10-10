@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-$user    = admin_require_login();
+$user    = admin_require_access('view');
 $agent   = admin_agent();
 $agentId = (int)$agent['id'];
 
@@ -48,7 +48,7 @@ $filters = Analytics::prospectFilters($agent);
 $breakdown = Analytics::prospectBreakdown($agent, $p, $f, $by);
 $whatsapp = Analytics::whatsapp($agent, $p);
 $chat     = Analytics::websiteChat($agent, $p);
-$exhibitions = Analytics::exhibitions($p);
+$exhibitions = Analytics::exhibitions($p, admin_is_super() ? null : Access::agentIds((int)$user['id'], 'sales'));
 
 $query = static function (array $change = []) use ($p, $f, $by, $preset): string {
     $custom = $preset === 'custom';

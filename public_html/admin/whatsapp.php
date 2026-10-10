@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_admin.php';
 
-$user    = admin_require_role('admin');
+$user    = admin_require_access('manage');
 $agent   = admin_agent();
 $agentId = (int)$agent['id'];
 $actor   = (string)$user['username'];
@@ -198,7 +198,7 @@ if ($problem !== null) {
 // ---------------------------------------------------------------------
 // Emergency stop
 // ---------------------------------------------------------------------
-if (!OutboundSwitch::isStopped()) {
+if (!OutboundSwitch::isStopped() && admin_is_super()) {
     echo '<div class="card stop-card"><h2>Emergency stop</h2>'
        . '<p class="hint" style="margin:0 0 12px">Stops every WhatsApp message and prospect email, on every '
        . 'exhibition, at once. Nothing waiting is lost; resume from the red banner at the top.</p>'

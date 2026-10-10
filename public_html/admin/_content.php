@@ -14,7 +14,7 @@ declare(strict_types=1);
  */
 function content_page(string $type, array $config): void
 {
-    $user    = admin_require_login();
+    $user    = admin_require_access('manage');
     $agent   = admin_agent();
     $agentId = (int)$agent['id'];
     $table   = ReviewWorkflow::table($type);

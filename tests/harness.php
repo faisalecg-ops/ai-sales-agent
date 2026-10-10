@@ -226,7 +226,7 @@ function reset_database(): void
         'whatsapp_outbox', 'whatsapp_inbox', 'agent_sales_reps', 'company_research', 'registrations',
         'outreach_emails', 'prospect_targets', 'prospect_campaigns',
         'company_contacts', 'company_evidence', 'companies', 'suppression_list',
-        'agents', 'admin_users', 'settings', 'login_attempts',
+        'agents', 'admin_users', 'admin_user_access', 'settings', 'login_attempts',
     ];
     db()->raw()->query('SET FOREIGN_KEY_CHECKS = 0');
     foreach ($tables as $t) {

@@ -4827,4 +4827,70 @@ T::ok(!MessagingProviderFactory::make($kB)->isConfigured(),
     'And never borrows a platform-wide key or another exhibition\'s');
 Settings::set('whatsapp.provider', 'none');
 
+// =====================================================================
+T::group('One login for both platforms: who may open which exhibition');
+// =====================================================================
+
+T::ok(Migrations::tableExists('admin_user_access'), 'The upgrade adds the access table');
+$roleType = (string)db()->value("SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = 'role'");
+T::ok(str_contains($roleType, "'admin'") && str_contains($roleType, "'staff'"), 'And the staff kind of user', $roleType);
+T::equals(0, Migrations::outstandingCount(), 'Running the upgrade again finds nothing left to do');
+
+$acA = (int)db()->insert('agents', ['slug' => 'acc-a', 'name' => 'Access A', 'status' => 'active',
+    'website_url' => 'https://a.example.net', 'allowed_domains' => 'a.example.net', 'llm_provider' => 'mock', 'llm_model' => 'mock-model']);
+$acB = (int)db()->insert('agents', ['slug' => 'acc-b', 'name' => 'Access B', 'status' => 'active',
+    'website_url' => 'https://b.example.net', 'allowed_domains' => 'b.example.net', 'llm_provider' => 'mock', 'llm_model' => 'mock-model']);
+$acGone = (int)db()->insert('agents', ['slug' => 'acc-gone', 'name' => 'Access Gone', 'status' => 'deleted',
+    'website_url' => 'https://g.example.net', 'allowed_domains' => 'g.example.net', 'llm_provider' => 'mock', 'llm_model' => 'mock-model']);
+$mkUser = static fn(string $name, string $role, int $active = 1): int => (int)db()->insert('admin_users', [
+    'username' => $name, 'email' => $name . '@example.net', 'password_hash' => password_hash('x', PASSWORD_DEFAULT),
+    'role' => $role, 'active' => $active]);
+$uSuper  = $mkUser('acc-super', 'admin');
+$uStaff  = $mkUser('acc-staff', 'staff');
+$uSocial = $mkUser('acc-social', 'staff');
+$uNone   = $mkUser('acc-none', 'staff');
+$uOff    = $mkUser('acc-off', 'staff', 0);
+foreach ([[$uStaff, 'sales', $acA, 'manager'], [$uStaff, 'social', $acB, 'editor'], [$uStaff, 'sales', $acGone, 'manager'],
+          [$uSocial, 'social', $acA, 'approver'], [$uOff, 'sales', $acA, 'manager']] as [$u, $p, $ag, $r]) {
+    db()->insert('admin_user_access', ['user_id' => $u, 'platform' => $p, 'agent_id' => $ag, 'role' => $r]);
+}
+Access::forget();
+
+T::ok(Access::isSuper($uSuper) && !Access::isSuper($uStaff), 'Super admins are told apart from staff');
+T::equals(['sales' => true, 'social' => true], Access::platforms($uSuper), 'A super admin may use both platforms');
+T::ok(in_array($acA, Access::agentIds($uSuper, 'sales'), true) && in_array($acB, Access::agentIds($uSuper, 'social'), true),
+    'And every exhibition on both');
+T::ok(!in_array($acGone, Access::agentIds($uSuper, 'sales'), true), 'But never a deleted exhibition');
+T::equals('admin', Access::role($uSuper, 'social', $acB), 'A super admin\'s role is admin everywhere');
+
+T::equals(['sales' => true, 'social' => true], Access::platforms($uStaff), 'Staff use the platforms they were given');
+T::equals([$acA], Access::agentIds($uStaff, 'sales'), 'Only their own exhibitions on the sales agent, not the deleted one');
+T::equals([$acB], Access::agentIds($uStaff, 'social'), 'And on /social, separately');
+T::equals('manager', Access::role($uStaff, 'sales', $acA), 'Their role on an exhibition they were given');
+T::equals(null, Access::role($uStaff, 'sales', $acB), 'No role on one they were not given');
+T::equals(null, Access::role($uStaff, 'sales', $acGone), 'Nor on a deleted one');
+
+T::equals(['sales' => false, 'social' => true], Access::platforms($uSocial), 'Someone may have /social only');
+T::equals(['sales' => false, 'social' => false], Access::platforms($uNone), 'A new account with nothing ticked has no access');
+T::equals(['sales' => false, 'social' => false], Access::platforms($uOff), 'A deactivated account has no access at all');
+T::equals([], Access::agentIds($uOff, 'sales'), 'Not even to rows it still has');
+T::equals([], Access::agentIds($uStaff, 'nonsense'), 'An unknown platform gives nothing');
+T::equals([], Access::agentIds(999999, 'sales'), 'Nor does an unknown user');
+
+$accessSource = (string)file_get_contents(APP_PATH . '/lib/Access.php');
+T::ok(!preg_match('/\b(INSERT|UPDATE|DELETE|REPLACE|ALTER|DROP|TRUNCATE)\b/i', preg_replace('#/\*.*?\*/|//[^\n]*#s', '', $accessSource))
+    && !str_contains($accessSource, '_admin.php'),
+    'Access.php only reads, and does not depend on the admin pages, so /social can use it safely');
+
+foreach (db()->all('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE \'sm\\_%\'') as $t) {
+    T::ok(false, 'The sales agent created a /social table', (string)$t['TABLE_NAME']);
+}
+T::ok(true, 'The sales agent creates no sm_ tables');
+
+db()->exec('DELETE FROM admin_user_access');
+db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');
+db()->exec('DELETE FROM agents WHERE slug LIKE \'acc-%\'');
+Access::forget();
+
 exit(T::summary());

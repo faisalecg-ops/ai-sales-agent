@@ -376,11 +376,15 @@ final class Analytics
     // -----------------------------------------------------------------
 
     /** @return list<array{name:string, chat_leads:int, wa_leads:int, emails:int, replies:int, booked:int}> */
-    public static function exhibitions(array $p): array
+    public static function exhibitions(array $p, ?array $onlyAgentIds = null): array
     {
         $out = [];
         $hasProspects = Migrations::tableExists('prospect_targets');
         foreach (db()->all("SELECT id, name, notify_timezone FROM agents WHERE status <> 'deleted' ORDER BY name") as $a) {
+            // Staff see only the exhibitions they were given.
+            if ($onlyAgentIds !== null && !in_array((int)$a['id'], array_map('intval', $onlyAgentIds), true)) {
+                continue;
+            }
             $ap = self::period($a, $p['from'], $p['to']);
             $s = self::sources($a, $ap);
             $out[] = [
