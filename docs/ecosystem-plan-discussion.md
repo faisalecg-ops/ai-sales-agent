@@ -385,6 +385,56 @@ sectors relevant to each event.
 - **Settings per event:** the mix share of this pillar and the sectors to
   cover.
 
+**More owner notes (10 Oct, evening).**
+
+**1a. Event Blog: an editorial section where industry leaders publish.**
+The working name is "Industry Voices", renamable in the admin.
+
+- **Already in the blog:** author pages with photo, title and bio, and the
+  author / approver roles.
+- **To add (blog version 1.3):**
+  - **Contributor profile:** name, designation, company, company logo, photo,
+    LinkedIn.
+  - **No login needed:** the editorial team can publish on a leader's behalf.
+    Alternatively the leader gets an author account that can only submit for
+    approval.
+  - **Public "Write for us" form:** an outline or draft, with editor review.
+  - **"Industry Voice" badge** on cards and articles.
+  - A **"Views are the author's own"** line.
+  - **Its own home-page section and menu item.**
+  - **/social:** posts made from these articles tag the author and the company.
+
+**1b. Event Blog: sponsored posts.**
+
+- **Marking:**
+  - "Sponsored" or "Partner content" label on cards and the article, with the
+    sponsor's name and logo;
+  - a disclosure line;
+  - all links get `rel="sponsored"` (the link policy already supports this).
+- **Timing:** start and end dates.
+- **Reporting:** views and clicks per sponsored post, with a downloadable
+  report like the banner reports.
+- **Approval:** an editor approves it.
+- **On social media:** posts made from sponsored articles are labelled as
+  sponsored / partnership, as the platforms' rules require.
+- **Selling it:** a sponsored-post package can be added to the sales agent's
+  knowledge and pricing by the owner, as content only, with no code change.
+
+**2. /social: "Post now" and "Schedule".**
+For each approved post on each platform there are two buttons:
+- **Post now.**
+- **Schedule:** date and time in Pakistan time, with a suggested best time for
+  each platform.
+
+How scheduling works:
+- Cron checks every 5 minutes and publishes posts that are due.
+- Scheduled posts can be moved, cancelled or edited before they go out.
+- A calendar view shows the week and month per event.
+- **Manual-mode platforms:** at the scheduled time the assigned person gets a
+  reminder (on the dashboard and by email) with the ready post. They post it
+  and press "Done".
+- **Failed posts** are shown with the reason and a "Try again" button.
+
 **Connecting to the platforms ("like IFTTT, with ID and password").**
 - IFTTT does not hold anyone's password. You log in once on the platform's own
   page and grant permission (OAuth). /social will do the same.
