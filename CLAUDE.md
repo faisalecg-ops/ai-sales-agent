@@ -19,7 +19,7 @@ Read this before any task on this project.
   owner installed it on the live sales agent on 9 Oct 2026. Read
   `docs/sales-agent-status-2026-10-09.md` before any sales agent work.
   Never change the sales agent without the owner's explicit approval.
-  **Approved sales agent change (10 Oct 2026) — BUILT, not yet installed:**
+  **Approved sales agent change (10 Oct 2026) — installed live 10 Oct 2026 (owner):**
   shared login, per-event staff access on both platforms, and the platform
   switcher. Read `docs/sales-agent-status-2026-10-10.md`. The contract for
   /social is the "Done — what /social can rely on" section at the end of
