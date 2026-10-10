@@ -8,7 +8,7 @@ Read this before any task on this project.
   research, prospecting, analytics, reorganised admin). 1,179 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
 - **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
-  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.2: Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`) — a standalone PHP 8.1+ /
+  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.2: Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
   MySQLi script installed per event website at `/blog` on cPanel **shared**
   hosting, table prefix `blog_`. Every reader option (comments, newsletter,
   sponsor reports, branding, language) is a setting in the blog admin.

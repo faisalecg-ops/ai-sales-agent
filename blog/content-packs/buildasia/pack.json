@@ -1,7 +1,7 @@
 {
  "name": "Build Asia — starter content",
- "version": "2026-10-09",
- "description": "Six real-world categories and 21 researched starter articles for the Build Asia blog, with cover images, the official logo, the link library, counter figures, menus, slider and event details. Facts checked against published sources and Build Asia's approved information on 9 October 2026.",
+ "version": "2026-10-10",
+ "description": "Eleven real-world categories and 46 researched starter articles for the Build Asia blog, with cover images, the official logo, the link library, counter figures, menus, slider and event details. Facts checked against published sources and Build Asia's approved information on 9–10 October 2026.",
  "author": {
   "name": "Build Asia Editorial Desk",
   "title": "Build Asia",
@@ -94,6 +94,31 @@
    "slug": "exhibition-news",
    "name": "Exhibition News",
    "description": "Build Asia dates, results, conference themes and guides for visitors and exhibitors."
+  },
+  {
+   "slug": "infrastructure-projects",
+   "name": "Infrastructure & Projects",
+   "description": "Dams, motorways, railways, water and transport projects: budgets, financing, progress and the work they create."
+  },
+  {
+   "slug": "cities-urban-development",
+   "name": "Cities & Urban Development",
+   "description": "How Pakistan's cities are growing: new urban projects, high-rises, ports and housing programmes."
+  },
+  {
+   "slug": "industry-manufacturing",
+   "name": "Industry & Manufacturing",
+   "description": "Cement, steel, glass, tiles and the economic zones where Pakistan's building products are made."
+  },
+  {
+   "slug": "trade-supply-chains",
+   "name": "Trade & Supply Chains",
+   "description": "What Pakistan imports and exports for building, regional corridors and the mining and rail projects behind them."
+  },
+  {
+   "slug": "economy-business-climate",
+   "name": "Economy & Business Climate",
+   "description": "Budget, interest rates, remittances, credit ratings and investment facilitation: the economy behind construction."
   }
  ],
  "links": [
@@ -229,6 +254,77 @@
  ],
  "articles": [
   {
+   "slug": "build-asia-2027-what-to-expect",
+   "category": "exhibition-news",
+   "featured": 1,
+   "title": "Build Asia 2027: 18–20 March at Karachi Expo Centre — what to expect",
+   "excerpt": "The 21st Build Asia brings building materials, construction machinery, property and stone together in Karachi. Dates, who exhibits, who visits, and how to take part.",
+   "tags": [
+    "Build Asia 2027",
+    "Karachi",
+    "Exhibition"
+   ],
+   "sources": [],
+   "body": "<p>The <strong>21st Build Asia International Exhibition and Conference</strong> takes place from <strong>18 to 20 March 2027</strong> at the <strong>Karachi Expo Centre</strong>, open daily from 10:00 to 18:00. It is Pakistan’s international building materials and construction machinery show, organised by Ecommerce Gateway Pakistan (Pvt) Ltd, a member of UFI, the Global Association of the Exhibition Industry.</p>\n<figure>{{img:buildasia-21-karachi-2027-banner.jpg|Build Asia 2027 — 18–20 March, Karachi Expo Centre}}<figcaption>The official banner of the 21st edition.</figcaption></figure>\n<h2>Why it matters</h2>\n<p>Build Asia is where Pakistan’s construction industry meets in one place: manufacturers, importers and distributors on one side; builders, developers, contractors, architects, engineers and government agencies on the other. It is also a gateway for international companies looking at Pakistan and the region, and for local firms seeking joint-venture partners and technology transfer.</p>\n<h2>What is on show</h2>\n<p>Exhibitors cover the whole building chain, including:</p>\n<ul>\n<li>cranes, earthmoving and hoisting machinery, drilling and mining equipment;</li>\n<li>pre-fabricated building components, pre-engineered steel buildings and prefab housing;</li>\n<li>steel, cement and concrete technology, construction chemicals;</li>\n<li>marble, granite, ceramics and tiles; wood and timber;</li>\n<li>paints and coatings, aluminium and PVC windows and doors, glazing and facades;</li>\n<li>pumps, pipes, cables, generators, solar and electrical systems;</li>\n<li>furniture, lighting, fire safety and security systems;</li>\n<li>builders, developers, banks, housing finance and real estate services.</li>\n</ul>\n<p>Co-located shows including Stonefair Asia and Furniture Asia run alongside. See the full <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>\n<h2>Who visits</h2>\n<p>The audience includes architects, engineers and town planners; builders, contractors and developers; interior designers; distributors and investors; government authorities and decision-makers; associations; consultants; real estate professionals; and foreign companies seeking joint ventures. See the <a href=\"https://buildasia.net/visitor-profile/\">visitor profile</a>.</p>\n<h2>How to take part</h2>\n<ul>\n<li><strong>Visiting:</strong> trade and corporate visitors can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register online</a>; anyone who has not registered can register at the on-site desks.</li>\n<li><strong>Exhibiting:</strong> stands are available as ready-built shell scheme or bare space. <a href=\"{{a:exhibiting-shell-scheme-or-bare-space}}\">Which is right for you?</a> To enquire, <a href=\"https://buildasia.net/contact/?enquiry=stand\">book a stand</a>.</li>\n</ul>\n<p>The last Karachi edition drew more than 32,000 trade visitors and 350 exhibitors from over 21 countries. <a href=\"{{a:build-asia-2026-in-numbers}}\">See the results.</a></p>",
+   "image": "cover-build-asia-2027-what-to-expect.jpg"
+  },
+  {
+   "slug": "psdp-2026-27-infrastructure-spending",
+   "category": "infrastructure-projects",
+   "title": "PSDP 2026-27: where the federal development money goes, and the work it creates",
+   "excerpt": "Highways, water and power take the largest shares of the Rs1 trillion federal PSDP for 2026-27. The allocations, the biggest road schemes and how much had been released by September.",
+   "tags": [
+    "PSDP",
+    "Infrastructure",
+    "Budget 2026-27"
+   ],
+   "sources": [
+    {
+     "title": "APP, \"Highlights of PSDP for FY 2026-27\", 12 June 2026",
+     "url": "https://www.app.com.pk/?p=1225059"
+    },
+    {
+     "title": "APP, \"Rs 224,709 m allocated for Communications Division\", 12 June 2026",
+     "url": "https://www.app.com.pk/?p=1225079"
+    },
+    {
+     "title": "APP, \"Govt. authorises Rs220.721bn in PSDP funds for FY2026-27 Q1\", 6 October 2026",
+     "url": "https://www.app.com.pk/?p=1286712"
+    }
+   ],
+   "body": "<p>The Public Sector Development Programme (PSDP) is the government’s budget for building things: roads, dams, power lines and public buildings. For contractors and suppliers it is the clearest published guide to where public-sector work will come from in the year ahead.</p>\n<h2>The size of the programme</h2>\n<p>Budget figures released on 12 June 2026 put the national development outlay for 2026-27 at <strong>Rs3.675 trillion</strong>: Rs1 trillion for the federal PSDP, Rs2.224 trillion for the provinces and Rs451 billion for state-owned enterprises. The largest federal infrastructure allocations are:</p>\n<table>\n<thead><tr><th>Federal PSDP 2026-27</th><th>Allocation</th></tr></thead>\n<tbody>\n<tr><td>National Highway Authority (NHA)</td><td>Rs224.5 billion</td></tr>\n<tr><td>Water Resources Division</td><td>Rs103.1 billion</td></tr>\n<tr><td>Power Division (NTDC/PEPCO)</td><td>Rs88 billion</td></tr>\n<tr><td>Railways Division</td><td>Rs40.7 billion</td></tr>\n<tr><td>Housing and Works Division</td><td>Rs16.4 billion</td></tr>\n</tbody>\n</table>\n<h2>Which roads get the money</h2>\n<p>The NHA’s list is weighted towards Balochistan and Sindh. Among the largest items:</p>\n<ul>\n<li><strong>N-25 (Karachi–Quetta–Chaman):</strong> Rs48 billion for the Kararo–Wadh and Kuchlak–Chaman sections, Rs30 billion for dualisation and rehabilitation of other sections, and Rs22 billion for the 330 km Khuzdar–Kuchlak section.</li>\n<li><strong>Hyderabad–Sukkur Motorway (306 km, six lanes):</strong> Rs30 billion.</li>\n<li><strong>N-5, Moro to Ranipur:</strong> Rs9 billion, including 32 damaged bridges, with ADB funding.</li>\n<li><strong>Indus Highway (N-55):</strong> Rs5 billion each for the ADB-funded Shikarpur–Rajanpur and Rajanpur–D.G. Khan sections.</li>\n<li><strong>Karakoram Highway, Thakot–Raikot:</strong> Rs5 billion for 102 km of relocation, funded by China EXIM.</li>\n</ul>\n<h2>Allocation is not spending</h2>\n<p>Money is released in stages. In the first quarter (July–September 2026) the government authorised <strong>Rs220.7 billion</strong>, about 22% of the federal PSDP, while spending reached <strong>Rs61.3 billion</strong>, around 6%. The Water Resources Division had the largest authorisation (Rs86.5 billion); the NHA had Rs22.4 billion authorised and Rs9.3 billion spent.</p>\n<h2>Where the openings are</h2>\n<p>Our reading of these figures, not the government’s:</p>\n<ul>\n<li>Several big road schemes carry ADB or Chinese lender funding, which usually means internationally tendered packages and work for both local and foreign contractors.</li>\n<li>Roadworks in Balochistan and Sindh, plus dam and power schemes, point to steady demand for aggregates, bitumen, cement, steel and earthmoving equipment.</li>\n<li>What to watch: the slow first-quarter spend. Quarterly release figures show how fast work can actually start on site.</li>\n</ul>\n<p>More detail: <a href=\"{{a:dams-under-construction-materials-demand}}\">the dams</a>, <a href=\"{{a:motorways-highways-pipeline-2026}}\">the motorway pipeline</a> and <a href=\"{{a:construction-machinery-imports-rise}}\">machinery imports</a>. Contractors and suppliers working on public projects meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March at the Karachi Expo Centre.</p>",
+   "image": "cover-psdp-2026-27-infrastructure-spending.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-urbanisation-census-cities",
+   "category": "cities-urban-development",
+   "title": "Census 2023: Pakistan’s cities are growing almost twice as fast as the countryside",
+   "excerpt": "The 2023 census counted 93.75 million city dwellers, with urban areas growing 3.65% a year against 1.90% in rural areas. What that pace means for housing and building.",
+   "tags": [
+    "Urbanisation",
+    "Census 2023",
+    "Cities"
+   ],
+   "sources": [
+    {
+     "title": "Finance Division, Pakistan Economic Survey 2023-24, Chapter 12: \"Population, Labour Force and Employment\" (Census 2023 figures)",
+     "url": "https://finance.gov.pk/survey/chapter_24/12_population.pdf"
+    },
+    {
+     "title": "The News, \"Pakistan’s urban boom\", 31 January 2026",
+     "url": "https://www.thenews.pk/print/1396144-pakistan-s-urban-boom"
+    },
+    {
+     "title": "Soch Fact Check, \"Lahore has not surpassed Karachi’s population\" (PBS Census 2023 figures), 30 September 2023",
+     "url": "https://www.sochfactcheck.com/lahore-has-not-surpassed-karachis-population/"
+    }
+   ],
+   "body": "<p>Pakistan’s seventh Population and Housing Census, carried out in 2023, gives the clearest recent picture of how quickly the country’s towns and cities are filling up. The figures below come from the census results as reported in the Pakistan Economic Survey 2023-24.</p>\n<h2>The headline figures</h2>\n<table>\n<thead><tr><th>Census</th><th>2017</th><th>2023</th></tr></thead>\n<tbody>\n<tr><td>Urban population</td><td>75.67 million</td><td>93.75 million</td></tr>\n<tr><td>Urban share of population</td><td>36.44%</td><td>38.82%</td></tr>\n<tr><td>Households</td><td>32.20 million</td><td>38.34 million</td></tr>\n<tr><td>Average household size</td><td>6.39</td><td>6.30</td></tr>\n</tbody>\n</table>\n<p>Between the two counts the urban population grew by <strong>3.65% a year</strong>, against 1.90% in rural areas. The survey puts much of that gap down to people moving from villages to cities.</p>\n<p>The urban share varies widely by province: <strong>53.73%</strong> in Sindh, 46.90% in Islamabad, 40.70% in Punjab, 30.96% in Balochistan and 15.01% in Khyber Pakhtunkhwa.</p>\n<h2>The biggest urban regions</h2>\n<p>According to PBS census figures, the seven districts of the Karachi division held <strong>20.38 million</strong> people in 2023. Lahore district alone counted 13.0 million, and the wider Lahore division (with Kasur, Nankana Sahib and Sheikhupura) 22.77 million, out of a national total of 241.49 million.</p>\n<h2>The official count may understate it</h2>\n<p>An opinion article in The News in January 2026 cited a World Bank study which found that <strong>88%</strong> of Pakistanis live in areas with urban characteristics, far above the official figure. The same piece noted that urban centres produce roughly 55% of GDP and that the ten largest cities generate 95% of federal tax revenue.</p>\n<h2>What this means for building</h2>\n<ul>\n<li><strong>Homes:</strong> by our own arithmetic, the number of households rose by about 6.1 million between 2017 and 2023 — roughly one million new households a year, each needing a home. Our article on <a href=\"{{a:pakistan-housing-gap-numbers}}\">the housing gap</a> looks at the shortfall in detail.</li>\n<li><strong>Density:</strong> faster urban growth on limited land pushes developers towards apartments and mixed-use buildings, which need lifts, pumps, fire systems and facade products as well as basic materials (see <a href=\"{{a:high-rise-growth-pakistan-cities}}\">vertical growth in Pakistan’s cities</a>).</li>\n<li><strong>Infrastructure:</strong> water, sewerage, roads and power networks have to grow with the population, creating steady demand for pipes, cables, pumps and civil works.</li>\n</ul>\n<p>What to watch: the census measures growth, not whether planning keeps up with it. The News article argues that housing, transport and energy need to be planned together.</p>\n<p>Developers, contractors and suppliers working in Pakistan’s growing cities meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. You can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register to visit</a>.</p>",
+   "image": "cover-pakistan-urbanisation-census-cities.jpg",
+   "featured": 0
+  },
+  {
    "slug": "cement-sales-fy26-what-the-numbers-say",
    "category": "market-insights",
    "featured": 2,
@@ -247,6 +343,433 @@
    ],
    "body": "<p>Cement is the most reliable early signal of how much is actually being built in Pakistan. Every housing scheme, road and factory floor starts with it, and the industry reports its despatches every month. That makes the full-year figures for 2025-26 worth a careful look.</p>\n<h2>The headline numbers</h2>\n<p>According to figures reported by the All Pakistan Cement Manufacturers Association (APCMA), total despatches reached <strong>50.515 million tonnes</strong> in FY26, up <strong>7.21%</strong> from 47.116 million tonnes the year before.</p>\n<table>\n<thead><tr><th>FY26</th><th>Million tonnes</th><th>Change on FY25</th></tr></thead>\n<tbody>\n<tr><td>Total despatches</td><td>50.515</td><td>+7.21%</td></tr>\n<tr><td>Domestic sales</td><td>41.507</td><td>+9.5%</td></tr>\n<tr><td>Exports</td><td>9.008</td><td>−2.19%</td></tr>\n</tbody>\n</table>\n<p>The growth came from home. Domestic sales rose by 3.6 million tonnes while exports slipped slightly — a sign that demand from local construction, rather than overseas buyers, carried the year.</p>\n<h2>North and south tell different stories</h2>\n<p>Mills in the north sold <strong>34.72 million tonnes</strong> at home, up 10.83%, while their exports fell by more than half. Mills in the south grew domestic sales more slowly (up 3.18% to 6.79 million tonnes) but increased exports by 9.36% to 8.23 million tonnes, helped by their access to the ports.</p>\n<h2>A strong finish to the year</h2>\n<p>June 2026 was particularly busy: despatches rose <strong>18.38%</strong> year on year to 4.33 million tonnes, with domestic sales up 26.78%. An APCMA spokesperson said demand was “expected to remain strong” in the coming months, while noting that high fuel and energy costs continue to weigh on the sector.</p>\n<h2>What it means for the supply chain</h2>\n<ul>\n<li><strong>Builders and contractors</strong> can read rising domestic despatches as evidence that projects are moving from planning to the ground.</li>\n<li><strong>Suppliers of steel, aggregates, construction chemicals and machinery</strong> usually follow cement: higher pours mean more rebar, admixtures, pumps and mixers.</li>\n<li><strong>Energy costs</strong> remain the industry’s main pressure point — one reason efficient kilns, waste-heat recovery and alternative fuels keep coming up in industry discussions.</li>\n</ul>\n<p>Cement producers, admixture suppliers and the equipment makers who serve them meet buyers at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi. Companies in the supply chain can see the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a> to judge whether the audience fits.</p>",
    "image": "cover-cement-sales-fy26-what-the-numbers-say.jpg"
+  },
+  {
+   "slug": "special-economic-zones-incentives",
+   "category": "industry-manufacturing",
+   "title": "Pakistan’s Special Economic Zones: 44 zones, the incentives and the reforms ahead",
+   "excerpt": "Pakistan now has 44 notified economic zones, but only a few CPEC zones are partly working. What the SEZ incentives are, and how IMF-linked reform will change them.",
+   "tags": [
+    "SEZs",
+    "Industry",
+    "Policy"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Pakistan’s special economic zones rise from 7 to 44 since 2019 under CPEC 2.0\", 17 January 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/01/17/pakistans-special-economic-zones-rise-from-7-to-44-since-2019-under-cpec-2-0/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Pakistan misses SEZ targets as CPEC phase II refocuses on exports\", 5 May 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/05/05/pakistan-misses-sez-targets-as-cpec-phase-ii-refocuses-on-exports/"
+    },
+    {
+     "title": "Business Recorder, Kashif Shafi (OICCI), \"SEZ 2.0: From tax holidays to performance-based incentives\", 1 August 2026",
+     "url": "https://www.brecorder.com/news/amp/40432793"
+    }
+   ],
+   "body": "<p>Special Economic Zones (SEZs) offer factories serviced land, utilities and tax relief in one place. Each zone is also a construction project: roads, power and water networks, then sheds and warehouses.</p>\n<h2>How many zones, and how many are working</h2>\n<p>According to figures presented to the Federal Minister for Investment, Qaiser Ahmed Sheikh, in January 2026, Pakistan’s notified SEZs rose from <strong>seven in 2019 to 44 by 2025</strong>. The briefing noted progress on the Karachi Industrial Park, work towards a Gilgit-Baltistan SEZ and approval of a land lease policy for BQIP.</p>\n<p>Zones on paper are not zones in use. In May 2026 the minister said Pakistan had fallen short of its SEZ targets. Of the nine zones designated under the first phase of CPEC, only four had moved beyond planning and were partly developed as of 2025:</p>\n<ul>\n<li>Rashakai, Khyber Pakhtunkhwa</li>\n<li>Allama Iqbal Industrial City, Punjab</li>\n<li>Dhabeji, Sindh</li>\n<li>Bostan, Balochistan</li>\n</ul>\n<p>The 2018–2024 goal had been more than US$8 billion of foreign investment and 500,000 jobs from the zones.</p>\n<h2>Who is coming in</h2>\n<p>China remains the main partner. A business-to-business investment conference held during the Prime Minister’s visit to China in September 2025 produced more than 160 memoranda of understanding and joint ventures. Proposals from a September 2025 CPEC Joint Cooperation Committee meeting include government-to-government industrial zones in Karachi and Islamabad for relocating Chinese firms in electronics, textiles, pharmaceuticals and electric vehicles.</p>\n<h2>The incentives, and how they will change</h2>\n<p>As described in Business Recorder in August 2026, zone developers and enterprises currently receive a <strong>ten-year income tax exemption</strong> and a <strong>one-time exemption from customs duties and taxes</strong> on qualifying imported capital goods. Under the IMF-supported programme, Pakistan has committed to amend the SEZ Act by June 2027 and to phase out existing SEZ and EPZ fiscal incentives by 2035, subject to existing contracts, moving from profit-based to cost-based support.</p>\n<h2>What this means for suppliers and partners</h2>\n<ul>\n<li>Zones that are actually being built out create demand for civil works, pre-engineered buildings, power and water systems and industrial flooring.</li>\n<li>Firms entering a zone before the rules change will want clarity on how existing rights are protected.</li>\n</ul>\n<p><strong>What to watch:</strong> the same Business Recorder opinion piece argues that several zones remain underdeveloped and that missing power, gas, roads and water have held zones back more than tax rules. For the investment-facilitation side, see <a href=\"{{a:sifc-investment-facilitation-explained}}\">our explainer on the SIFC</a>.</p>\n<p>Zone developers, industrial builders and their suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. See the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-special-economic-zones-incentives.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "construction-imports-what-pakistan-buys",
+   "category": "trade-supply-chains",
+   "title": "What Pakistan imports to build: machinery, steel and timber in FY26",
+   "excerpt": "Machinery imports passed $10.9 billion in FY26, and construction and mining equipment grew fastest of the machinery lines. Official trade data shows where local supply still falls short.",
+   "tags": [
+    "Imports",
+    "Machinery",
+    "Trade data"
+   ],
+   "sources": [
+    {
+     "title": "APP, \"Agricultural machinery, implements worth of $135.267 mln imported in FY2026\", 5 August 2026",
+     "url": "https://www.app.com.pk/?p=1258417"
+    },
+    {
+     "title": "Pakistan Business Council, \"Pakistan’s Trade in Goods Data, July 2025 – May 2026 vs. July 2024 – May 2025\" (source: Pakistan Bureau of Statistics)",
+     "url": "https://www.pbc.org.pk/wp-content/uploads/Trade-in-Goods-Data-Jul-25-to-May-26-Vs.-Jul-24-to-May-25.pdf"
+    }
+   ],
+   "body": "<p>Import figures are a useful map of the building supply chain. They show what contractors and factories need but cannot yet buy at home in the quantity or quality they want. The Pakistan Bureau of Statistics (PBS) data for 2025-26 gives a clear picture.</p>\n<h2>Machinery: the biggest bill</h2>\n<p>For the full year FY26 (July 2025 to June 2026), the machinery group cost <strong>$10.919 billion</strong>, up 5.95% from $10.307 billion in FY25, according to PBS figures reported by APP. In the first eleven months alone, machinery made up about 15.75% of all goods imported.</p>\n<p>The machinery lines most closely tied to building, together with steel and timber (which sit outside the machinery group), moved as follows over July 2025 to May 2026, according to PBS data tabulated by the Pakistan Business Council:</p>\n<table>\n<thead><tr><th>Jul–May FY26</th><th>USD million</th><th>Change on a year earlier</th></tr></thead>\n<tbody>\n<tr><td>Construction and mining machinery</td><td>212.6</td><td>+65.8%</td></tr>\n<tr><td>Power-generating machinery</td><td>745.9</td><td>+16.2%</td></tr>\n<tr><td>Electrical machinery and apparatus</td><td>2,590.3</td><td>−24.5%</td></tr>\n<tr><td>Iron and steel</td><td>2,369.0</td><td>+9.9%</td></tr>\n<tr><td>Iron and steel scrap</td><td>1,771.5</td><td>+1.6%</td></tr>\n<tr><td>Wood and cork</td><td>113.8</td><td>+25.0%</td></tr>\n</tbody>\n</table>\n<h2>Reading the numbers</h2>\n<ul>\n<li><strong>Construction and mining machinery</strong> is still a small line, but it grew faster than any other line in the table, and faster than any other part of the machinery group. It continues the rise we described in <a href=\"{{a:construction-machinery-imports-rise}}\">our earlier look at machinery imports</a>.</li>\n<li><strong>Steel volumes rose faster than value.</strong> Iron and steel imports reached about 3.87 million tonnes in eleven months, up 22.6% by weight, while the bill rose only 9.9%. Scrap imports came to about 3.43 million tonnes, up 4.2% by weight.</li>\n<li><strong>Timber</strong> is a small but fast-growing import, up a quarter on the year.</li>\n<li><strong>Electrical machinery</strong> fell by almost a quarter. The data does not say why.</li>\n</ul>\n<h2>Where the openings are</h2>\n<p>These are observations, not forecasts. Steady imports of steel and heavy equipment show demand that local makers do not yet fully meet. That leaves room for local assembly, dealership networks, spare parts, servicing and rental fleets around imported machines. Our article on <a href=\"{{a:steel-industry-capacity-demand-2026}}\">Pakistan’s steel industry</a> looks at the domestic side.</p>\n<p>What to watch: total imports rose 6.26% in the eleven months while exports fell 5.67%. In our view, a wider trade gap can bring tighter import conditions, which matters to buyers who rely on imported equipment.</p>\n<p>Machinery suppliers, steel traders and contractors meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March at the Karachi Expo Centre. The January 2026 edition drew over 350 exhibitors from over 21 countries. See the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-construction-imports-what-pakistan-buys.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "construction-machinery-imports-rise",
+   "category": "construction-machinery",
+   "featured": 3,
+   "title": "Construction machinery imports jump as contractors re-equip",
+   "excerpt": "Imports of construction and mining machinery rose to $138 million in FY25, and the first months of FY26 point higher again. What the trend says about the market.",
+   "tags": [
+    "Machinery",
+    "Imports",
+    "Market data"
+   ],
+   "sources": [
+    {
+     "title": "PACRA, Sector Study: Machinery, January 2026",
+     "url": "https://www.pacra.com/view/storage/app/PACRA%20Research%20-%20Machinery%20-%20Jan%2726_1767447674.pdf"
+    }
+   ],
+   "body": "<p>Pakistan builds with imported machines. Excavators, cranes, pumps and batching plants largely come from abroad, so import figures are a good guide to how confident contractors feel about the work ahead.</p>\n<h2>What the figures show</h2>\n<p>According to PACRA’s machinery sector study (January 2026), imports of construction and mining machinery were:</p>\n<table>\n<thead><tr><th>Period</th><th>USD million</th></tr></thead>\n<tbody>\n<tr><td>FY23</td><td>85</td></tr>\n<tr><td>FY24</td><td>94</td></tr>\n<tr><td>FY25</td><td>138</td></tr>\n<tr><td>First five months of FY26</td><td>98</td></tr>\n</tbody>\n</table>\n<p>That is a rise of roughly 47% in FY25 alone, and the first five months of FY26 already reached about 70% of the previous full year.</p>\n<h2>Part of a wider machinery upturn</h2>\n<p>All machinery imports rose to about <strong>$9.6 billion</strong> in FY25 — around 16.5% of the country’s total imports — and were up about 20% year on year in the first five months of FY26. PACRA noted they may exceed $10 billion in FY26. Construction and mining machinery is still a small share of that total, but its share has been growing.</p>\n<h2>What is driving it</h2>\n<p>PACRA points to several supports for demand: easing inflation (around 5.6% in December 2025), a lower policy rate (about 10.5%) that makes equipment finance cheaper, and a larger federal development budget. It also notes that most demand is met by imports and that local producers face stiff competition.</p>\n<h2>What it means for buyers and sellers</h2>\n<ul>\n<li><strong>Contractors</strong> are replacing ageing fleets as financing costs ease. <a href=\"{{a:buy-rent-or-lease-construction-equipment}}\">Our guide to buying, renting or leasing</a> covers the trade-offs.</li>\n<li><strong>Dealers and manufacturers</strong> face buyers who compare total cost of ownership, after-sales support and spare-parts availability, not just the purchase price.</li>\n<li><strong>Service companies</strong> — maintenance, parts, training and telematics — grow with every machine sold.</li>\n</ul>\n<p>Build Asia has a dedicated outdoor area for heavy machinery, more than 50,000 sq ft at the last Karachi edition, where buyers can see equipment working rather than in a brochure.</p>",
+   "image": "cover-construction-machinery-imports-rise.jpg"
+  },
+  {
+   "slug": "budget-2026-27-what-it-means-for-construction",
+   "category": "economy-business-climate",
+   "title": "Budget 2026-27: property taxes halved, 7E abolished – what it means for construction",
+   "excerpt": "From 1 July 2026, advance tax on property deals was halved and Section 7E scrapped, alongside a Rs1 trillion federal PSDP and Rs71 billion for housing finance.",
+   "tags": [
+    "Budget",
+    "Property tax",
+    "Housing"
+   ],
+   "sources": [
+    {
+     "title": "Pakistan Observer, \"What's new in Budget 2026-27 after amendments? A look at key changes taking effect from July 1\", 23 June 2026",
+     "url": "https://pakobserver.net/whats-new-in-budget-2026-27-after-amendments-a-look-at-key-changes-taking-effect-from-july-1/"
+    },
+    {
+     "title": "Zameen News, \"Budget 2026-27: Tax cuts proposed to revive property sector\", 15 June 2026",
+     "url": "https://www.zameen.com/news/budget-proposes-tax-cuts-for-property-sector.html"
+    },
+    {
+     "title": "ProPakistani, \"Govt officially notifies Budget 2026-27\", 30 June 2026",
+     "url": "https://propakistani.pk/2026/06/30/govt-officially-notifies-budget-2026-27/amp/"
+    }
+   ],
+   "body": "<p>After amendments, the National Assembly approved the federal budget for 2026-27 in June 2026, with total federal spending of <strong>Rs18.771 trillion</strong>. The Finance Act 2026 was notified on 30 June, with its measures in force from <strong>1 July 2026</strong>. For the building industry, the most direct changes are in how property deals are taxed.</p>\n<h2>Property transactions: lower taxes</h2>\n<p>For active taxpayers, the advance tax collected on buying and selling property was roughly halved:</p>\n<table>\n<thead><tr><th>Measure</th><th>Before</th><th>From 1 July 2026</th></tr></thead>\n<tbody>\n<tr><td>Advance tax paid by buyers</td><td>2.5%</td><td>1.25% of fair market value</td></tr>\n<tr><td>Advance tax paid by sellers</td><td>5.5%</td><td>2.75% of gross sale amount</td></tr>\n<tr><td>Section 7E (deemed income of 5% of property value)</td><td>In force</td><td>Abolished</td></tr>\n</tbody>\n</table>\n<p>Section 7E had treated certain properties as earning a deemed income and was widely criticised by stakeholders. The government presented the package as a way to stimulate investment, boost market activity and encourage tax compliance.</p>\n<h2>Housing and development spending</h2>\n<ul>\n<li><strong>Housing finance:</strong> Rs71 billion is allocated to the PM Apna Ghar Scheme, which aims to widen access to affordable housing finance.</li>\n<li><strong>Federal PSDP:</strong> Rs1 trillion, within total national development spending of Rs3.675 trillion. Separately, the budget allocates Rs103.1 billion for water projects and Rs116.2 billion for energy. <a href=\"{{a:psdp-2026-27-infrastructure-spending}}\">Our PSDP article looks at where the money goes.</a></li>\n<li><strong>Import duties:</strong> the notified budget reduces or removes additional customs duties and cuts regulatory duties, which are expected to reduce collections by Rs47.06 billion and Rs65.57 billion respectively.</li>\n</ul>\n<h2>What this means for builders and suppliers</h2>\n<ul>\n<li><strong>Developers:</strong> cheaper transactions can make it easier to sell finished units and recycle money into new projects. Whether sales actually pick up will show in the coming months’ cement and property data.</li>\n<li><strong>Affordable housing:</strong> a funded housing-finance scheme matters most to builders of smaller, lower-cost homes, where the <a href=\"{{a:pakistan-housing-gap-numbers}}\">housing gap</a> is widest.</li>\n<li><strong>Contractors:</strong> the PSDP signals demand for road, water and power work; what matters is how much is actually released.</li>\n</ul>\n<p><strong>What to watch:</strong> budget allocations are targets, not spending, and lower duties also mean lower revenue. Track actual development releases and property sales through the year rather than the headline figures.</p>\n<p>Developers, contractors and the suppliers who serve them meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. Firms selling into housing and infrastructure can check the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-budget-2026-27-what-it-means-for-construction.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "dams-under-construction-materials-demand",
+   "category": "infrastructure-projects",
+   "title": "Mohmand, Diamer-Bhasha and Dasu: where Pakistan’s big dams stand in 2026",
+   "excerpt": "Three large dams are under construction at once, with roller-compacted concrete work due at two of them in 2026. Their scale, progress, this year’s funding and what they consume.",
+   "tags": [
+    "Dams",
+    "Hydropower",
+    "WAPDA"
+   ],
+   "sources": [
+    {
+     "title": "WAPDA, \"Construction continues on 10 key sites\" (Mohmand Dam Project), 19 January 2026",
+     "url": "https://wapda.gov.pk/?p=4045"
+    },
+    {
+     "title": "The News, \"RCC work to begin at Diamer Basha & Dasu dams this year\", 17 February 2026",
+     "url": "https://www.thenews.pk/print/1399578-rcc-work-to-begin-at-diamer-basha-dasu-dams-this-year"
+    },
+    {
+     "title": "Zameen News, \"Budget 2026-27: PKR 103bn allocated for key dam, hydropower schemes\", 16 June 2026",
+     "url": "https://www.zameen.com/news/pkr-103bn-allocated-for-key-dams-in-budget.html"
+    }
+   ],
+   "body": "<p>Pakistan has three large dams under construction at the same time, all run by WAPDA. By our own addition of the figures below, together they account for more than 9,600 MW of planned generating capacity.</p>\n<h2>The three projects</h2>\n<table>\n<thead><tr><th>Project</th><th>Key figures</th><th>Status</th><th>PSDP 2026-27</th></tr></thead>\n<tbody>\n<tr><td>Mohmand (River Swat, KP)</td><td>213 m concrete-faced rock-fill dam, 1.29 MAF storage, 800 MW</td><td>About 50% overall (January 2026); power by early 2028</td><td>Rs22bn</td></tr>\n<tr><td>Diamer-Bhasha (Indus, near Chilas)</td><td>8.1 MAF storage, 4,500 MW</td><td>Completion scheduled for 2030</td><td>Rs10bn, plus Rs4bn for land and resettlement</td></tr>\n<tr><td>Dasu (Indus, Upper Kohistan)</td><td>4,320 MW in two stages</td><td>Generation expected in 2028</td><td>Rs15bn (Stage I)</td></tr>\n</tbody>\n</table>\n<h2>Progress on site</h2>\n<p>At <strong>Mohmand</strong>, WAPDA reported in January 2026 that work continued on ten sites. Pit excavation for the main dam finished in mid-2025, the rock fill had reached 392 m above sea level, the spillway was about 70% complete and powerhouse structural work had begun. The WAPDA chairman asked the contractor to speed up quarry development, which the main dam depends on.</p>\n<p>At <strong>Diamer-Bhasha</strong>, The News reported in February 2026 that work was under way at 20 sites, excavation of the left abutment and dam pit was complete, and roller-compacted concrete (RCC) trials had succeeded. RCC placement was due to start in 2026 once the right abutment is excavated. At <strong>Dasu</strong>, 23 work fronts were active, crushing and batching plants were running, and RCC pouring for the main dam was also due in 2026.</p>\n<h2>What they consume</h2>\n<p>Our observation: the move to full RCC and rock-fill placement is the phase that draws most heavily on cement, aggregates, crushing and batching plant, haulage and earthmoving fleets, followed by electro-mechanical equipment for the powerhouses. The same budget also funds Tarbela’s 1,410 MW 5th extension (Rs3.4 billion), a refurbishment to lift Mangla Power Station from 1,000 MW to 1,310 MW, and smaller dams in Balochistan such as Awaran, Panjgur and Garuk.</p>\n<p><strong>What to watch:</strong> the Rs103 billion water and hydropower allocation for 2026-27 is more than 42% below the Rs179 billion the Planning Ministry proposed, so the pace of releases matters. See <a href=\"{{a:psdp-2026-27-infrastructure-spending}}\">our PSDP overview</a>.</p>\n<p>Suppliers of cement, construction chemicals and heavy machinery meet project contractors at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi, 18–20 March. The <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a> lists the product groups on show.</p>",
+   "image": "cover-dams-under-construction-materials-demand.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-marble-granite-mechanised-quarrying",
+   "category": "building-materials",
+   "featured": 4,
+   "title": "Pakistan’s marble and granite: vast reserves, and the push to quarry them better",
+   "excerpt": "Reserves are estimated at 30 billion tonnes, yet exports average about $37 million a year. Mechanised quarrying is starting to change that.",
+   "tags": [
+    "Marble",
+    "Stone",
+    "Exports"
+   ],
+   "sources": [
+    {
+     "title": "APP / Wealth Pakistan, \"135 mines in Pakistan adopt mechanized mining techniques\", 19 October 2025",
+     "url": "https://www.app.com.pk/?p=1088564"
+    }
+   ],
+   "body": "<p>Pakistan sits on some of the world’s most varied stone. Marble and granite deposits run across Khyber Pakhtunkhwa, Balochistan, Sindh, Punjab, Gilgit-Baltistan and Azad Jammu and Kashmir, with reserves estimated at around <strong>30 billion tonnes</strong>.</p>\n<p>Yet the industry’s export earnings are modest: marble exports have averaged about <strong>$37 million a year</strong> over the past five years, mostly as raw or semi-processed blocks. The gap between potential and earnings comes down largely to how stone is taken out of the ground.</p>\n<h2>The cost of blasting</h2>\n<p>Traditional quarrying often relies on blasting, which shatters much of the stone and leaves blocks of irregular size. According to official documents reported by Wealth Pakistan, waste at quarries that have modernised has fallen from <strong>nearly 85% to about 45%</strong>.</p>\n<h2>Mechanised quarrying is spreading</h2>\n<p>The Pakistan Stone Development Company (PASDEC) reports that <strong>135 operational mines</strong> have adopted mechanised techniques with its help — controlled cutting of standard square blocks instead of blasting. The programme has drawn about Rs 1.16 billion in combined public and private investment and created more than 800 jobs. PASDEC has also provided around Rs 1 billion in subsidies to miners over the past decade.</p>\n<h2>Why block quality matters</h2>\n<ul>\n<li><strong>Standard blocks</strong> can be cut efficiently into slabs and tiles, increasing value per tonne.</li>\n<li><strong>Less waste</strong> means more saleable stone from the same deposit.</li>\n<li><strong>Value addition</strong> — polishing, cutting to size, finished products — is where export margins are made.</li>\n</ul>\n<h2>Opportunities along the chain</h2>\n<p>The shift opens doors for suppliers of wire saws, cutting and polishing lines, block handling equipment, and the training that goes with them — and for buyers who want consistent, export-grade stone from Pakistan.</p>\n<p>Stonefair Asia runs alongside Build Asia, bringing quarry owners, processors and machinery suppliers together. Marble, granite and ceramic producers, and quarrying and finishing machinery suppliers, are core <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor categories</a>.</p>",
+   "image": "cover-pakistan-marble-granite-mechanised-quarrying.jpg"
+  },
+  {
+   "slug": "gwadar-port-city-development-2026",
+   "category": "cities-urban-development",
+   "title": "Gwadar in 2026: a busier port, a new airport and a free zone looking for tenants",
+   "excerpt": "Gwadar handled about 11,000 containers in April 2026 alone, more than in all of 2025. Where the port, the new airport and the free zone stand, and what to watch.",
+   "tags": [
+    "Gwadar",
+    "Ports",
+    "Balochistan"
+   ],
+   "sources": [
+    {
+     "title": "APP, \"Gwadar Airport, free zone to boost Balochistan trade access, Senate told\", 13 February 2026",
+     "url": "https://www.app.com.pk/?p=1161951"
+    },
+    {
+     "title": "The News, \"How Gwadar port is benefiting from Hormuz crisis: report\", 30 April 2026",
+     "url": "https://www.thenews.pk/print/1412828-how-gwadar-port-is-benefiting-from-hormuz-crisis-report"
+    },
+    {
+     "title": "Business Recorder, \"Gwadar Port sees maritime surge after ME crisis, tariff cut\", 26 May 2026",
+     "url": "https://www.brecorder.com/news/amp/40422812"
+    }
+   ],
+   "body": "<p>For most of the past two decades Gwadar has been better known for its plans than its traffic. In 2026 that began to change, partly because of events far from Balochistan. Here is where the main pieces stand.</p>\n<h2>The port: a sudden surge</h2>\n<p>The News reported on 30 April 2026 that Gwadar had handled about <strong>11,000 standard containers</strong> so far that month, against roughly 8,300 in the whole of 2025. Historically, no more than 20 ships had called in a single year. The port offers over 90,000 square metres of general cargo storage.</p>\n<p>The trigger was disruption around the Strait of Hormuz, which pushed shipping lines to look for alternatives. The government added a price incentive: Business Recorder reported in May 2026 that it had cut port charges as follows.</p>\n<table>\n<thead><tr><th>Charge</th><th>Reduction</th></tr></thead>\n<tbody>\n<tr><td>Berthing fees, transshipment container vessels</td><td>25%</td></tr>\n<tr><td>International transshipment container cargo</td><td>40%</td></tr>\n<tr><td>Transit container cargo</td><td>31%</td></tr>\n</tbody>\n</table>\n<p>Larger ships followed. A vessel carrying over <strong>53,000 tonnes of steel billets</strong> berthed on 24 May 2026, after one with about 34,000 tonnes of transshipment cargo on 11 May.</p>\n<h2>The airport and the free zone</h2>\n<p>According to a government answer in the Senate in February 2026, the New Gwadar International Airport has been operating since <strong>20 January 2025</strong>. The Gwadar Free Zone covers about <strong>2,281 acres</strong> at the port and was described as fully operational, with ready warehouses, office space and industrial units. Its incentives include:</p>\n<ul>\n<li>a 23-year holiday from federal, provincial and local taxes;</li>\n<li>leases of up to 99 years;</li>\n<li>exemption from import duties and sales tax on machinery and equipment.</li>\n</ul>\n<p>Road links named in the same answer include the M-8 Ratodero–Gwadar motorway, the N-85 Hoshab–Surab highway and the N-10 Makran Coastal Highway to Karachi.</p>\n<h2>Where the openings are</h2>\n<ul>\n<li><strong>Warehousing and port services:</strong> more cargo means more demand for storage, handling equipment and maintenance.</li>\n<li><strong>Industrial units in the free zone:</strong> the duty exemption on machinery lowers the cost of setting up processing or assembly.</li>\n<li><strong>Roads and utilities:</strong> connecting the port, airport and hinterland remains a federal responsibility and an ongoing programme of civil works.</li>\n</ul>\n<p>What to watch: The News described much of the new activity as transshipment and anchorage — a “temporary logistical buffer”, with cargo not meant for local markets. Some analysts saw a long-term opportunity, but the paper said it remained to be seen whether the surge would bring sustained growth after the crisis.</p>\n<p>Contractors, equipment suppliers and project owners active across Pakistan meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi. See the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-gwadar-port-city-development-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "steel-industry-capacity-demand-2026",
+   "category": "industry-manufacturing",
+   "title": "Pakistan’s steel industry in 2026: 9 million tonnes of capacity, 3.8 million produced",
+   "excerpt": "Long-steel makers run far below capacity, squeezed by power tariffs and taxes, even as scrap imports point to a rebar recovery. The numbers, and what they mean for buyers.",
+   "tags": [
+    "Steel",
+    "Industry",
+    "Energy"
+   ],
+   "sources": [
+    {
+     "title": "The News, \"Steel sector at breaking point\", 29 April 2026 (PALSP data)",
+     "url": "https://www.thenews.pk/print/1412613-steel-sector-at-breaking-point"
+    },
+    {
+     "title": "Dawn, \"Iron, steel scrap imports hit record in October\", 27 November 2025",
+     "url": "https://www.dawn.com/news/1957616"
+    },
+    {
+     "title": "Press Information Department, Government of Pakistan, PR No. 132, \"Pakistan, Russia sign protocol to revive Steel Mills\", 11 July 2025",
+     "url": "https://pid.gov.pk/site/press_detail/29669"
+    }
+   ],
+   "body": "<p>Steel bars and sections are, after cement, the second pillar of almost every building and bridge in Pakistan. The industry that makes them has plenty of capacity but is running far below it.</p>\n<h2>Capacity and output</h2>\n<p>Figures from the Pakistan Association of Large Steel Producers (PALSP), reported in April 2026, show the gap clearly:</p>\n<table>\n<thead><tr><th>Indicator (PALSP, April 2026)</th><th>Figure</th></tr></thead>\n<tbody>\n<tr><td>Installed capacity</td><td>9 million tonnes</td></tr>\n<tr><td>Current production</td><td>3.8 million tonnes</td></tr>\n<tr><td>Steel use per person</td><td>48 kg</td></tr>\n<tr><td>Electricity used each year</td><td>about 3 billion kWh (about 7 billion at full capacity)</td></tr>\n<tr><td>Direct jobs</td><td>about 200,000</td></tr>\n</tbody>\n</table>\n<p>Many units are shut and the rest run at 30% to 50% of capacity. For comparison, the same report says Bangladesh, with similar capacity, produces about 6.5 million tonnes a year.</p>\n<h2>Why: energy and taxes</h2>\n<p>The industry points to steep electricity tariffs, high interest rates and heavier taxes. Sales tax on steel rose from Rs10,350 per tonne in 2018-19 to between Rs37,000 and Rs40,500 per tonne in recent years. PALSP has asked for regionally competitive power tariffs, removal of the super tax and collection of tax at the scrap-import stage to curb evasion.</p>\n<h2>Signs of a pick-up</h2>\n<p>Imports of scrap, which local mills melt into steel bars, fell from 4.72 million tonnes of imports in 2021 to about 2.7–2.8 million tonnes in 2024-25. Then demand turned. In the first four months of FY26 (July–October 2025), scrap imports rose 58.5% to 1.299 million tonnes, with October a record at 381,991 tonnes. PALSP’s secretary general, Syed Wajid Bukhari, said the rise came from real demand, not cheaper scrap.</p>\n<p>On the state side, Pakistan and Russia signed a protocol in Moscow in July 2025 to restore and modernise Pakistan Steel Mills in Karachi, originally built with Soviet help in 1973.</p>\n<h2>What this means for suppliers and buyers</h2>\n<ul>\n<li>Spare capacity means local mills can meet more demand quickly if construction keeps growing.</li>\n<li>Energy is the biggest lever: efficient furnaces, captive or renewable power and better rolling-mill equipment address the industry’s main cost.</li>\n<li>Contractors should watch rebar price swings, which follow scrap prices and energy costs.</li>\n</ul>\n<p><strong>What to watch:</strong> the industry says high tariffs and taxes have already shut many units, and the July 2025 announcement on Pakistan Steel Mills gave no timetable.</p>\n<p>Steel makers, rolling-mill suppliers and contractors meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi. Cement demand, steel’s closest companion, is covered in <a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">our FY26 cement analysis</a>.</p>",
+   "image": "cover-steel-industry-capacity-demand-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-housing-gap-numbers",
+   "category": "housing-real-estate",
+   "featured": 5,
+   "title": "Pakistan’s housing gap: the numbers behind the shortage",
+   "excerpt": "Need grows by about a million homes a year, cities build fewer than half of what they need, and mortgages are just 0.44% of GDP.",
+   "tags": [
+    "Housing",
+    "Affordable housing",
+    "Finance"
+   ],
+   "sources": [
+    {
+     "title": "Business Recorder, opinion, 20 November 2025 (figures from PMRC, UN-Habitat and the ACASH Report 2023)",
+     "url": "https://www.brecorder.com/news/40393310"
+    }
+   ],
+   "body": "<p>Housing is the single largest driver of construction in Pakistan, and the gap between need and supply is the defining fact of the market. Figures compiled from the Pakistan Mortgage Refinance Company (PMRC), UN-Habitat and the ACASH Report (2023) show its shape.</p>\n<h2>The headline gap</h2>\n<ul>\n<li>National need is put at about <strong>38.3 million</strong> housing units against a supply of about <strong>36.2 million</strong> — a shortfall of around <strong>2.1 million</strong> units.</li>\n<li>Need grows by about <strong>1.06 million units a year</strong>, driven by population growth and new households.</li>\n<li>In urban areas about <strong>350,000</strong> new units are needed each year, but only about <strong>150,000</strong> are built.</li>\n<li>About <strong>13 million households</strong> are overcrowded — 6 million in towns and cities and 7 million in rural areas.</li>\n</ul>\n<h2>Who needs homes</h2>\n<p>Most of the need is at the lower end of the market: about 217,000 units a year for lower-income households, 87,500 for lower-middle-income and 35,000 for higher-income households. In rural areas, much of the need is about quality — replacing homes that are unsafe or inadequate.</p>\n<h2>The finance problem</h2>\n<p>Mortgage lending is only about <strong>0.44% of GDP</strong>. Without long-term finance, most families build slowly from savings, one room or one floor at a time. That shapes the whole supply chain: materials are bought in small quantities, and construction stretches over years.</p>\n<h2>What could close the gap</h2>\n<ul>\n<li><strong>Affordable design:</strong> smaller, well-planned units on serviced plots.</li>\n<li><strong>Faster building systems:</strong> prefabrication and <a href=\"{{a:light-gauge-steel-framing-low-rise-homes}}\">light gauge steel framing</a> can cut time on site.</li>\n<li><strong>Finance:</strong> more mortgage lending, and new investment routes such as <a href=\"{{a:reits-pakistan-real-estate-investment}}\">REITs</a>.</li>\n<li><strong>Better use of land:</strong> mid-rise apartments in cities rather than ever-wider sprawl.</li>\n</ul>\n<p>Affordable housing was one of the themes of the PROPTECH Convention at the last Build Asia. Builders, developers, banks and housing finance companies are all part of the show’s audience.</p>",
+   "image": "cover-pakistan-housing-gap-numbers.jpg"
+  },
+  {
+   "slug": "building-materials-exports-markets",
+   "category": "trade-supply-chains",
+   "title": "Building-material exports: where Pakistan’s cement and stone are sold",
+   "excerpt": "Cement export earnings rose in July–May FY26 while full-year volume held near 9 million tonnes, and Pakistan was China’s third-largest supplier of calcareous building stone in 2025.",
+   "tags": [
+    "Exports",
+    "Cement",
+    "Stone"
+   ],
+   "sources": [
+    {
+     "title": "CemNet / International Cement Review, \"Pakistan’s cement exports show growth in 11MFY26\", 6 July 2026",
+     "url": "https://www.cemnet.com/News/story/181635/pakistan-s-cement-exports-show-growth-in-11mfy26.html"
+    },
+    {
+     "title": "Global Cement, \"Update on Pakistan, July 2026\", 8 July 2026",
+     "url": "https://globalcement.com/news/analysis/20977-update-on-pakistan-july-2026"
+    },
+    {
+     "title": "APP, \"Pakistan’s marble and onyx exports to China stable in 2025\", 10 February 2026",
+     "url": "https://www.app.com.pk/?p=1160335"
+    }
+   ],
+   "body": "<p>Pakistan mostly imports for construction, but some building materials go the other way. Cement and natural stone are two of them. Their export figures show which overseas buyers already trust Pakistani supply.</p>\n<h2>Cement: more revenue, flat volume</h2>\n<p>The All Pakistan Cement Manufacturers Association put FY26 cement exports at about <strong>9 million tonnes</strong>, slightly down on the year, as reported by Global Cement in July 2026. Trade figures for the first eleven months (July 2025 to May 2026), reported by CemNet, show a better picture by value:</p>\n<table>\n<thead><tr><th>Jul–May</th><th>FY25</th><th>FY26</th><th>Change</th></tr></thead>\n<tbody>\n<tr><td>Volume (million tonnes)</td><td>8.02</td><td>8.11</td><td>+1.19%</td></tr>\n<tr><td>Value (USD million)</td><td>287.9</td><td>316.3</td><td>+9.85%</td></tr>\n</tbody>\n</table>\n<p>The value rose much faster than the tonnage, which suggests better prices per tonne. CemNet notes that Pakistan has historically shipped cement and clinker to Afghanistan, Sri Lanka, Brazil, the USA and parts of Africa.</p>\n<h2>North and south moved apart</h2>\n<p>Geography shaped the year. AKD Research, quoted by Global Cement, said exports from northern plants fell after the Afghan border closed in late 2025. Global Cement added that exports from the south rose on growing demand from Africa, but not enough to lift the national total. For domestic sales, see <a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">our FY26 cement figures</a>, and for new kilns see <a href=\"{{a:cement-exports-and-capacity-expansion}}\">cement exports and capacity expansion</a>.</p>\n<h2>Stone: a foothold in China</h2>\n<p>Chinese customs data for 2025, reported by APP in February 2026, ranked Pakistan as China’s <strong>third-largest supplier</strong> of calcareous building stone, including onyx. It shipped about 31.7 million kg worth $8.10 million, behind Türkiye and Bulgaria. Marble and travertine cut into blocks or slabs rose to $5.41 million from $5.02 million. Crude granite shipments fell sharply while cut granite rose.</p>\n<h2>What this means for suppliers and partners</h2>\n<ul>\n<li>Higher earnings per tonne suggest firmer export prices, and in FY26 southern producers fared better than northern ones.</li>\n<li>The move from crude to cut stone is the value-addition story told in <a href=\"{{a:pakistan-marble-granite-mechanised-quarrying}}\">our marble and granite article</a>. Cutting, polishing and finishing lines are the tools for it.</li>\n<li>Other finished goods, such as <a href=\"{{a:furniture-exports-germany-overtakes-us}}\">furniture</a>, are another export story worth following.</li>\n</ul>\n<p>What to watch: CemNet reported in July 2026 that the Afghan border had been closed for the past nine months. For later developments on the crossings, see <a href=\"{{a:regional-corridors-central-asia-trade}}\">our article on regional corridors</a>.</p>\n<p>Exporters, stone processors and buyers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi, 18–20 March 2027.</p>",
+   "image": "cover-building-materials-exports-markets.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "interest-rates-construction-finance-2026",
+   "category": "economy-business-climate",
+   "title": "From 22% to 11.5%: the policy rate path and what it means for construction finance",
+   "excerpt": "The SBP cut its policy rate from a record 22% to 10.5%, then raised it to 11.5% in April 2026. What the path means for developers, contractors and home buyers.",
+   "tags": [
+    "Interest rates",
+    "Finance",
+    "SBP"
+   ],
+   "sources": [
+    {
+     "title": "Dawn, \"Central bank increases policy rate by 100bps to 11.5pc\", 27 April 2026",
+     "url": "https://www.dawn.com/news/1995495"
+    },
+    {
+     "title": "State Bank of Pakistan, Monetary Policy Statement, 14 September 2026",
+     "url": "https://www.sbp.org.pk/assets/documents/press-release/PR-14-Sep-2026.pdf"
+    },
+    {
+     "title": "ProPakistani, \"House financing amount in Pakistan reaches Rs. 37 billion\", 7 May 2026",
+     "url": "https://propakistani.pk/2026/05/07/house-financing-amount-in-pakistan-reaches-rs-37-billion/amp/"
+    }
+   ],
+   "body": "<p>Few numbers matter more to a builder than the cost of borrowing. Working capital, machinery purchases, land and home buyers’ mortgages all follow the State Bank of Pakistan’s policy rate. Over the past two years that rate has moved a long way, mostly down, with one turn up in 2026.</p>\n<h2>The path so far</h2>\n<table>\n<thead><tr><th>Period</th><th>Policy rate</th></tr></thead>\n<tbody>\n<tr><td>Before June 2024</td><td>22% (record high)</td></tr>\n<tr><td>June 2024 – December 2025</td><td>Cut by a cumulative 1,150 basis points</td></tr>\n<tr><td>December 2025 – April 2026</td><td>Held at 10.5%</td></tr>\n<tr><td>27 April 2026 (effective 28 April)</td><td>Raised by 100 basis points to 11.5%</td></tr>\n<tr><td>14 September 2026</td><td>Held at 11.5%</td></tr>\n</tbody>\n</table>\n<p>The April increase was the first in nearly three years. The Monetary Policy Committee linked it to the Middle East conflict, which pushed up oil, freight and insurance costs. Headline inflation, 7.3% in March 2026, reached 11.1% in August. At its September meeting, seven of ten committee members voted to hold the rate. The SBP expects inflation to ease towards the upper end of its 5–7% target range by June 2027.</p>\n<h2>Credit is still growing</h2>\n<p>Even at 11.5%, the policy rate is roughly half its 22% peak. Private sector credit grew 13.4% year on year, according to the September statement. Housing finance, however, remains small: an official briefing document reported in May 2026 put it at <strong>0.3% of GDP</strong>, and State Bank data put its share of total bank advances at 1.48%. The same document reported 25,304 housing finance applications by 30 April 2026, with Rs37.154 billion approved but only Rs5.071 billion disbursed.</p>\n<h2>What it means for construction</h2>\n<ul>\n<li><strong>Developers and contractors:</strong> with the policy rate at about half its peak, bank-funded working capital and equipment are more viable than when rates were at 22%.</li>\n<li><strong>Home buyers:</strong> mortgages remain rare, so most housing demand still depends on buyers’ own savings. A wider mortgage market would change the pace of building more than any single rate cut. <a href=\"{{a:pakistan-housing-gap-numbers}}\">See the housing gap in numbers.</a></li>\n<li><strong>Suppliers:</strong> dealers who offer credit to contractors face lower funding costs than two years ago, but should plan for rates staying at this level for now.</li>\n</ul>\n<p><strong>What to watch:</strong> the SBP lists commodity price volatility, electricity and gas tariff adjustments, food prices and the Middle East conflict as risks to inflation. Further cuts depend on inflation falling back.</p>\n<p>Banks, housing finance companies and the builders who use them are part of the audience at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi, 18–20 March 2027.</p>",
+   "image": "cover-interest-rates-construction-finance-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "buildings-electricity-energy-conservation-building-code",
+   "category": "sustainable-building",
+   "featured": 6,
+   "title": "Buildings use about 60% of Pakistan’s electricity. Can a building code change that?",
+   "excerpt": "The federal government wants the Energy Conservation Building Code 2023 applied to new construction. What the code is for, and what it means for designers and suppliers.",
+   "tags": [
+    "Energy efficiency",
+    "ECBC",
+    "Policy"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Energy ministry links building code to power efficiency standards\", 30 May 2025",
+     "url": "https://profit.pakistantoday.com.pk/2025/05/30/energy-ministry-links-building-code-to-power-efficiency-standards"
+    }
+   ],
+   "body": "<p>Every summer, Pakistan’s grid is pushed to its limit by one thing above all: keeping buildings cool. According to the Federal Energy Minister, Sardar Awais Ahmed Khan Leghari, buildings account for <strong>about 60% of electricity use</strong> in the country.</p>\n<h2>The push for the code</h2>\n<p>In May 2025 the minister wrote to provincial Chief Ministers and federal officials urging them to adopt the <strong>Energy Conservation Building Code 2023 (ECBC-2023)</strong> as the national standard for new construction. His letters called for:</p>\n<ul>\n<li>ECBC-2023 to apply across all development plans;</li>\n<li>compliance by all government-funded projects under the Public Sector Development Programme;</li>\n<li>provinces to build it into their planning — with a proposal to link approval of future projects to compliance;</li>\n<li>efficient electrical systems in all new buildings.</li>\n</ul>\n<h2>What an energy code does</h2>\n<p>An energy conservation building code sets minimum standards for how much energy a building may use — typically through the building envelope (walls, roofs, windows and insulation), lighting, air-conditioning and electrical systems. The idea is simple: decisions made at design stage lock in a building’s electricity bills for decades.</p>\n<h2>What it means in practice</h2>\n<ul>\n<li><strong>Architects and engineers</strong> will need to show compliance at design stage, especially on public projects.</li>\n<li><strong>Developers</strong> can market lower running costs to buyers and tenants facing high tariffs.</li>\n<li><strong>Suppliers</strong> of insulation, high-performance glazing, reflective roofing, efficient air-conditioning, LED lighting and building controls stand to see demand grow.</li>\n</ul>\n<h2>The open questions</h2>\n<p>The success of any code depends on enforcement by local building authorities, on training for designers and inspectors, and on materials being available at prices builders can afford. Those are the conversations the industry will need to have over the coming years.</p>\n<p>Energy-efficient buildings and green construction practices are among the opportunity areas highlighted at Build Asia. <a href=\"{{a:rooftop-solar-7000-mw-building-design}}\">See also: how rooftop solar is changing building design.</a></p>",
+   "image": "cover-buildings-electricity-energy-conservation-building-code.jpg"
+  },
+  {
+   "slug": "motorways-highways-pipeline-2026",
+   "category": "infrastructure-projects",
+   "title": "M-6 and the KKH realignment: Pakistan’s motorway pipeline and who is financing it",
+   "excerpt": "The 306 km Hyderabad–Sukkur Motorway is moving to contract award with IsDB, OPEC Fund and PPP finance, and Pakistan and China have agreed an 85:15 split for the KKH realignment. Where things stand.",
+   "tags": [
+    "Motorways",
+    "M-6",
+    "CPEC"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"Construction Starting Date Announced for New Motorway\", 22 September 2026",
+     "url": "https://propakistani.pk/2026/09/22/construction-starting-date-announced-for-new-motorway/"
+    },
+    {
+     "title": "APP, \"Govt steps up work on Hyderabad-Sukkur Motorway\", 21 May 2026",
+     "url": "https://www.app.com.pk/?p=1214354"
+    },
+    {
+     "title": "APP, \"CPEC projects continue to boost connectivity, infrastructure development: Economic Survey\", 11 June 2026",
+     "url": "https://www.app.com.pk/?p=1224525"
+    }
+   ],
+   "body": "<p>Two road projects show how Pakistan is now paying for large highways: by splitting them into sections and matching each section to a different lender or to private finance.</p>\n<h2>M-6 Hyderabad–Sukkur: five sections, three financing routes</h2>\n<p>The 306 km motorway is estimated at Rs359 billion, and ECNEC has approved a revised PC-I of Rs364 billion. Land acquisition for the main corridor is reported complete, and ProPakistani reported in September 2026 that construction was scheduled to begin in November 2026.</p>\n<table>\n<thead><tr><th>Section</th><th>Length / cost</th><th>Financing</th><th>Status (Sept 2026)</th></tr></thead>\n<tbody>\n<tr><td>I: Hyderabad–Tando Adam</td><td>57 km, Rs81bn</td><td>Public–private partnership</td><td>Tendering 6 Nov 2026; concession award targeted for 4 Feb 2027</td></tr>\n<tr><td>II: Tando Adam–Nawabshah</td><td>63 km, Rs70bn</td><td>Public–private partnership</td><td>As section I</td></tr>\n<tr><td>III: Nawabshah–Naushahro Feroze</td><td>65 km, Rs69bn</td><td>OPEC Fund, $230m</td><td>Bids received 2 Sept; award expected November</td></tr>\n<tr><td>IV: Naushahro Feroze–Ranipur</td><td>61 km, about Rs68bn</td><td>Islamic Development Bank</td><td>Bids under evaluation</td></tr>\n<tr><td>V: Ranipur–Sukkur</td><td>60 km, Rs71bn</td><td>Islamic Development Bank</td><td>Bid opening delayed by grievance process</td></tr>\n</tbody>\n</table>\n<p>The IsDB approved $475 million for sections IV and V in September 2025 and signed the financing agreement on 19 January 2026. The Asian Development Bank is transaction adviser for the two PPP sections. According to APP in May 2026, the three northern sections are targeted for completion between March and May 2029.</p>\n<h2>Karakoram Highway: rebuilding around the dams</h2>\n<p>The Economic Survey 2025-26 (June 2026) says work on realigning the KKH between Thakot and Raikot is advancing under a government-to-government framework agreement with China. Phase II(A) moves 102 km of the road from Thor Nullah to Raikot, including 88 km of new alignment; Phase II(B) upgrades 139 km of the existing highway. The two countries agreed an 85:15 financing split, with the financing agreement still being finalised. The Survey also says MoUs are being advanced for the N-50 D.I. Khan–Zhob road, the M-10 and the Babusar Tunnel, with feasibility studies to follow.</p>\n<h2>What this means for suppliers and partners</h2>\n<ul>\n<li>Lender-funded sections are usually procured through international bidding, which can be open to local and foreign contractors and their joint ventures.</li>\n<li>Contract awards from late 2026 point to demand for asphalt plants, pavers, crushers and bridge steel in Sindh during 2027.</li>\n<li>What to watch: section V’s bid delay and the PPP sections, which still depend on attracting a concessionaire.</li>\n</ul>\n<p>Read <a href=\"{{a:ppp-projects-pipeline-pakistan}}\">how PPP projects work</a> and <a href=\"{{a:psdp-2026-27-infrastructure-spending}}\">the PSDP road allocations</a>. Road contractors and equipment suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, Karachi Expo Centre, 18–20 March.</p>",
+   "image": "cover-motorways-highways-pipeline-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "lahore-new-urban-projects-ravi-cbd",
+   "category": "cities-urban-development",
+   "title": "Lahore’s new urban projects: Ravi City and the Central Business District in 2026",
+   "excerpt": "River training and embankments along 46 km of the Ravi, and hotel, residential and commercial sites on offer in the CBD: where Lahore’s two flagship projects stand.",
+   "tags": [
+    "Lahore",
+    "RUDA",
+    "CBD Punjab"
+   ],
+   "sources": [
+    {
+     "title": "Daily Times, \"RUDA to revolutionise urban landscape of Lahore in 2026\", 2 January 2026",
+     "url": "https://dailytimes.com.pk/1428101/ruda-to-revolutionise-urban-landscape-of-lahore-in-2026/"
+    },
+    {
+     "title": "The News, \"CBD launches new projects for investors\", 10 May 2026",
+     "url": "https://www.thenews.pk/print/1414727-cbd-launches-new-projects-for-investors"
+    },
+    {
+     "title": "ProPakistani, \"Ravi Urban Development Authority to Get Rs. 15 Billion From Punjab Govt\", 1 October 2026",
+     "url": "https://propakistani.pk/2026/10/01/ravi-urban-development-authority-to-get-rs-15-billion-from-punjab-govt/"
+    }
+   ],
+   "body": "<p>Two Punjab government authorities are reshaping parts of Lahore: the Ravi Urban Development Authority (RUDA), which is developing a new city along the River Ravi, and CBD Punjab, which is turning state land into a business district. Both are led by the same chief executive, Imran Amin.</p>\n<h2>Ravi City: flood protection first</h2>\n<p>Daily Times reported in January 2026 that the riverfront project runs along a <strong>46 km</strong> stretch of the Ravi and, in the words of RUDA’s chief executive, covers “over 140,000 acres”. Most of the early work is river control:</p>\n<ul>\n<li>Phase 1 river channelisation covers 14.5 km, with the first 3 km on the right bank completed and the other reported packages at between 6.5% and 52%.</li>\n<li>Phases 2 and 3 cover 31.5 km; two packages are under way on a government-to-government basis, both below 2% complete.</li>\n<li>46 km of embankments are planned on both banks within three years; 7 km were built in 2025.</li>\n<li>A 9.5 km, 140-foot-wide road linking the Lahore Ring Road with the riverbank is in progress.</li>\n</ul>\n<p>Other works reported include the Chaharbagh-01 regeneration across 138 acres (98% complete), civil infrastructure for the 168-acre Chaharbagh Enclave (43%), a completed RUDA Industrial Zone and 100,000 trees planted on 198 acres at Jhoke.</p>\n<p>On funding, ProPakistani reported on 1 October 2026 that the Punjab cabinet had approved a <strong>Rs15 billion</strong> loan from CBD Punjab to RUDA for flood protection along the Ravi, to reach RUDA as a supplementary grant in 2026-27.</p>\n<h2>The Central Business District: sites on offer</h2>\n<p>In May 2026 CBD Punjab invited expressions of interest and sealed bids for:</p>\n<table>\n<thead><tr><th>Project</th><th>Location</th><th>Size</th></tr></thead>\n<tbody>\n<tr><td>The Regalia, branded residences (design, build, finance, own, operate and maintain)</td><td>CBD Quaid District</td><td>3 plots of 7.11 kanals each</td></tr>\n<tr><td>Five-star-plus hotel and mixed-use complex</td><td>CBD Quaid District</td><td>41 kanals</td></tr>\n<tr><td>Two petrol station sites, 10-year lease</td><td>CBD NSIT City</td><td>6.77 and 5.38 kanals</td></tr>\n</tbody>\n</table>\n<h2>What this means for suppliers and partners</h2>\n<ul>\n<li><strong>Heavy civil works now:</strong> channelisation, embankments and roads call for earthmoving machinery, aggregates, cement and geotechnical expertise.</li>\n<li><strong>Buildings later:</strong> hotels, branded residences and mixed-use towers will need facades, lifts, building services and fit-out once developers are chosen.</li>\n</ul>\n<p>What to watch: most Ravi channelisation packages beyond Phase 1 were still at an early stage or in design at the start of 2026; in our view, building plots depend on the flood works finishing.</p>\n<p>Developers, contractors and machinery suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. Interested companies can <a href=\"https://buildasia.net/contact/?enquiry=stand\">enquire about a stand</a>.</p>",
+   "image": "cover-lahore-new-urban-projects-ravi-cbd.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "build-asia-2026-in-numbers",
+   "category": "exhibition-news",
+   "title": "Build Asia 2026 in numbers: 32,000 visitors, 350 exhibitors, 21 countries",
+   "excerpt": "The figures from the post-show report of the January 2026 Karachi edition, and who opened and supported it.",
+   "tags": [
+    "Build Asia 2026",
+    "Results",
+    "Karachi"
+   ],
+   "sources": [],
+   "body": "<p>The most recent Karachi edition of Build Asia was held from <strong>22 to 24 January 2026</strong> at the Karachi Expo Centre. These are the figures from its post-show report.</p>\n<table>\n<thead><tr><th>Build Asia Karachi 2026</th><th></th></tr></thead>\n<tbody>\n<tr><td>Trade visitors</td><td>32,000+</td></tr>\n<tr><td>Exhibitors, international and local</td><td>350+</td></tr>\n<tr><td>Countries taking part</td><td>21+</td></tr>\n<tr><td>Indoor exhibition space</td><td>190,000+ sq ft (about 18,000 m²)</td></tr>\n<tr><td>Outdoor area for heavy machinery</td><td>50,000+ sq ft (about 5,000 m²)</td></tr>\n</tbody>\n</table>\n<h2>Opening and closing</h2>\n<p>The edition was inaugurated by senior figures from the Association of Builders and Developers, together with the Consuls General of Oman and Iran, the Deputy Trade Representative of the Russian Federation Trade Mission, and the Principal Secretary to the Governor of Sindh. The closing ceremony was attended by the Minister for Local Government, Sindh.</p>\n<h2>Supporters</h2>\n<p>The event was supported by the Ministry of Industries and Production, the Trade Development Authority of Pakistan and the Pakistan Engineering Council. Build Asia’s supporters also include PASDEC, the All Pakistan Marble Industries Association, the All Karachi Marble Industries Association and the Karachi Chamber of Commerce and Industry.</p>\n<h2>Alongside the exhibition</h2>\n<p>The PROPTECH Convention ran with the show, covering housing, finance, design and technology in real estate. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what it covered.</a></p>\n<h2>Next edition</h2>\n<p>The 21st edition takes place from 18 to 20 March 2027 at the Karachi Expo Centre. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a> Photos from past editions are in the <a href=\"https://buildasia.net/gallery/\">gallery</a>.</p>",
+   "image": "cover-build-asia-2026-in-numbers.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "pakistan-glass-industry-float-glass",
+   "category": "industry-manufacturing",
+   "title": "Pakistan’s glass industry: three float glass makers, 1,600 tonnes a day, rising imports",
+   "excerpt": "Float glass for windows and facades comes from three local producers. What PACRA’s December 2025 study says about output, imports, energy costs and where the openings are.",
+   "tags": [
+    "Glass",
+    "Industry",
+    "Facades"
+   ],
+   "sources": [
+    {
+     "title": "PACRA, Sector Study: Glass, 9 December 2025",
+     "url": "https://www.pacra.com/view/storage/app/PACRA%20Research%20-%20Glass%20-%20Dec%2725_1765266161.pdf"
+    },
+    {
+     "title": "Ghani Glass Limited, corporate briefing presentation, nine months to 31 March 2025 (PSX filing)",
+     "url": "https://dps.psx.com.pk/download/document/257154.pdf"
+    },
+    {
+     "title": "Tariq Glass Industries Limited, corporate briefing session 2025, year to 30 June 2025 (PSX filing)",
+     "url": "https://dps.psx.com.pk/download/document/261984.pdf"
+    }
+   ],
+   "body": "<p>Windows, shopfronts and glass facades all start as float glass: flat sheets made by floating molten glass on a bath of tin. PACRA’s sector study of 9 December 2025 names float glass for the construction industry as the glass sector’s largest segment.</p>\n<h2>Who makes it</h2>\n<p>PACRA names three float glass producers — <strong>Tariq Glass, Ghani Glass and Ghani Value Glass</strong> — with a combined float capacity of about <strong>1,600 tonnes per day</strong>. These groups also make containers and tableware:</p>\n<ul>\n<li><strong>Ghani Glass</strong> lists a 1,000-tonne-a-day float glass plant at Sheikhupura (two furnaces), alongside container plants at Hattar and Karachi, and says it exports to 52 countries (briefing for the nine months to March 2025).</li>\n<li><strong>Tariq Glass</strong> reports five plants with a combined capacity of 1,390 tonnes per day across tableware, container and float glass, and a joint venture with Lucky Core Industries (briefing for the year to June 2025).</li>\n</ul>\n<h2>Output, trade and costs</h2>\n<table>\n<thead><tr><th>Indicator (PACRA)</th><th>FY24</th><th>FY25</th></tr></thead>\n<tbody>\n<tr><td>Glass plates and sheets produced</td><td>20.2 million m²</td><td>13.0 million m² (about −36%)</td></tr>\n<tr><td>Glass imports</td><td>—</td><td>US$114.7 million</td></tr>\n<tr><td>Glass exports</td><td>US$41.0 million</td><td>US$33.2 million</td></tr>\n<tr><td>Revenue of listed players</td><td>Rs85.2 billion</td><td>Rs88.7 billion</td></tr>\n</tbody>\n</table>\n<p>Sheet output kept falling slightly in the first four months of FY26, to about 3.2 million m², while imports in that period rose about 10% to US$40.1 million. Glass fibres were the largest import category, at about a quarter of the total. Fuel and energy make up about <strong>34% of direct costs</strong>, and Ghani Glass listed surging gas prices and slow construction activity among its challenges.</p>\n<h2>Where the openings are</h2>\n<ul>\n<li>Only three companies make float glass locally, so buyers have a narrow local choice and specialist products face little direct local competition.</li>\n<li>Processing — toughening, laminating, insulating units and facade fabrication — adds value close to the building site.</li>\n<li>Energy-saving furnace and process technology addresses the industry’s largest cost.</li>\n</ul>\n<p><strong>What to watch:</strong> PACRA rates the outlook stable but flags periodic plant shutdowns for maintenance, rising energy costs and muted construction activity. Net margins of listed players narrowed to about 9.1% in the first quarter of FY26.</p>\n<p>Glass makers, processors and facade contractors meet buyers at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. Interested companies can <a href=\"https://buildasia.net/contact/?enquiry=stand\">enquire about a stand</a>.</p>",
+   "image": "cover-pakistan-glass-industry-float-glass.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "regional-corridors-central-asia-trade",
+   "category": "trade-supply-chains",
+   "title": "Rail to Uzbekistan, roads under CAREC: Pakistan’s regional corridors in 2026",
+   "excerpt": "A trans-Afghan railway is in feasibility, a decision to reopen Afghan crossings was reported in August 2026 and ADB road money has a deadline. What the corridors mean for construction.",
+   "tags": [
+    "Corridors",
+    "Railways",
+    "Central Asia"
+   ],
+   "sources": [
+    {
+     "title": "Kun.uz, \"Uzbekistan ratifies feasibility study agreement for Trans-Afghan railway\", 10 February 2026",
+     "url": "https://kun.uz/en/news/2026/02/10/uzbekistan-ratifies-feasibility-study-agreement-for-trans-afghan-railway"
+    },
+    {
+     "title": "KabulNow, \"Pakistan to Reopen Border Crossings and Transit Routes with Afghanistan\", 9 August 2026",
+     "url": "https://kabulnow.com/2026/08/pakistan-to-reopen-border-crossings-and-transit-routes-with-afghanistan/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"ADB warns of $360 million loan lapse for CAREC project due to delay in road works\", 12 January 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/01/12/adb-warns-of-360-million-loan-lapse-for-carec-project-due-to-delay-in-road-works/"
+    }
+   ],
+   "body": "<p>Pakistan’s ports could give landlocked Central Asia a route to the sea. Three strands of regional work could turn that geography into trade: a railway through Afghanistan, the land border crossings themselves and road upgrades under the Central Asia Regional Economic Cooperation (CAREC) programme. Each involves building work, at very different stages.</p>\n<h2>The Uzbekistan–Afghanistan–Pakistan railway</h2>\n<ul>\n<li><strong>Stage:</strong> feasibility. The three countries signed a framework agreement on 17 July 2025 for a joint technical and economic study of a Naibabad–Kharlachi line. Uzbekistan ratified it in February 2026.</li>\n<li><strong>Route:</strong> Termez through Naibabad, Maidanshahr and Logar to Kharlachi.</li>\n<li><strong>Scale:</strong> a 2018 proposal envisaged up to 20 million tonnes of cargo a year.</li>\n<li><strong>Cost:</strong> estimates have ranged widely, from $4.6 billion (Uzbekistan Railways, 2022) to $8.2 billion (Pakistan’s Ministry of Railways). In autumn 2023 the cost was revised to about $7 billion.</li>\n<li><strong>Funding:</strong> not yet confirmed. A build-operate-transfer public–private partnership is one option being considered.</li>\n</ul>\n<h2>The border: a reported decision to reopen</h2>\n<p>Torkham was shut to travellers and cargo in October 2025 after several days of clashes. On 8 August 2026, Pakistani media reported that Interior Minister Mohsin Naqvi had told business representatives of a decision to reopen all crossings and transit routes with Afghanistan. As of KabulNow’s report the next day, the decision had not been officially confirmed, and putting it into practice depended on an official announcement. Check the current status before planning shipments. According to the Pakistan-Afghanistan Joint Chamber of Commerce and Industry, two-way trade peaked at about $2.5 billion in 2010 and was just over $1.8 billion in 2022-23.</p>\n<h2>CAREC roads: money with a deadline</h2>\n<p>Under Tranche III of ADB’s CAREC programme, Pakistan is widening sections of the N55 highway. The project is estimated at Rs170 billion and backed by a <strong>$360 million</strong> ADB loan. In January 2026, Profit reported that the project had been stalled for over eight months. The works are split into four lots, and the loan must be used by 31 December 2027.</p>\n<h2>What this means for construction</h2>\n<ul>\n<li>A trans-Afghan line would need track, bridges, tunnels and terminals on a large scale, but it is years away and still unfunded.</li>\n<li>The nearer-term work is roads, border facilities and logistics yards. For the wider road pipeline, see <a href=\"{{a:motorways-highways-pipeline-2026}}\">motorways and highways in 2026</a>.</li>\n</ul>\n<p>What to watch: the border closure showed how quickly trade on these routes can stop, and the ADB loan for the N55 has a fixed deadline.</p>\n<p>Contractors, logistics firms and suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, Karachi Expo Centre, 18–20 March 2027.</p>",
+   "image": "cover-regional-corridors-central-asia-trade.jpg",
+   "featured": 0
   },
   {
    "slug": "construction-grows-fy26-economic-survey",
@@ -270,6 +793,404 @@
    ],
    "body": "<p>When the Finance Minister, Muhammad Aurangzeb, released the Pakistan Economic Survey 2025-26 in Islamabad on 11 June 2026, construction stood out as one of the brighter spots in the provisional figures.</p>\n<h2>The provisional figures</h2>\n<table>\n<thead><tr><th>FY26 (provisional)</th><th>Growth</th></tr></thead>\n<tbody>\n<tr><td>GDP</td><td>3.7%</td></tr>\n<tr><td>Industry</td><td>3.51%</td></tr>\n<tr><td><strong>Construction</strong></td><td><strong>5.73%</strong></td></tr>\n<tr><td>Large-scale manufacturing</td><td>6.1%</td></tr>\n<tr><td>Services</td><td>4.09%</td></tr>\n<tr><td>Agriculture</td><td>2.89%</td></tr>\n</tbody>\n</table>\n<p>GDP growth of 3.7% was the fastest in four years, though below the 4.2% target. Within industry, construction grew well ahead of the sector average and was described as a positive contributor.</p>\n<h2>It matches what the factories saw</h2>\n<p>The survey figure is consistent with the cement industry’s own numbers: domestic cement sales rose 9.5% over the same year, to 41.5 million tonnes (<a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">see our analysis of the FY26 cement figures</a>). Large-scale manufacturing, which includes many building-material producers, grew 6.1% — its best result in four years, with 16 of 22 sub-sectors growing.</p>\n<h2>Why it matters</h2>\n<p>Construction is one of the economy’s largest employers and pulls dozens of other industries with it, from steel and glass to transport and finance. Faster growth in construction usually means:</p>\n<ul>\n<li>more demand for building materials and finishing products;</li>\n<li>more investment in machinery and equipment by contractors;</li>\n<li>more work for architects, engineers, consultants and skilled trades.</li>\n</ul>\n<p>The figures are provisional and will be revised, but the direction is clear. For companies planning their next year, the question is less whether demand exists than where it will come from: housing, infrastructure, industrial buildings or energy-efficient retrofits.</p>\n<p>Those conversations happen in person at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, where builders, developers and government agencies meet suppliers. Trade visitors can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register online</a> before the show.</p>",
    "image": "cover-construction-grows-fy26-economic-survey.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "remittances-record-property-demand",
+   "category": "economy-business-climate",
+   "title": "Record $41.6 billion remittances in FY26: what it means for property demand",
+   "excerpt": "Overseas Pakistanis sent a record $41.6 billion home in 2025-26, and Roshan Digital Account inflows passed $13.3 billion. Why this money matters for housing and construction.",
+   "tags": [
+    "Remittances",
+    "Overseas Pakistanis",
+    "Real estate"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Pakistan receives record $41.6 billion workers' remittances in FY26\", 9 July 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/07/09/pakistan-receives-record-dollar416-billion-workers-remittances-in-fy26"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Roshan Digital Account gross inflows reach $13.37 billion by June 2026\", 10 July 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/07/10/roshan-digital-account-gross-inflows-reach-dollar1337-billion-by-june-2026"
+    },
+    {
+     "title": "Zameen News, \"Budget 2026-27: Incentives package announced for expats\", 15 June 2026",
+     "url": "https://www.zameen.com/news/budget-2026-27-incentives-package-announced-for-expats.html"
+    }
+   ],
+   "body": "<p>Money sent home by Pakistanis working abroad is one of the steadiest sources of demand for new homes, plots and renovations. In 2025-26 it reached a new high.</p>\n<h2>A record year</h2>\n<p>State Bank of Pakistan data released on 9 July 2026 show workers’ remittances of <strong>$41.6 billion in FY26</strong>, up 8.6% from $38.3 billion in FY25. In June 2026 alone, $3.5 billion arrived. The largest senders that month were:</p>\n<table>\n<thead><tr><th>Country</th><th>June 2026</th></tr></thead>\n<tbody>\n<tr><td>Saudi Arabia</td><td>$829.6 million</td></tr>\n<tr><td>United Arab Emirates</td><td>$792.2 million</td></tr>\n<tr><td>United Kingdom</td><td>$514.9 million</td></tr>\n<tr><td>United States</td><td>$296.8 million</td></tr>\n</tbody>\n</table>\n<h2>Roshan Digital Accounts</h2>\n<p>Roshan Digital Accounts (RDAs), launched for overseas Pakistanis in 2020, are a second channel. By the end of June 2026, gross RDA inflows had reached <strong>$13.365 billion</strong>, according to data compiled by Arif Habib Limited from SBP figures. Of this, $8.435 billion had been used within Pakistan and $2.093 billion repatriated. Net investment in Naya Pakistan Certificates stood at $1.901 billion. The published figures do not break down how much went into property.</p>\n<h2>Budget changes that affect overseas buyers</h2>\n<p>As presented on 12 June 2026, the 2026-27 budget cut withholding tax on property purchases by filers from 2.5% to 1.25% and on sales from 5.5% to 2.75%. It also abolished the capital value tax on foreign assets and cut withholding tax on international card transactions from 5% to 0.5%. <a href=\"{{a:budget-2026-27-what-it-means-for-construction}}\">More on the budget measures.</a></p>\n<h2>What this means for builders</h2>\n<ul>\n<li>Remittances add to household spending power at home. A record year suggests steady potential demand for housing, finishes, fittings and contractors’ services, especially where overseas families build or buy.</li>\n<li>Much of the money comes from the Gulf, the UK and the US. Projects aimed at overseas buyers need clear titles, approvals and remote payment options.</li>\n<li>Listed property funds offer another route for small investors. <a href=\"{{a:reits-pakistan-real-estate-investment}}\">How REITs work in Pakistan.</a></li>\n</ul>\n<p><strong>What to watch:</strong> the largest sources are in the Gulf, so regional conflict or a slowdown there could affect flows. Remittance figures also do not show directly how much is spent on property.</p>\n<p>Developers, builders and housing finance providers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">Register to visit.</a></p>",
+   "image": "cover-remittances-record-property-demand.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "karachi-infrastructure-projects-2026",
+   "category": "infrastructure-projects",
+   "title": "K-IV and the Red Line BRT: where Karachi’s big projects stand in 2026",
+   "excerpt": "Karachi’s K-IV water mainline is about 70% built with a December 2026 target, and the Red Line BRT is aiming for December 2027. Costs, progress and what is still needed.",
+   "tags": [
+    "Karachi",
+    "Water supply",
+    "Transport"
+   ],
+   "sources": [
+    {
+     "title": "Nukta, \"K-IV: 70% complete, but where is Karachi's water?\", 22 August 2026",
+     "url": "https://nukta.com/k-iv-70-complete-but-where-is-karachis-water"
+    },
+    {
+     "title": "Dawn, \"Federal minister sets new deadline for completion of K-IV water supply project\", 13 February 2026",
+     "url": "https://www.dawn.com/news/1972789/federal-minister-sets-new-deadline-for-completion-of-k-iv-water-supply-project"
+    },
+    {
+     "title": "Nukta, \"Karachi's BRT Red Line project plagued by delays, rising costs\", 27 March 2026",
+     "url": "https://nukta.com/karachi-brt-red-line-project-delays"
+    }
+   ],
+   "body": "<p>Two of Karachi’s biggest public projects, a bulk water line and a bus rapid transit corridor, have both run years behind schedule. Their progress matters to anyone building, supplying or operating in the city.</p>\n<h2>K-IV: bulk water for the city</h2>\n<p>K-IV, now implemented by WAPDA, is designed to bring <strong>260 million gallons a day</strong> (MGD) to the city in its first phase. Nukta reported in August 2026 that Karachi needs about 1,300 MGD and receives well below that.</p>\n<ul>\n<li><strong>Cost:</strong> the estimate rose from Rs120 billion to Rs170 billion, and the federal government will bear the full cost of the revised project (Dawn, February 2026).</li>\n<li><strong>Who does what:</strong> WAPDA builds the bulk transmission and lines the canal; the Sindh government is responsible for the distribution network inside Karachi.</li>\n<li><strong>Progress:</strong> officials put the mainline at about 70% complete in August 2026, with a December 2026 target set by the Planning Minister, Ahsan Iqbal.</li>\n</ul>\n<p>The catch, according to Nukta: the works that connect K-IV to the city’s existing network are behind schedule, so the mainline could be finished before water fully reaches consumers.</p>\n<h2>Red Line BRT: University Road corridor</h2>\n<p>The Red Line is a 23 km bus rapid transit corridor approved in 2019 and funded by the Asian Development Bank and other lenders. As of March 2026, Nukta reported:</p>\n<table>\n<thead><tr><th>Red Line BRT</th><th>Figure</th></tr></thead>\n<tbody>\n<tr><td>Progress</td><td>37% complete</td></tr>\n<tr><td>Cost</td><td>Up from $503 million to $600 million</td></tr>\n<tr><td>Completion target</td><td>December 2027 (originally June 2024)</td></tr>\n<tr><td>Commuters affected daily on University Road</td><td>Over 350,000</td></tr>\n</tbody>\n</table>\n<p>Reported problems include land disputes, payment issues, safety violations and administrative lapses.</p>\n<h2>What these projects still need</h2>\n<p>Our observations from the facts above:</p>\n<ul>\n<li>With K-IV’s mainline nearing completion, the next demand is in the city-side links: pipes, valves, pumping and storage tied into Karachi’s network.</li>\n<li>The Red Line, at 37% in March 2026, still has most of its work ahead, which points to work for civil contractors, steel and concrete suppliers through 2027.</li>\n<li>What to watch: both projects have slipped several times, and both have seen their costs rise.</li>\n</ul>\n<p>Karachi’s growth also depends on links out of the city, such as the <a href=\"{{a:motorways-highways-pipeline-2026}}\">Hyderabad–Sukkur Motorway</a>. Build Asia 2027 takes place in Karachi itself, at the Expo Centre from 18 to 20 March; <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register to visit</a> or read <a href=\"{{a:build-asia-2027-what-to-expect}}\">what to expect</a>.</p>",
+   "image": "cover-karachi-infrastructure-projects-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "buy-rent-or-lease-construction-equipment",
+   "category": "construction-machinery",
+   "title": "Buy, rent or lease? A practical guide to construction equipment decisions",
+   "excerpt": "How contractors can decide whether to own, rent or lease each machine — and the questions to ask suppliers before signing.",
+   "tags": [
+    "Machinery",
+    "Contractors",
+    "Guide"
+   ],
+   "sources": [],
+   "body": "<p>Every contractor faces the same question with each machine: buy it, rent it when needed, or lease it over several years? There is no single right answer, but there is a sound way to decide.</p>\n<h2>Start with utilisation</h2>\n<p>The most important number is how many days a year the machine will actually work for you. A machine that works most of the year on your own projects usually costs less to own. One that is needed for a few weeks on a single job is almost always cheaper to rent.</p>\n<h2>When buying makes sense</h2>\n<ul>\n<li>You have a steady pipeline of work that needs the machine for most of the year.</li>\n<li>You have operators and maintenance staff who can look after it.</li>\n<li>The machine holds its value well and has a good resale market.</li>\n<li>Financing is available at a rate your projects can carry.</li>\n</ul>\n<h2>When renting makes sense</h2>\n<ul>\n<li>The need is short or occasional — a crane for a lift, a piling rig for foundations.</li>\n<li>You want the latest model without tying up capital.</li>\n<li>You would rather not manage transport, servicing and storage.</li>\n</ul>\n<h2>When leasing makes sense</h2>\n<p>Leasing sits in between: predictable monthly payments, no large upfront outlay, and often the option to buy at the end. It suits companies with steady work but limited cash to spare, and lease payments can be easier to plan for than a loan.</p>\n<h2>Questions to ask any supplier</h2>\n<ol>\n<li>What is the total cost over the period, including servicing, insurance and transport?</li>\n<li>How quickly are spare parts available locally, and where?</li>\n<li>Is operator training included?</li>\n<li>What happens if the machine breaks down mid-project — is a replacement provided?</li>\n<li>For used machines: what are the working hours, and is there a service record?</li>\n</ol>\n<h2>Think in fleets, not machines</h2>\n<p>Many contractors own the machines they use every day — excavators, loaders, mixers — and rent the specialist ones. Reviewing the mix once a year keeps money from sitting in idle equipment.</p>\n<p>Dealers, rental companies and finance providers can be compared side by side at Build Asia’s machinery halls and outdoor display. <a href=\"{{a:construction-machinery-imports-rise}}\">Read why contractors are re-equipping.</a></p>",
+   "image": "cover-buy-rent-or-lease-construction-equipment.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "high-rise-growth-pakistan-cities",
+   "category": "cities-urban-development",
+   "title": "Building upwards: a record Karachi tower, new parking and fire rules, and what towers need",
+   "excerpt": "An 82-storey twin-tower project in Karachi, eased parking rules in Islamabad and tighter fire rules in Punjab: how 2026 is shaping tall buildings, and what they need.",
+   "tags": [
+    "High-rise",
+    "Building regulations",
+    "Fire safety"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"Pakistan’s Tallest Building to Be Built in Karachi’s DHA\", 25 July 2026",
+     "url": "https://propakistani.pk/2026/07/25/pakistans-tallest-building-to-be-built-in-karachis-dha/"
+    },
+    {
+     "title": "ProPakistani, \"CDA Eases Parking Rules for Commercial Buildings\", 3 August 2026",
+     "url": "https://propakistani.pk/2026/08/03/cda-eases-parking-rules-for-commercial-buildings/"
+    },
+    {
+     "title": "ProPakistani, \"Punjab Issues New Fire Safety Rules For Commercial Buildings After Karachi Gul Plaza Tragedy\", 25 January 2026",
+     "url": "https://propakistani.pk/2026/01/25/punjab-issues-new-fire-safety-rules-for-commercial-buildings-after-karachi-gul-plaza-tragedy/amp/"
+    }
+   ],
+   "body": "<p>As land in Pakistan’s big cities gets scarcer and dearer, more projects are going up rather than out. Three developments in 2026 show how the rules around tall buildings are moving — towards larger projects, simpler approvals and stricter safety.</p>\n<h2>Karachi: the tallest project yet</h2>\n<p>ProPakistani reported in July 2026 that the foundation stone had been laid for <strong>Burj Quaid</strong>, two towers of 82 storeys each on a six-acre site at DHA Golf Club, Karachi. It said the towers are expected to be Pakistan’s tallest buildings once complete, and project officials said the Pakistan Civil Aviation Authority had approved the height. The report links the project to ABS Developers.</p>\n<h2>Islamabad: fewer basements</h2>\n<p>In August 2026 the Capital Development Authority (CDA) Board amended its Building Control Regulations 2023 to ease parking for high-rise commercial buildings:</p>\n<table>\n<thead><tr><th>Parking rule</th><th>Requirement</th></tr></thead>\n<tbody>\n<tr><td>Before</td><td>1 space per 750 sq ft of covered commercial area</td></tr>\n<tr><td>From August 2026</td><td>1 space per 1,000 sq ft</td></tr>\n</tbody>\n</table>\n<p>The CDA said the old ratio had forced some projects to dig up to six basement levels, raising costs and concerns about soil and structural safety. The new rule applies to commercial plots offered at its auction of 4–6 August 2026 and later auctions.</p>\n<h2>Punjab: fire safety tightened</h2>\n<p>After the Gul Plaza fire in Karachi, the Punjab government issued new rules for commercial buildings in January 2026. Firefighting equipment became mandatory, every floor must have a fire extinguisher, and three-storey buildings must install steel evacuation staircases (no NOC needed). Owners were given 15 days to comply. In Rawalpindi, the development authority sent a fire safety checklist to high-rise owners and planned audits covering fire equipment, electrical systems and emergency routes.</p>\n<h2>What tall buildings need</h2>\n<p>Every tower is a bundle of systems that low-rise construction barely uses. In our view, the main ones are:</p>\n<ul>\n<li><strong>Vertical transport:</strong> lifts and, in commercial buildings, escalators, with long-term maintenance contracts.</li>\n<li><strong>Facades:</strong> glazing, aluminium and cladding systems that handle wind, heat and fire.</li>\n<li><strong>Fire safety:</strong> detection, alarms, sprinklers, pumps, fire-rated doors and protected stairs.</li>\n<li><strong>Building services (MEP):</strong> water pressure pumps, chillers, standby power and electrical distribution.</li>\n<li><strong>Structure and foundations:</strong> high-strength concrete, rebar, formwork and piling.</li>\n</ul>\n<p>What to watch: the 2026 safety push was a reaction to a disaster, and in our view enforcement across existing buildings is the open question. For designers, our article on <a href=\"{{a:designing-for-heat-karachi-lessons}}\">designing for heat in Karachi</a> covers related facade choices.</p>\n<p>Lift, facade, fire safety and MEP suppliers meet developers and contractors at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi. See the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-high-rise-growth-pakistan-cities.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "tiles-ceramics-sanitaryware-industry",
+   "category": "industry-manufacturing",
+   "title": "Tiles and ceramics in Pakistan: half the capacity idle, imports and the tariff debate",
+   "excerpt": "Local tile makers say they run at about half their capacity as energy costs bite and import duties fall. A look at the industry, the imports it competes with and what could change.",
+   "tags": [
+    "Tiles",
+    "Ceramics",
+    "Industry"
+   ],
+   "sources": [
+    {
+     "title": "The Express Tribune, \"Tariff cuts threaten tile industry\", 21 June 2026",
+     "url": "https://tribune.com.pk/story/2614309/tariff-cuts-threaten-tile-industry"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Customs revises import values for ceramic and porcelain tiles\", 12 January 2026",
+     "url": "https://profit.pakistantoday.com.pk/?p=206285"
+    },
+    {
+     "title": "Shabbir Tiles and Ceramics Limited, interim financial statements and directors’ report, nine months to 31 March 2026 (PSX filing)",
+     "url": "https://dps.psx.com.pk/download/document/276231.pdf"
+    }
+   ],
+   "body": "<p>Floor and wall tiles, along with sanitaryware, are among the most visible finishing products in any home or office. Pakistan has an established tile industry, now going through a difficult period. Published data on sanitaryware is much thinner, so the figures here are for tiles.</p>\n<h2>Half the capacity in use</h2>\n<p>In June 2026 industry sources said Pakistan’s ceramic tile sector was running at <strong>nearly 50% of its installed capacity</strong>. They blamed a long economic slowdown, weak construction, high energy costs and expensive finance, and said their production costs are well above those in China and India.</p>\n<p>The experience of one listed maker, Shabbir Tiles and Ceramics (the “Stile” brand), shows the pressure. Its net turnover for the nine months to March 2026 was about Rs8.85 billion, against about Rs10.63 billion a year earlier. Its directors cited subdued demand, an “oversupply situation”, higher energy, raw material and freight costs, and competition from undocumented operators. The FBR has issued STGO 02/2026, which requires electronic surveillance of tile production through video analytics.</p>\n<h2>Imports and the tariff debate</h2>\n<p>Imported tiles come from China and also from the UAE, Turkey and Iran, according to a January 2026 customs valuation ruling. During that review, local manufacturers said they had invested heavily in production, including larger-format tiles, while importers argued that international prices had fallen with new technology.</p>\n<p>Under Phase II of tariff rationalisation in the 2026-27 budget, as reported in June 2026, regulatory duty on imported tiles is set to fall by 20% and additional customs duty by 50%. Local makers warned this could lead to closures; Naveed Qamar, chairman of the National Assembly finance committee, asked the Ministry of Commerce and the National Tariff Commission to explain the impact. For the wider budget picture, see <a href=\"{{a:budget-2026-27-what-it-means-for-construction}}\">Budget 2026-27 and construction</a>.</p>\n<h2>Where the room for growth is</h2>\n<ul>\n<li><strong>Energy efficiency:</strong> kilns and dryers that use less gas and power go straight at the industry’s main cost. Shabbir Tiles, for example, has borrowed under the SBP refinance scheme for renewable energy.</li>\n<li><strong>Larger formats and porcelain:</strong> the segments where imports compete most directly and where local makers say they are investing.</li>\n<li><strong>Documentation:</strong> if surveillance narrows the gap with undocumented producers, compliant makers gain room on price.</li>\n</ul>\n<p><strong>What to watch:</strong> lower duties will widen buyers’ choice but may squeeze local output while energy costs stay high.</p>\n<p>Tile, ceramic and sanitaryware makers, importers and dealers meet specifiers at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, where the January 2026 edition drew over 32,000 trade visitors. See the <a href=\"https://buildasia.net/visitor-profile/\">visitor profile</a>.</p>",
+   "image": "cover-tiles-ceramics-sanitaryware-industry.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "paints-and-coatings-market-room-to-grow",
+   "category": "building-materials",
+   "title": "Paints and coatings: a market with room to grow",
+   "excerpt": "Pakistan uses about 1.2 kg of paint per person a year — low by international standards. What that means for decorative and protective coatings.",
+   "tags": [
+    "Paints",
+    "Coatings",
+    "Market data"
+   ],
+   "sources": [
+    {
+     "title": "U.S. International Trade Administration, \"Pakistan Paints and Coatings\", market intelligence, 14 August 2023",
+     "url": "https://www.trade.gov/market-intelligence/pakistan-paints-and-coatings"
+    }
+   ],
+   "body": "<p>Paint is the last product a building receives and the first thing people see. In Pakistan it is also a market with a lot of room left to grow.</p>\n<h2>The size of the market</h2>\n<p>The U.S. International Trade Administration estimated Pakistan’s paints and coatings market at about <strong>$400 million</strong>, with local production of around 0.25 million tonnes according to the Pakistan Coating Association, and expected growth of <strong>3.5% to 4% a year</strong>. Its market note dates from August 2023, so current figures may differ, but the structure it describes still holds.</p>\n<h2>Low use per person</h2>\n<p>Consumption is about <strong>1.2 kg per person per year</strong>, for a population of over 240 million. That is low by international standards, which means that as incomes rise, more homes are finished and more buildings are maintained, demand has a long way to grow.</p>\n<h2>Where the demand comes from</h2>\n<ul>\n<li><strong>Architectural (decorative) paint</strong> for homes, offices and public buildings — the largest use.</li>\n<li><strong>Protective and industrial coatings</strong> for steel structures, bridges, factories and pipelines.</li>\n<li><strong>Wood coatings</strong> for furniture, doors and fittings.</li>\n<li><strong>Infrastructure</strong> — dams, roads and government-funded housing.</li>\n</ul>\n<h2>Trends to watch</h2>\n<ul>\n<li><strong>Water-based paints</strong> with low solvent content, better for indoor air and painters’ health.</li>\n<li><strong>Heat-reflective roof and wall coatings</strong>, increasingly relevant in hot cities (<a href=\"{{a:designing-for-heat-karachi-lessons}}\">see our piece on designing for heat</a>).</li>\n<li><strong>Waterproof and anti-fungal coatings</strong> for humid coastal areas and monsoon seasons.</li>\n<li><strong>Protective coatings for steel</strong>, as more buildings use steel frames.</li>\n</ul>\n<p>Paints, varnishes and coatings are one of Build Asia’s exhibitor categories, alongside the construction chemicals and waterproofing products that often go with them.</p>",
+   "image": "cover-paints-and-coatings-market-room-to-grow.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "reko-diq-mining-construction-demand",
+   "category": "trade-supply-chains",
+   "title": "Reko Diq: a multi-billion-dollar mine, its financing, and the 2026 slowdown",
+   "excerpt": "Phase 1 of the Reko Diq copper-gold project was costed at $5.6–6.0 billion, with up to $3 billion of project finance sought in 2025. In 2026 Barrick slowed work for a review. What it means for construction.",
+   "tags": [
+    "Mining",
+    "Reko Diq",
+    "Balochistan"
+   ],
+   "sources": [
+    {
+     "title": "Barrick, \"Barrick Provides an Update on Reko Diq\", 2 April 2026",
+     "url": "https://www.barrick.com/English/news/news-details/2026/barrick-provides-an-update-on-reko-diq/default.aspx"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"$3 billion project financing for Reko Diq advances with IFC, IDA loan approval\", 18 June 2025",
+     "url": "https://profit.pakistantoday.com.pk/2025/06/18/3-billion-project-financing-for-reko-diq-advances-with-ifc-ida-loan-approval/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Reko Diq project cost rises to $7.7bn, rail link financing planned\", 10 September 2025",
+     "url": "https://profit.pakistantoday.com.pk/2025/09/10/reko-diq-project-cost-rises-to-7-7bn-rail-link-financing-planned/"
+    }
+   ],
+   "body": "<p>Reko Diq in Balochistan is one of the world’s largest undeveloped copper-gold deposits, according to Profit. The project is large, it has major international lenders, and as of 2026 its development is slowing down.</p>\n<h2>Who owns it, and how big it is</h2>\n<p>Barrick holds 50% of Reko Diq, with the rest split between Pakistan’s federal and provincial governments. Barrick has disclosed estimated capital costs of <strong>$5.6–6.0 billion for Phase 1</strong> and $3.3–3.6 billion for Phase 2 (100% basis). Profit reported an estimated mine life of 37 years.</p>\n<h2>The financing package</h2>\n<p>In June 2025 the company was raising up to <strong>$3 billion</strong> in limited-recourse project finance for Phase 1. On 12 June 2025, IFC and IDA approved up to $700 million of it. The lenders named included:</p>\n<ul>\n<li>ADB, the US DFC and US EXIM;</li>\n<li>Export Development Canada, KfW IPEX-Bank and Euler Hermes;</li>\n<li>Sweden’s EKN and Finland’s Finnvera;</li>\n<li>a covered commercial bank tranche.</li>\n</ul>\n<h2>The rail link</h2>\n<p>In September 2025 Profit reported a proposal, discussed at shareholder meetings, for <strong>$350 million</strong> to be routed through the mining company to Pakistan Railways as a loan for a line linking the mine to Port Qasim, as part of the ML-3 project. Under the proposal the railway would have three years to build it. For the separate main-line upgrade, see <a href=\"{{a:ml-1-railway-upgrade-status}}\">our ML-1 article</a>.</p>\n<h2>2026: a slowdown and a review</h2>\n<p>On 5 February 2026 Barrick announced a review of all aspects of the project. On 2 April it said it would slow development and continue the review until mid-2027, citing the review’s early findings and escalating security issues in Pakistan and the region. Phase 1 development was approved on this reduced-spend basis. Barrick expects significant increases to the capital budget and the timeline, and the review will also look at financing and scope. First production had been targeted for the end of 2028.</p>\n<h2>Where the openings are</h2>\n<p>The following are observations. A mine of this size needs earthworks, a processing plant, camps, roads, power and water, and the rail line to the port. That means demand for heavy equipment, steel, cement, and maintenance and spare-parts services over many years. The slowdown and review affect the timing, and possibly the scope, of that demand. Suppliers will want to follow the review’s outcome in 2027. On machinery, see <a href=\"{{a:construction-machinery-imports-rise}}\">construction machinery imports</a>.</p>\n<p>Mining and construction equipment suppliers meet project owners and contractors at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March, Karachi Expo Centre. See the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>",
+   "image": "cover-reko-diq-mining-construction-demand.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "credit-ratings-reserves-recovery-2026",
+   "category": "economy-business-climate",
+   "title": "Rating upgrades, IMF reviews and $21.5 billion reserves: Pakistan’s macro picture in 2026",
+   "excerpt": "Two credit rating upgrades, a record $3 billion Eurobond and an IMF staff-level agreement on the fourth review in October 2026. What has changed in Pakistan’s economy, and what has not.",
+   "tags": [
+    "Economy",
+    "IMF",
+    "Credit ratings"
+   ],
+   "sources": [
+    {
+     "title": "The Express Tribune, \"Moody's upgrades Pakistan's sovereign credit rating to B3\", 24 August 2026",
+     "url": "https://tribune.com.pk/story/2625596/moodys-upgrades-pakistans-sovereign-credit-rating-to-b3"
+    },
+    {
+     "title": "Gulf News, \"IMF clears $1.21b for Pakistan after fourth loan review\", 8 October 2026",
+     "url": "https://gulfnews.com/business/economy/imf-clears-121b-for-pakistan-after-fourth-loan-review-1.500702624"
+    },
+    {
+     "title": "The Express Tribune, \"Pakistan raises $3b in largest-ever international bond transaction\", 3 September 2026",
+     "url": "https://tribune.com.pk/story/2627207/pakistan-raises-3b-in-largest-ever-international-bond-transaction"
+    }
+   ],
+   "body": "<p>For companies planning projects or supply contracts in Pakistan, the country’s financial stability sets the backdrop: whether imports can be paid for, whether the rupee holds and whether banks can lend. In 2026 several indicators moved in the same direction.</p>\n<h2>Credit ratings</h2>\n<table>\n<thead><tr><th>Agency</th><th>Action</th><th>Date</th></tr></thead>\n<tbody>\n<tr><td>S&amp;P Global</td><td>Upgraded from B− to B</td><td>22 July 2026</td></tr>\n<tr><td>Moody’s</td><td>Upgraded from Caa1 to B3, outlook stable</td><td>24 August 2026</td></tr>\n</tbody>\n</table>\n<p>Moody’s expected improved governance to help sustain recent gains in the external position, and pointed to better debt affordability: interest payments took about 35% of government revenue in FY26, down from 49% in FY25. B3 is still seven notches below investment grade, and Moody’s listed weaknesses including a narrow revenue base, very low foreign direct investment and high dependence on remittances.</p>\n<h2>The IMF programme</h2>\n<p>Pakistan’s 37-month, $7 billion Extended Fund Facility began in September 2024, and a Resilience and Sustainability Facility of about $1.4 billion was added in 2025. On 7 October 2026, IMF staff reached a staff-level agreement on the fourth EFF review and the third RSF review, worth about <strong>$1.21 billion</strong> once approved by the IMF board. Disbursements under both arrangements would then total about $5.7 billion. The IMF estimated FY26 growth at 3.6% and said inflation had eased to about 10.3% in September 2026.</p>\n<h2>Reserves and market access</h2>\n<ul>\n<li>Gross reserves reached about <strong>$21.5 billion</strong> by the end of September 2026, according to the IMF.</li>\n<li>In early September 2026, Pakistan raised <strong>$3 billion</strong> through a two-part Eurobond (5½ and 10 years, coupons of 7.50% and 7.90%), with nearly $6 billion in orders — its largest single international bond issue.</li>\n</ul>\n<h2>What this means for the building industry</h2>\n<ul>\n<li>Stronger reserves make it easier to pay for imported machinery, materials and components. <a href=\"{{a:construction-machinery-imports-rise}}\">Read about construction machinery imports.</a></li>\n<li>Better ratings and bond access can lower borrowing costs for the government and banks over time, which feeds through to project finance.</li>\n</ul>\n<p><strong>What to watch:</strong> the IMF still rates risks as high, citing geopolitical tensions and energy prices, and wants the State Bank to keep monetary policy tight until inflation durably returns to its target range. <a href=\"{{a:interest-rates-construction-finance-2026}}\">See the policy rate path.</a></p>\n<p>Build Asia 2027 brings project owners, contractors and suppliers from Pakistan and abroad together at the Karachi Expo Centre, 18–20 March 2027; the January 2026 edition had exhibitors from over 21 countries. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect.</a></p>",
+   "image": "cover-credit-ratings-reserves-recovery-2026.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "reits-pakistan-real-estate-investment",
+   "category": "housing-real-estate",
+   "title": "REITs come of age: 29 schemes and a seventh listing on the PSX",
+   "excerpt": "Real estate investment trusts are giving developers a new source of money and investors a way into property. Where the market stands in 2026.",
+   "tags": [
+    "REITs",
+    "Real estate",
+    "Finance"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"SECP approves PSX listing of Naya Nazimabad Apartments REIT\", 18 August 2026",
+     "url": "https://propakistani.pk/2026/08/18/secp-approves-psx-listing-of-naya-nazimabad-apartments-reit/"
+    }
+   ],
+   "body": "<p>For most investors in Pakistan, putting money into property has meant buying a plot or a flat. Real estate investment trusts (REITs) offer another way: buying units in a fund that owns or develops property, traded like shares.</p>\n<h2>Where the market stands</h2>\n<p>According to a report on the approval of the Naya Nazimabad Apartments REIT in August 2026, Pakistan has <strong>29 registered REIT schemes</strong>, of which <strong>six are listed</strong> on the Pakistan Stock Exchange. The Naya Nazimabad Apartments REIT is set to become the seventh.</p>\n<h2>A developmental REIT</h2>\n<p>The Naya Nazimabad scheme is a closed-end <strong>developmental REIT</strong> under the REIT Regulations, 2022 — it raises money to build, rather than only to own finished buildings. The public offering covers 44.06 million units, 15% of the scheme, with 75% offered to institutional and high-net-worth investors and 25% to retail investors through book building. The SECP described it as the 13th public offering it had approved in 2026.</p>\n<h2>Why it matters for construction</h2>\n<ul>\n<li><strong>Developers</strong> get access to money from many investors, not just bank loans or advance payments from buyers.</li>\n<li><strong>Buyers</strong> can see a project funded before it is sold off-plan, which can reduce the risk of stalled schemes.</li>\n<li><strong>Investors</strong> can own a share of property with smaller sums, and sell their units on the exchange.</li>\n<li><strong>Transparency</strong> improves, because listed REITs must report regularly to the regulator and investors.</li>\n</ul>\n<h2>Things to keep in mind</h2>\n<p>REIT units can fall in value, and developmental REITs carry construction risk. As with any investment, investors should read the offering document and take professional advice.</p>\n<p>REITs and tokenisation were on the agenda of the PROPTECH Convention at Build Asia 2026. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what the conference covered.</a></p>",
+   "image": "cover-reits-pakistan-real-estate-investment.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "ppp-projects-pipeline-pakistan",
+   "category": "infrastructure-projects",
+   "title": "Public–private partnerships in Pakistan: the P3A, its projects and how firms take part",
+   "excerpt": "The PPP Authority has moved under the Privatisation Division, and motorways are among the projects being prepared as PPPs. How the framework works, which projects are live and where private firms come in.",
+   "tags": [
+    "PPP",
+    "Infrastructure",
+    "Motorways"
+   ],
+   "sources": [
+    {
+     "title": "Profit by Pakistan Today, \"Public Private Partnership Authority's administrative control shifted to Privatisation Division\", 13 May 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/05/13/public-private-partnership-authoritys-administrative-control-shifted-to-privatisation-division/"
+    },
+    {
+     "title": "Profit by Pakistan Today, \"Govt moves to award Rs205 billion Kharian-Rawalpindi Motorway to FWO\", 25 June 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/06/25/govt-moves-to-award-rs205-billion-kharian-rawalpindi-motorway-to-fwo-without-competitive-bidding-report"
+    },
+    {
+     "title": "ProPakistani, \"Construction Starting Date Announced for New Motorway\", 22 September 2026",
+     "url": "https://propakistani.pk/2026/09/22/construction-starting-date-announced-for-new-motorway/"
+    }
+   ],
+   "body": "<p>Alongside the PSDP and lender-funded schemes, some of Pakistan’s large projects are being prepared as public–private partnerships (PPPs): projects where a private company finances, builds and runs an asset under a concession.</p>\n<h2>How the framework works</h2>\n<p>The Public Private Partnership Authority (P3A) was set up under the PPP Authority Act, 2017. It provides the legal framework and helps federal agencies structure, develop and procure PPP projects. Key points, as reported by Profit in May 2026:</p>\n<ul>\n<li>Since a 2020 amendment, the P3A handles “Qualified” projects directly; other projects can go ahead with approval from the implementing agency’s principal accounting officer.</li>\n<li>The P3A board approves projects that give the public sector value for money while staying financially viable for private investors.</li>\n<li>Private firms may submit <strong>unsolicited proposals</strong> for projects the government has not identified but considers suitable for a PPP.</li>\n<li>In May 2026, administrative control of the P3A moved from the Planning Division to the Privatisation Division, with the stated aim of widening private participation in infrastructure.</li>\n</ul>\n<h2>Projects in the pipeline</h2>\n<table>\n<thead><tr><th>Project</th><th>Size</th><th>Status (2026)</th></tr></thead>\n<tbody>\n<tr><td>Kharian–Rawalpindi Motorway (M-13)</td><td>117 km, Rs203.32bn (ECNEC, April 2026)</td><td>Build-operate-transfer; viability gap of over Rs40bn to be met by the federal government</td></tr>\n<tr><td>M-6 sections I and II, Hyderabad–Nawabshah</td><td>120 km, Rs151bn combined</td><td>Tendering from 6 Nov 2026; concession award targeted for 4 Feb 2027; ADB as transaction adviser</td></tr>\n</tbody>\n</table>\n<p>The M-13 cost has more than doubled from Rs96 billion in January 2022, after the road was upgraded from four to six lanes. ECNEC directed international competitive bidding, but in June 2026 Profit, citing Dawn, reported that the P3A board had backed, in principle, a negotiated award to the Frontier Works Organisation, subject to federal cabinet approval (not yet given as of that report).</p>\n<h2>How private firms take part</h2>\n<p>Our observations:</p>\n<ul>\n<li><strong>As concessionaires or sponsors</strong>, bidding for tendered PPP sections such as M-6 I and II, or bringing an unsolicited proposal.</li>\n<li><strong>As subcontractors and suppliers</strong> to whoever wins, for materials, plant, tolling systems and maintenance.</li>\n<li><strong>What to watch:</strong> the M-13 case shows that the procurement route for a PPP project can change after it has been approved.</li>\n</ul>\n<p>See <a href=\"{{a:motorways-highways-pipeline-2026}}\">the motorway pipeline</a> for the lender-funded sections. Developers, contractors and suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi, 18–20 March; the January 2026 edition drew over 350 exhibitors from over 21 countries. <a href=\"https://buildasia.net/contact/?enquiry=stand\">Enquire about a stand</a>.</p>",
+   "image": "cover-ppp-projects-pipeline-pakistan.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "punjab-housing-programme-apni-chhat",
+   "category": "cities-urban-development",
+   "title": "Apni Chhat Apna Ghar: over 100,000 homes built with Punjab’s interest-free loans",
+   "excerpt": "By June 2026 Punjab’s housing programme had completed 100,633 houses with more than Rs208 billion in interest-free loans. What it means for building-material demand.",
+   "tags": [
+    "Housing",
+    "Punjab",
+    "Building materials"
+   ],
+   "sources": [
+    {
+     "title": "The News, \"2,000 families being provided free residential plots: minister\", 12 March 2026",
+     "url": "https://www.thenews.pk/print/1404016-2-000-families-being-provided-free-residential-plots-minister"
+    },
+    {
+     "title": "The News, \"‘Apni Chhat, Apna Ghar’ project: 100,633 houses complete, minister told\", 3 June 2026",
+     "url": "https://www.thenews.pk/print/1418550-apni-chhat-apna-ghar-project-100-633-houses-complete-minister-told"
+    },
+    {
+     "title": "The Express Tribune, \"Applicants await ‘Apni Chhat Apna Ghar’ loans\", 25 August 2026",
+     "url": "https://tribune.com.pk/story/2625724/applicants-await-apni-chhat-apna-ghar-loans"
+    }
+   ],
+   "body": "<p>Punjab’s <strong>Apni Chhat Apna Ghar</strong> (“my roof, my home”) programme lends families money, interest-free, to build a house on their own plot, which is pledged as security. Because each family builds its own home, in our view much of the money goes into local purchases of cement, bricks, steel and fittings.</p>\n<h2>Progress in 2026</h2>\n<p>Figures given to the Punjab Housing Minister, Bilal Yasin, by the Punjab Housing and Town Planning Agency (PHATA) show how fast the programme moved in the first half of the year:</p>\n<table>\n<thead><tr><th>Indicator</th><th>March 2026</th><th>June 2026</th></tr></thead>\n<tbody>\n<tr><td>Houses completed</td><td>83,330</td><td>100,633</td></tr>\n<tr><td>Houses under construction</td><td>45,425</td><td>32,412</td></tr>\n<tr><td>Families given loans</td><td>131,680</td><td>over 156,000</td></tr>\n<tr><td>Loans provided</td><td>over Rs183 billion</td><td>over Rs208 billion</td></tr>\n</tbody>\n</table>\n<p>In March 2026 the programme had more than 1.9 million registrations and over 1.135 million applications, and Rs8.4 billion had been repaid. In June the minister said the government would fund interest-free loans for <strong>another 100,000 families</strong> in the coming fiscal year.</p>\n<p>A companion scheme, <strong>Apni Zameen Apna Ghar</strong>, was providing free residential plots to 2,000 families, according to the minister in March 2026.</p>\n<h2>What this means for materials demand</h2>\n<p>By our own arithmetic, about 17,300 houses were completed between the March and June updates — well over 5,000 a month. A few observations follow:</p>\n<ul>\n<li><strong>Small, scattered buyers:</strong> loans of up to Rs1.5 million each (as reported in Vehari) go to individual families across the province, so demand reaches district dealers and shops rather than big contractors.</li>\n<li><strong>Basic materials first:</strong> cement, bricks, steel bars, roofing, doors, windows, wiring and sanitary fittings make up most of a modest single-family house.</li>\n<li><strong>Room for efficient methods:</strong> standard designs and faster building systems could help families build within a fixed loan; see our article on <a href=\"{{a:light-gauge-steel-framing-low-rise-homes}}\">light-gauge steel framing</a>.</li>\n</ul>\n<h2>What to watch</h2>\n<p>The Express Tribune reported in August 2026 that applicants in Vehari whose loans were approved between January and June 2026 were still waiting for their first instalment. Demand from the programme depends on the money arriving on time.</p>\n<p>For the national picture, read <a href=\"{{a:pakistan-housing-gap-numbers}}\">Pakistan’s housing gap in numbers</a>. Material makers and dealers serving the housing market meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre. You can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register to visit</a>.</p>",
+   "image": "cover-punjab-housing-programme-apni-chhat.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "rooftop-solar-7000-mw-building-design",
+   "category": "sustainable-building",
+   "title": "7,000 MW on the rooftops: how solar is reshaping building design",
+   "excerpt": "Net-metered solar grew 37-fold in six years. Roofs, structures and wiring now have to be designed for panels from day one.",
+   "tags": [
+    "Solar",
+    "Energy",
+    "Design"
+   ],
+   "sources": [
+    {
+     "title": "ProPakistani, \"Pakistan's solar boom reaches 7,000 MW as govt moves to replace net metering\", 17 July 2026",
+     "url": "https://propakistani.pk/2026/07/17/pakistans-solar-boom-reaches-7000-mw-as-govt-moves-to-replace-net-metering/"
+    }
+   ],
+   "body": "<p>Pakistan’s rooftops have changed faster than almost anyone expected. Solar generation under net metering grew from <strong>190 MW in FY2020 to about 6,978 MW by FY2026</strong> — nearly 37 times in six years — according to figures presented by Syed Faizan Ali, Energy Adviser to the Power Division.</p>\n<h2>Why it happened</h2>\n<p>The same presentation set out the drivers: electricity tariffs rose about <strong>140%</strong> between FY2021 and FY2025, while the rupee lost about 75% of its value and imported solar panel prices fell by about <strong>60%</strong>. For many homes and businesses, generating their own power became the obvious choice.</p>\n<h2>The rules are changing</h2>\n<p>Under the Prosumer Regulations 2026, which took effect on 8 February 2026, new consumers move to <strong>net billing</strong>: electricity they export to the grid is paid at a lower reference price rather than credited one-for-one. Consumers with 2015 net-metering agreements keep their terms until their contracts expire. The result is that it now pays to use more of your own solar power on site — which puts more weight on batteries and on efficient buildings.</p>\n<h2>What this means for building design</h2>\n<ul>\n<li><strong>Roofs:</strong> plan clear, shade-free areas, the right orientation, and safe access for cleaning and maintenance.</li>\n<li><strong>Structure:</strong> design for the weight of panels and mounting frames, and for wind loads.</li>\n<li><strong>Waterproofing:</strong> mounting penetrations are a common source of leaks if not detailed properly.</li>\n<li><strong>Electrical:</strong> space for inverters and batteries, proper earthing, and cable routes planned in advance.</li>\n<li><strong>Efficiency first:</strong> every unit of electricity saved by insulation and shading is one the panels do not need to produce.</li>\n</ul>\n<h2>Opportunities across the industry</h2>\n<p>Solar installers, inverter and battery suppliers, cable makers, roofing and waterproofing companies, and structural engineers all have a part in getting rooftop solar right. Generators, the solar industry, UPS systems and electrical cables are exhibitor categories at Build Asia. <a href=\"{{a:buildings-electricity-energy-conservation-building-code}}\">Read about the energy building code.</a></p>",
+   "image": "cover-rooftop-solar-7000-mw-building-design.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "cement-exports-and-capacity-expansion",
+   "category": "industry-manufacturing",
+   "title": "Cement exports and new capacity: southern mills, African demand and US$700m of projects",
+   "excerpt": "Pakistan’s cement capacity reached 84.58 million tonnes in FY26 while exports shifted south and towards Africa. Where new capacity is coming from and what it means for suppliers.",
+   "tags": [
+    "Cement",
+    "Exports",
+    "Industry"
+   ],
+   "sources": [
+    {
+     "title": "International Cement Review (CemNet), \"Pakistan’s cement industry capacity reached 84.58Mt in FY26\", 12 June 2026",
+     "url": "https://www.cemnet.com/News/story/181503/pakistan-s-cement-industry-capacity-reached-84-58-mt-in-fy26.html"
+    },
+    {
+     "title": "Global Cement, \"Update on Pakistan, July 2026\", 8 July 2026",
+     "url": "https://globalcement.com/news/analysis/20977-update-on-pakistan-july-2026"
+    },
+    {
+     "title": "ProPakistani, \"Cement sales rise 7% in September\", 2 October 2026 (APCMA data)",
+     "url": "https://propakistani.pk/2026/10/02/cement-sales-rise-7-in-september/"
+    }
+   ],
+   "body": "<p>Our <a href=\"{{a:cement-sales-fy26-what-the-numbers-say}}\">analysis of FY26 cement despatches</a> covered the strong year at home. This article looks at the other side of the industry: how much it can make, where its exports go and who is adding capacity.</p>\n<h2>Capacity and utilisation</h2>\n<p>According to the Pakistan Economic Survey 2025-26, as reported by CemNet in June 2026, installed cement capacity grew from 45.62 million tonnes in FY16 to <strong>84.58 million tonnes in FY26</strong>. Utilisation improved to <strong>60.2%</strong> from 55.1% a year earlier — so, by our calculation, about two-fifths of capacity is still idle. In July–March FY26, exports earned US$271 million, up 17.7% on both higher volumes and better prices.</p>\n<h2>Exports are moving south</h2>\n<p>Global Cement, citing AKD Research, reports that exports from northern mills fell after the Afghan border closed in late 2025 amid hostilities, while southern mills exported more on growing African demand. The first quarter of FY27 shows the split clearly:</p>\n<table>\n<thead><tr><th>July–September 2026 (APCMA)</th><th>Million tonnes</th><th>Change</th></tr></thead>\n<tbody>\n<tr><td>Total despatches</td><td>13.141</td><td>+3.88%</td></tr>\n<tr><td>Domestic</td><td>10.845</td><td>+7.79%</td></tr>\n<tr><td>Exports (all from the south)</td><td>2.296</td><td>−11.32%</td></tr>\n<tr><td>Southern exports</td><td>2.296</td><td>+19.15%</td></tr>\n</tbody>\n</table>\n<p>Northern mills exported nothing in the quarter, against about 662,000 tonnes a year earlier.</p>\n<h2>New capacity and efficiency</h2>\n<ul>\n<li>In April 2026 the SIFC approved cement projects worth <strong>US$700 million</strong> for Flying, Lucky, Bhutta, Asian Precious Minerals, Orient, Dandot and Maple Cement.</li>\n<li>Lucky Cement completed an optimisation at its Karachi plant, adding 300,000 tonnes a year to reach 5.35 million tonnes, which is expected to cut fuel use per tonne. Lucky, which already has plants in Iraq and the DR Congo, is also considering a 2.5-million-tonne plant in Libya.</li>\n</ul>\n<h2>What this means for suppliers</h2>\n<ul>\n<li>Expansions and upgrades need kilns, mills, conveyors, refractories and process controls — and fuel-saving equipment, given energy costs.</li>\n<li>Southern exports depend on port handling, bulk logistics and bagging.</li>\n</ul>\n<p><strong>What to watch:</strong> APCMA has voiced concern about falling exports and unstable energy prices, and Global Cement flags energy costs linked to the Iran conflict as a major risk.</p>\n<p>Cement makers and their equipment suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a> in Karachi; the January 2026 edition had over 350 exhibitors from over 21 countries. For other export products, see <a href=\"{{a:building-materials-exports-markets}}\">building-material exports</a>.</p>",
+   "image": "cover-cement-exports-and-capacity-expansion.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "ml-1-railway-upgrade-status",
+   "category": "trade-supply-chains",
+   "title": "ML-1 railway upgrade: ADB money for Karachi–Rohri, groundbreaking targeted for 2027",
+   "excerpt": "The first 480 km of the Karachi–Peshawar main line is moving towards an ADB-led start. Here are the costs, lenders and timetable as of 2026, and what the works involve.",
+   "tags": [
+    "Railways",
+    "ML-1",
+    "Infrastructure"
+   ],
+   "sources": [
+    {
+     "title": "Dawn, \"Groundbreaking of ML-1 early next year: minister\", 1 July 2026",
+     "url": "https://www.dawn.com/news/2012099"
+    },
+    {
+     "title": "The Express Tribune, \"ML-1 moves closer to groundbreaking\", 16 August 2026",
+     "url": "https://tribune.com.pk/story/2624113/ml-1-moves-closer-to-groundbreaking"
+    },
+    {
+     "title": "Profit by Pakistan Today (citing Business Recorder), \"Pakistan in advanced talks with ADB for $2bn loan to fund Karachi–Rohri ML-1 section\", 16 February 2026",
+     "url": "https://profit.pakistantoday.com.pk/2026/02/16/pakistan-in-advanced-talks-with-adb-for-2bn-loan-to-fund-karachi-rohri-ml-1-section-report"
+    }
+   ],
+   "body": "<p>Main Line-1 (ML-1) is Pakistan’s rail spine, running from Karachi to Peshawar. Upgrading it has been planned for years under CPEC. In 2026 the plan changed shape: the first section will start with multilateral money, and Chinese financing may follow later.</p>\n<h2>The financing as of 2026</h2>\n<ul>\n<li><strong>Whole line:</strong> Dawn reported in July 2026 that the 1,680-km route was estimated at about <strong>$10 billion</strong>. Government figures reported by The Express Tribune in August 2026 gave about $6.66 billion for the “rationalised” project.</li>\n<li><strong>First phase:</strong> Dawn reported in July 2026 that the ADB had committed a loan package of around $2 billion. Profit reported in February 2026, when talks were at an advanced stage, that the ADB was expected to cover about $1.2 billion of the Karachi–Rohri section, with AIIB and the European Investment Bank in talks for the rest.</li>\n<li><strong>Preparation:</strong> The Express Tribune reported a $10 million ADB project readiness financing loan for Karachi–Rohri.</li>\n<li><strong>China:</strong> Dawn reported that starting with ADB money was judged prudent and that China had agreed; Mr Iqbal said Chinese financing could come in a later phase.</li>\n</ul>\n<h2>The timetable</h2>\n<table>\n<thead><tr><th>Step</th><th>Timing (as reported)</th></tr></thead>\n<tbody>\n<tr><td>Second round of market consultation</td><td>From 8 September 2026</td></tr>\n<tr><td>Review phase deadline</td><td>30 October 2026</td></tr>\n<tr><td>Groundbreaking, first phase</td><td>Early 2027, according to the Planning Minister</td></tr>\n<tr><td>Karachi–Rohri construction</td><td>About three years</td></tr>\n</tbody>\n</table>\n<h2>What the works involve</h2>\n<p>The corridor is divided into five sections: Karachi–Rohri (480 km, estimated at $2.04 billion), Rohri–Multan, Multan–Lahore, Lahore–Rawalpindi and Rawalpindi–Peshawar. The planned works include:</p>\n<ul>\n<li>rehabilitating the track and doubling it where needed;</li>\n<li>better signalling and a higher axle load;</li>\n<li>passenger train speeds of up to 160 km/h.</li>\n</ul>\n<h2>What this means for suppliers and partners</h2>\n<p>The following are observations. International competitive procurement under a multilateral lender usually opens work to qualified contractors and suppliers from many countries. Track materials, ballast, signalling, bridges and earthmoving fleets are all likely needs. Other rail plans, such as the proposed <a href=\"{{a:reko-diq-mining-construction-demand}}\">Reko Diq line</a>, are covered separately.</p>\n<p>What to watch: the project has long been delayed, and The Express Tribune reported in August 2026 that ADB financing and completed project documents were still key requirements for construction to start.</p>\n<p>Rail and infrastructure suppliers meet contractors at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March, Karachi Expo Centre. <a href=\"https://buildasia.net/contact/?enquiry=stand\">Enquire about a stand</a>.</p>",
+   "image": "cover-ml-1-railway-upgrade-status.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "planning-your-visit-build-asia-karachi",
+   "category": "exhibition-news",
+   "title": "Planning your visit to Build Asia: a guide for trade visitors",
+   "excerpt": "Registration, opening hours, getting the most from three days at the show, and help for visitors coming from abroad.",
+   "tags": [
+    "Visitors",
+    "Guide",
+    "Build Asia 2027"
+   ],
+   "sources": [],
+   "body": "<p>Three days at a large trade show go quickly. A little planning turns a walk around the halls into meetings that move your projects forward.</p>\n<h2>The essentials</h2>\n<ul>\n<li><strong>Dates:</strong> 18–20 March 2027</li>\n<li><strong>Hours:</strong> 10:00 to 18:00 each day</li>\n<li><strong>Venue:</strong> Karachi Expo Centre, Main University Road, Gulshan-e-Iqbal, Karachi</li>\n<li><strong>Who can attend:</strong> trade and corporate visitors</li>\n</ul>\n<h2>Register before you go</h2>\n<p><a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">Register online</a> for your visitor pass to save time at the entrance. If you have not registered, you can still register at the on-site desks.</p>\n<h2>Make a plan</h2>\n<ol>\n<li><strong>List what you need:</strong> products to source, problems to solve, suppliers to compare.</li>\n<li><strong>Check who is exhibiting</strong> and mark the stands to visit first.</li>\n<li><strong>Book meetings</strong> with key suppliers in advance — their senior people are busy during show days.</li>\n<li><strong>Bring drawings or specifications</strong> for current projects, so suppliers can give useful answers.</li>\n<li><strong>Leave time to explore:</strong> the best finds are often stands you did not plan to visit.</li>\n<li><strong>Visit the outdoor area</strong> to see heavy machinery in person.</li>\n</ol>\n<h2>Coming from abroad</h2>\n<p>Recommended hotels are in the city centre, about 20–30 minutes from the Karachi Expo Centre. The organisers offer foreign visitor facilitation; contact details and travel information are on the <a href=\"https://buildasia.net/karachi/travel/\">travel page</a>.</p>\n<h2>After the show</h2>\n<p>Follow up within a week while conversations are fresh: send your requirements, ask for quotations and samples, and arrange site or factory visits with the suppliers that impressed you.</p>\n<p>Questions? Contact the Build Asia Secretariat at info@buildasia.net or (92-21) 111-222-444. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a></p>",
+   "image": "cover-planning-your-visit-build-asia-karachi.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "sifc-investment-facilitation-explained",
+   "category": "economy-business-climate",
+   "title": "The Special Investment Facilitation Council explained: structure, sectors and projects",
+   "excerpt": "Set up in 2023 as a “single window” for investment, the SIFC coordinates federal and provincial bodies. How it is organised, what it has worked on, and the transparency questions.",
+   "tags": [
+    "SIFC",
+    "Investment",
+    "Policy"
+   ],
+   "sources": [
+    {
+     "title": "Board of Investment (invest.gov.pk), \"Special Investment Facilitation Council (SIFC)\", notification No. 7(218)-HR/2023",
+     "url": "https://invest.gov.pk/node/1989"
+    },
+    {
+     "title": "Radio Pakistan, \"SIFC playing pivotal role in bringing investment to Pakistan\", 7 May 2026",
+     "url": "https://www.radio.gov.pk/07-05-2026/sifc-playing-pivotal-role-in-bringing-investment-to-pakistan"
+    },
+    {
+     "title": "The News, \"SIFC report to be made public by June 2027\", 2 February 2026",
+     "url": "https://www.thenews.pk/print/1396739-sifc-report-to-be-made-public-by-june-2027"
+    }
+   ],
+   "body": "<p>The Special Investment Facilitation Council (SIFC) is often mentioned when large projects in Pakistan are announced. This is a plain guide to what it is and how it works.</p>\n<h2>What it is</h2>\n<p>The SIFC was constituted by the Prime Minister following a meeting on 2 June 2023 on attracting investment from Gulf (GCC) countries, through notification No. 7(218)-HR/2023. Its terms of reference include acting as a <strong>“Single Window”</strong> for cooperation with Gulf (GCC) and other countries, preparing a long-term investment roadmap, cutting bureaucratic hurdles, coordinating federal and provincial bodies, and fast-tracking projects. The original notification named five fields: defence, agriculture, minerals, IT and telecommunication, and energy.</p>\n<h2>How it is organised</h2>\n<table>\n<thead><tr><th>Tier</th><th>Members include</th><th>Meets</th></tr></thead>\n<tbody>\n<tr><td>Apex Committee</td><td>Prime Minister, with federal ministers, provincial Chief Ministers and the Chief of Army Staff (by special invitation)</td><td>Quarterly</td></tr>\n<tr><td>Executive Committee</td><td>Minister for Planning, Development and Special Initiatives, federal and provincial ministers, provincial Chief Secretaries</td><td>Monthly</td></tr>\n<tr><td>Implementation Committee</td><td>SIFC Secretariat, with sector coordinators and sectoral divisions</td><td>Fortnightly</td></tr>\n</tbody>\n</table>\n<p>Officials from the Finance Ministry, the Board of Investment, the FBR and the State Bank are co-opted members, and a National Coordinator from the Pakistan Army sits on the Apex and Executive Committees.</p>\n<h2>What it has worked on</h2>\n<p>According to Radio Pakistan in May 2026, citing the Secretary of the SIFC Apex Committee, Dr Jahanzeb Khan, the council’s work has included:</p>\n<ul>\n<li><strong>Cement:</strong> facilitating the establishment of seven new cement factories. <a href=\"{{a:cement-exports-and-capacity-expansion}}\">More on cement capacity.</a></li>\n<li><strong>Transport:</strong> logistics, railways and motorways, including reviving the M-12 motorway project.</li>\n<li><strong>Other sectors:</strong> large-scale farming, pharmaceuticals, warehousing and a medical tourism initiative.</li>\n</ul>\n<h2>Transparency</h2>\n<p>Following an IMF condition, the government has drawn up an action plan for the SIFC’s first annual report: a draft by December 2026, a final version by March 2027 and public release by June 2027. It is to list facilitated investments and the tax, policy and regulatory incentives granted, with a justification and estimated value for each.</p>\n<h2>What this means for the industry</h2>\n<p>For construction suppliers, the SIFC is mainly a signal of where large projects are being pushed, such as cement plants and transport. The annual report, once published, should give a clearer picture of what has actually been facilitated. <a href=\"{{a:special-economic-zones-incentives}}\">See also: incentives in Special Economic Zones.</a></p>\n<p>Project owners, contractors and suppliers meet at <a href=\"{{a:build-asia-2027-what-to-expect}}\">Build Asia 2027</a>, 18–20 March 2027 at the Karachi Expo Centre.</p>",
+   "image": "cover-sifc-investment-facilitation-explained.jpg",
    "featured": 0
   },
   {
@@ -305,41 +1226,6 @@
    "featured": 0
   },
   {
-   "slug": "construction-machinery-imports-rise",
-   "category": "construction-machinery",
-   "featured": 3,
-   "title": "Construction machinery imports jump as contractors re-equip",
-   "excerpt": "Imports of construction and mining machinery rose to $138 million in FY25, and the first months of FY26 point higher again. What the trend says about the market.",
-   "tags": [
-    "Machinery",
-    "Imports",
-    "Market data"
-   ],
-   "sources": [
-    {
-     "title": "PACRA, Sector Study: Machinery, January 2026",
-     "url": "https://www.pacra.com/view/storage/app/PACRA%20Research%20-%20Machinery%20-%20Jan%2726_1767447674.pdf"
-    }
-   ],
-   "body": "<p>Pakistan builds with imported machines. Excavators, cranes, pumps and batching plants largely come from abroad, so import figures are a good guide to how confident contractors feel about the work ahead.</p>\n<h2>What the figures show</h2>\n<p>According to PACRA’s machinery sector study (January 2026), imports of construction and mining machinery were:</p>\n<table>\n<thead><tr><th>Period</th><th>USD million</th></tr></thead>\n<tbody>\n<tr><td>FY23</td><td>85</td></tr>\n<tr><td>FY24</td><td>94</td></tr>\n<tr><td>FY25</td><td>138</td></tr>\n<tr><td>First five months of FY26</td><td>98</td></tr>\n</tbody>\n</table>\n<p>That is a rise of roughly 47% in FY25 alone, and the first five months of FY26 already reached about 70% of the previous full year.</p>\n<h2>Part of a wider machinery upturn</h2>\n<p>All machinery imports rose to about <strong>$9.6 billion</strong> in FY25 — around 16.5% of the country’s total imports — and were up about 20% year on year in the first five months of FY26. PACRA noted they may exceed $10 billion in FY26. Construction and mining machinery is still a small share of that total, but its share has been growing.</p>\n<h2>What is driving it</h2>\n<p>PACRA points to several supports for demand: easing inflation (around 5.6% in December 2025), a lower policy rate (about 10.5%) that makes equipment finance cheaper, and a larger federal development budget. It also notes that most demand is met by imports and that local producers face stiff competition.</p>\n<h2>What it means for buyers and sellers</h2>\n<ul>\n<li><strong>Contractors</strong> are replacing ageing fleets as financing costs ease. <a href=\"{{a:buy-rent-or-lease-construction-equipment}}\">Our guide to buying, renting or leasing</a> covers the trade-offs.</li>\n<li><strong>Dealers and manufacturers</strong> face buyers who compare total cost of ownership, after-sales support and spare-parts availability, not just the purchase price.</li>\n<li><strong>Service companies</strong> — maintenance, parts, training and telematics — grow with every machine sold.</li>\n</ul>\n<p>Build Asia has a dedicated outdoor area for heavy machinery, more than 50,000 sq ft at the last Karachi edition, where buyers can see equipment working rather than in a brochure.</p>",
-   "image": "cover-construction-machinery-imports-rise.jpg"
-  },
-  {
-   "slug": "buy-rent-or-lease-construction-equipment",
-   "category": "construction-machinery",
-   "title": "Buy, rent or lease? A practical guide to construction equipment decisions",
-   "excerpt": "How contractors can decide whether to own, rent or lease each machine — and the questions to ask suppliers before signing.",
-   "tags": [
-    "Machinery",
-    "Contractors",
-    "Guide"
-   ],
-   "sources": [],
-   "body": "<p>Every contractor faces the same question with each machine: buy it, rent it when needed, or lease it over several years? There is no single right answer, but there is a sound way to decide.</p>\n<h2>Start with utilisation</h2>\n<p>The most important number is how many days a year the machine will actually work for you. A machine that works most of the year on your own projects usually costs less to own. One that is needed for a few weeks on a single job is almost always cheaper to rent.</p>\n<h2>When buying makes sense</h2>\n<ul>\n<li>You have a steady pipeline of work that needs the machine for most of the year.</li>\n<li>You have operators and maintenance staff who can look after it.</li>\n<li>The machine holds its value well and has a good resale market.</li>\n<li>Financing is available at a rate your projects can carry.</li>\n</ul>\n<h2>When renting makes sense</h2>\n<ul>\n<li>The need is short or occasional — a crane for a lift, a piling rig for foundations.</li>\n<li>You want the latest model without tying up capital.</li>\n<li>You would rather not manage transport, servicing and storage.</li>\n</ul>\n<h2>When leasing makes sense</h2>\n<p>Leasing sits in between: predictable monthly payments, no large upfront outlay, and often the option to buy at the end. It suits companies with steady work but limited cash to spare, and lease payments can be easier to plan for than a loan.</p>\n<h2>Questions to ask any supplier</h2>\n<ol>\n<li>What is the total cost over the period, including servicing, insurance and transport?</li>\n<li>How quickly are spare parts available locally, and where?</li>\n<li>Is operator training included?</li>\n<li>What happens if the machine breaks down mid-project — is a replacement provided?</li>\n<li>For used machines: what are the working hours, and is there a service record?</li>\n</ol>\n<h2>Think in fleets, not machines</h2>\n<p>Many contractors own the machines they use every day — excavators, loaders, mixers — and rent the specialist ones. Reviewing the mix once a year keeps money from sitting in idle equipment.</p>\n<p>Dealers, rental companies and finance providers can be compared side by side at Build Asia’s machinery halls and outdoor display. <a href=\"{{a:construction-machinery-imports-rise}}\">Read why contractors are re-equipping.</a></p>",
-   "image": "cover-buy-rent-or-lease-construction-equipment.jpg",
-   "featured": 0
-  },
-  {
    "slug": "heavy-machinery-site-safety-checklist",
    "category": "construction-machinery",
    "title": "Heavy machinery on site: a safety checklist for contractors",
@@ -352,46 +1238,6 @@
    "sources": [],
    "body": "<p>Heavy machines make construction possible at scale — and they are behind many of the most serious accidents on building sites. Most of those accidents follow the same few patterns, which means most can be prevented with routine habits.</p>\n<h2>Before work starts each day</h2>\n<ul>\n<li><strong>Walk-around inspection:</strong> tyres or tracks, hydraulic hoses, leaks, lights, mirrors, horn and reversing alarm.</li>\n<li><strong>Check the operator:</strong> trained and authorised for that machine, rested, and wearing the right protective equipment.</li>\n<li><strong>Check the ground:</strong> soft soil, slopes, trenches and buried services change what a machine can safely do.</li>\n<li><strong>Check overhead:</strong> power lines are a leading cause of fatal accidents with cranes, tippers and excavators.</li>\n</ul>\n<h2>Keep people and machines apart</h2>\n<ul>\n<li>Mark exclusion zones around working machines and lifting areas.</li>\n<li>Use a trained banksman (signaller) whenever a machine reverses or visibility is limited.</li>\n<li>Plan walkways so workers do not cross the machine’s path.</li>\n<li>Never allow passengers or riding on buckets and forks.</li>\n</ul>\n<h2>Lifting operations</h2>\n<ul>\n<li>Know the load weight and the crane’s capacity at that radius — not just its maximum.</li>\n<li>Inspect slings, chains and hooks before each lift.</li>\n<li>Stop lifting in high wind.</li>\n</ul>\n<h2>Maintenance and records</h2>\n<p>Keep a service log for every machine and act on faults immediately. A machine that is “nearly fine” should not be on site. Lock out machines during maintenance so they cannot be started.</p>\n<h2>Build a safety culture</h2>\n<p>A short daily briefing, near-miss reporting without blame, and visible commitment from site management do more than any poster. Safety is also good business: accidents stop work, damage equipment and harm a company’s reputation.</p>\n<p>Fire-fighting, safety and security equipment suppliers are among the exhibitor categories at Build Asia. <a href=\"{{a:buy-rent-or-lease-construction-equipment}}\">See also: buy, rent or lease?</a></p>",
    "image": "cover-heavy-machinery-site-safety-checklist.jpg",
-   "featured": 0
-  },
-  {
-   "slug": "pakistan-marble-granite-mechanised-quarrying",
-   "category": "building-materials",
-   "featured": 4,
-   "title": "Pakistan’s marble and granite: vast reserves, and the push to quarry them better",
-   "excerpt": "Reserves are estimated at 30 billion tonnes, yet exports average about $37 million a year. Mechanised quarrying is starting to change that.",
-   "tags": [
-    "Marble",
-    "Stone",
-    "Exports"
-   ],
-   "sources": [
-    {
-     "title": "APP / Wealth Pakistan, \"135 mines in Pakistan adopt mechanized mining techniques\", 19 October 2025",
-     "url": "https://www.app.com.pk/?p=1088564"
-    }
-   ],
-   "body": "<p>Pakistan sits on some of the world’s most varied stone. Marble and granite deposits run across Khyber Pakhtunkhwa, Balochistan, Sindh, Punjab, Gilgit-Baltistan and Azad Jammu and Kashmir, with reserves estimated at around <strong>30 billion tonnes</strong>.</p>\n<p>Yet the industry’s export earnings are modest: marble exports have averaged about <strong>$37 million a year</strong> over the past five years, mostly as raw or semi-processed blocks. The gap between potential and earnings comes down largely to how stone is taken out of the ground.</p>\n<h2>The cost of blasting</h2>\n<p>Traditional quarrying often relies on blasting, which shatters much of the stone and leaves blocks of irregular size. According to official documents reported by Wealth Pakistan, waste at quarries that have modernised has fallen from <strong>nearly 85% to about 45%</strong>.</p>\n<h2>Mechanised quarrying is spreading</h2>\n<p>The Pakistan Stone Development Company (PASDEC) reports that <strong>135 operational mines</strong> have adopted mechanised techniques with its help — controlled cutting of standard square blocks instead of blasting. The programme has drawn about Rs 1.16 billion in combined public and private investment and created more than 800 jobs. PASDEC has also provided around Rs 1 billion in subsidies to miners over the past decade.</p>\n<h2>Why block quality matters</h2>\n<ul>\n<li><strong>Standard blocks</strong> can be cut efficiently into slabs and tiles, increasing value per tonne.</li>\n<li><strong>Less waste</strong> means more saleable stone from the same deposit.</li>\n<li><strong>Value addition</strong> — polishing, cutting to size, finished products — is where export margins are made.</li>\n</ul>\n<h2>Opportunities along the chain</h2>\n<p>The shift opens doors for suppliers of wire saws, cutting and polishing lines, block handling equipment, and the training that goes with them — and for buyers who want consistent, export-grade stone from Pakistan.</p>\n<p>Stonefair Asia runs alongside Build Asia, bringing quarry owners, processors and machinery suppliers together. Marble, granite and ceramic producers, and quarrying and finishing machinery suppliers, are core <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor categories</a>.</p>",
-   "image": "cover-pakistan-marble-granite-mechanised-quarrying.jpg"
-  },
-  {
-   "slug": "paints-and-coatings-market-room-to-grow",
-   "category": "building-materials",
-   "title": "Paints and coatings: a market with room to grow",
-   "excerpt": "Pakistan uses about 1.2 kg of paint per person a year — low by international standards. What that means for decorative and protective coatings.",
-   "tags": [
-    "Paints",
-    "Coatings",
-    "Market data"
-   ],
-   "sources": [
-    {
-     "title": "U.S. International Trade Administration, \"Pakistan Paints and Coatings\", market intelligence, 14 August 2023",
-     "url": "https://www.trade.gov/market-intelligence/pakistan-paints-and-coatings"
-    }
-   ],
-   "body": "<p>Paint is the last product a building receives and the first thing people see. In Pakistan it is also a market with a lot of room left to grow.</p>\n<h2>The size of the market</h2>\n<p>The U.S. International Trade Administration estimated Pakistan’s paints and coatings market at about <strong>$400 million</strong>, with local production of around 0.25 million tonnes according to the Pakistan Coating Association, and expected growth of <strong>3.5% to 4% a year</strong>. Its market note dates from August 2023, so current figures may differ, but the structure it describes still holds.</p>\n<h2>Low use per person</h2>\n<p>Consumption is about <strong>1.2 kg per person per year</strong>, for a population of over 240 million. That is low by international standards, which means that as incomes rise, more homes are finished and more buildings are maintained, demand has a long way to grow.</p>\n<h2>Where the demand comes from</h2>\n<ul>\n<li><strong>Architectural (decorative) paint</strong> for homes, offices and public buildings — the largest use.</li>\n<li><strong>Protective and industrial coatings</strong> for steel structures, bridges, factories and pipelines.</li>\n<li><strong>Wood coatings</strong> for furniture, doors and fittings.</li>\n<li><strong>Infrastructure</strong> — dams, roads and government-funded housing.</li>\n</ul>\n<h2>Trends to watch</h2>\n<ul>\n<li><strong>Water-based paints</strong> with low solvent content, better for indoor air and painters’ health.</li>\n<li><strong>Heat-reflective roof and wall coatings</strong>, increasingly relevant in hot cities (<a href=\"{{a:designing-for-heat-karachi-lessons}}\">see our piece on designing for heat</a>).</li>\n<li><strong>Waterproof and anti-fungal coatings</strong> for humid coastal areas and monsoon seasons.</li>\n<li><strong>Protective coatings for steel</strong>, as more buildings use steel frames.</li>\n</ul>\n<p>Paints, varnishes and coatings are one of Build Asia’s exhibitor categories, alongside the construction chemicals and waterproofing products that often go with them.</p>",
-   "image": "cover-paints-and-coatings-market-room-to-grow.jpg",
    "featured": 0
   },
   {
@@ -415,61 +1261,6 @@
    "featured": 0
   },
   {
-   "slug": "waterproofing-before-monsoon-checklist",
-   "category": "building-materials",
-   "title": "Waterproofing before the monsoon: a checklist for owners and builders",
-   "excerpt": "Most leaks start at roofs, joints and wet areas. What to check, which systems to consider, and the questions to ask an applicator.",
-   "tags": [
-    "Waterproofing",
-    "Construction chemicals",
-    "Guide"
-   ],
-   "sources": [],
-   "body": "<p>Water is the slowest and most expensive enemy of a building. Leaks damage plaster and paint, rust reinforcement inside concrete, and grow mould that affects health. Most problems start in a few predictable places — which means they can be prevented.</p>\n<h2>Where to look first</h2>\n<ul>\n<li><strong>Roofs:</strong> cracks, ponding water, blocked drains, and the joint where roof meets parapet.</li>\n<li><strong>Bathrooms and kitchens:</strong> around drains, pipe entries and the base of walls.</li>\n<li><strong>Basements and water tanks:</strong> water pushing in from the soil or out from the tank.</li>\n<li><strong>External walls:</strong> hairline cracks, window and door frames, and where services enter the building.</li>\n<li><strong>Expansion joints</strong> in larger buildings, which need flexible sealants.</li>\n</ul>\n<h2>Common systems, in plain words</h2>\n<ul>\n<li><strong>Cementitious coatings:</strong> brushed or troweled on; suit tanks, basements and wet areas.</li>\n<li><strong>Liquid membranes</strong> (acrylic, polyurethane): form a seamless flexible skin; suit roofs.</li>\n<li><strong>Bituminous membranes:</strong> sheets laid on roofs and foundations; durable but need careful laying.</li>\n<li><strong>Crystalline admixtures:</strong> added to concrete so it seals its own pores.</li>\n<li><strong>Sealants:</strong> for joints, frames and pipe entries.</li>\n</ul>\n<h2>Questions to ask an applicator</h2>\n<ol>\n<li>How will the surface be prepared? Most failures come from poor preparation, not poor products.</li>\n<li>Is the system suited to our roof — exposed to sun, walked on, or covered?</li>\n<li>How thick will the coating be, and how many coats?</li>\n<li>What guarantee is given, and who gives it — the applicator or the manufacturer?</li>\n<li>Will you do a flood test on the roof before handing over?</li>\n</ol>\n<h2>Design it in from the start</h2>\n<p>The cheapest waterproofing is the one planned at design stage: proper roof slopes, enough drains, details at every joint, and good concrete. Repairs after leaks start always cost more.</p>\n<p>Waterproofing, insulation, sealants and adhesives, and construction chemicals are all exhibitor categories at Build Asia. <a href=\"{{a:paints-and-coatings-market-room-to-grow}}\">See also: the paints and coatings market.</a></p>",
-   "image": "cover-waterproofing-before-monsoon-checklist.jpg",
-   "featured": 0
-  },
-  {
-   "slug": "pakistan-housing-gap-numbers",
-   "category": "housing-real-estate",
-   "featured": 5,
-   "title": "Pakistan’s housing gap: the numbers behind the shortage",
-   "excerpt": "Need grows by about a million homes a year, cities build fewer than half of what they need, and mortgages are just 0.44% of GDP.",
-   "tags": [
-    "Housing",
-    "Affordable housing",
-    "Finance"
-   ],
-   "sources": [
-    {
-     "title": "Business Recorder, opinion, 20 November 2025 (figures from PMRC, UN-Habitat and the ACASH Report 2023)",
-     "url": "https://www.brecorder.com/news/40393310"
-    }
-   ],
-   "body": "<p>Housing is the single largest driver of construction in Pakistan, and the gap between need and supply is the defining fact of the market. Figures compiled from the Pakistan Mortgage Refinance Company (PMRC), UN-Habitat and the ACASH Report (2023) show its shape.</p>\n<h2>The headline gap</h2>\n<ul>\n<li>National need is put at about <strong>38.3 million</strong> housing units against a supply of about <strong>36.2 million</strong> — a shortfall of around <strong>2.1 million</strong> units.</li>\n<li>Need grows by about <strong>1.06 million units a year</strong>, driven by population growth and new households.</li>\n<li>In urban areas about <strong>350,000</strong> new units are needed each year, but only about <strong>150,000</strong> are built.</li>\n<li>About <strong>13 million households</strong> are overcrowded — 6 million in towns and cities and 7 million in rural areas.</li>\n</ul>\n<h2>Who needs homes</h2>\n<p>Most of the need is at the lower end of the market: about 217,000 units a year for lower-income households, 87,500 for lower-middle-income and 35,000 for higher-income households. In rural areas, much of the need is about quality — replacing homes that are unsafe or inadequate.</p>\n<h2>The finance problem</h2>\n<p>Mortgage lending is only about <strong>0.44% of GDP</strong>. Without long-term finance, most families build slowly from savings, one room or one floor at a time. That shapes the whole supply chain: materials are bought in small quantities, and construction stretches over years.</p>\n<h2>What could close the gap</h2>\n<ul>\n<li><strong>Affordable design:</strong> smaller, well-planned units on serviced plots.</li>\n<li><strong>Faster building systems:</strong> prefabrication and <a href=\"{{a:light-gauge-steel-framing-low-rise-homes}}\">light gauge steel framing</a> can cut time on site.</li>\n<li><strong>Finance:</strong> more mortgage lending, and new investment routes such as <a href=\"{{a:reits-pakistan-real-estate-investment}}\">REITs</a>.</li>\n<li><strong>Better use of land:</strong> mid-rise apartments in cities rather than ever-wider sprawl.</li>\n</ul>\n<p>Affordable housing was one of the themes of the PROPTECH Convention at the last Build Asia. Builders, developers, banks and housing finance companies are all part of the show’s audience.</p>",
-   "image": "cover-pakistan-housing-gap-numbers.jpg"
-  },
-  {
-   "slug": "reits-pakistan-real-estate-investment",
-   "category": "housing-real-estate",
-   "title": "REITs come of age: 29 schemes and a seventh listing on the PSX",
-   "excerpt": "Real estate investment trusts are giving developers a new source of money and investors a way into property. Where the market stands in 2026.",
-   "tags": [
-    "REITs",
-    "Real estate",
-    "Finance"
-   ],
-   "sources": [
-    {
-     "title": "ProPakistani, \"SECP approves PSX listing of Naya Nazimabad Apartments REIT\", 18 August 2026",
-     "url": "https://propakistani.pk/2026/08/18/secp-approves-psx-listing-of-naya-nazimabad-apartments-reit/"
-    }
-   ],
-   "body": "<p>For most investors in Pakistan, putting money into property has meant buying a plot or a flat. Real estate investment trusts (REITs) offer another way: buying units in a fund that owns or develops property, traded like shares.</p>\n<h2>Where the market stands</h2>\n<p>According to a report on the approval of the Naya Nazimabad Apartments REIT in August 2026, Pakistan has <strong>29 registered REIT schemes</strong>, of which <strong>six are listed</strong> on the Pakistan Stock Exchange. The Naya Nazimabad Apartments REIT is set to become the seventh.</p>\n<h2>A developmental REIT</h2>\n<p>The Naya Nazimabad scheme is a closed-end <strong>developmental REIT</strong> under the REIT Regulations, 2022 — it raises money to build, rather than only to own finished buildings. The public offering covers 44.06 million units, 15% of the scheme, with 75% offered to institutional and high-net-worth investors and 25% to retail investors through book building. The SECP described it as the 13th public offering it had approved in 2026.</p>\n<h2>Why it matters for construction</h2>\n<ul>\n<li><strong>Developers</strong> get access to money from many investors, not just bank loans or advance payments from buyers.</li>\n<li><strong>Buyers</strong> can see a project funded before it is sold off-plan, which can reduce the risk of stalled schemes.</li>\n<li><strong>Investors</strong> can own a share of property with smaller sums, and sell their units on the exchange.</li>\n<li><strong>Transparency</strong> improves, because listed REITs must report regularly to the regulator and investors.</li>\n</ul>\n<h2>Things to keep in mind</h2>\n<p>REIT units can fall in value, and developmental REITs carry construction risk. As with any investment, investors should read the offering document and take professional advice.</p>\n<p>REITs and tokenisation were on the agenda of the PROPTECH Convention at Build Asia 2026. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what the conference covered.</a></p>",
-   "image": "cover-reits-pakistan-real-estate-investment.jpg",
-   "featured": 0
-  },
-  {
    "slug": "light-gauge-steel-framing-low-rise-homes",
    "category": "housing-real-estate",
    "title": "Light gauge steel framing: a faster way to build low-rise homes?",
@@ -487,46 +1278,6 @@
    ],
    "body": "<p>Most homes in Pakistan are built from brick, block and reinforced concrete — strong and familiar, but slow, heavy and labour-intensive. Light gauge steel (LGS) framing offers a different approach for low-rise buildings, and it is being studied seriously for affordable housing.</p>\n<h2>What it is</h2>\n<p>LGS framing uses thin, cold-formed steel sections — studs, joists and trusses — screwed together into wall and roof frames, then clad with boards and insulation. Sections are factory-made to exact sizes, so assembly on site is fast and precise.</p>\n<h2>The benefits</h2>\n<p>NED University’s Center for Affordable Housing and Sustainable Built Environment (CAHSBE) describes LGS as an attractive alternative to traditional reinforced concrete for low-rise buildings. It notes that:</p>\n<ul>\n<li>sections are light enough to carry by hand, and allow quick building without heavy tools or equipment;</li>\n<li>steel is non-combustible, which is a code requirement for some types of structures;</li>\n<li>it does not rot, warp or suffer termite attack;</li>\n<li>frames are easy to modify later.</li>\n</ul>\n<h2>Being tested in Pakistan</h2>\n<p>CAHSBE worked with the construction industry to build an affordable model house using LGS on the NED campus, and the university reports that LGS was considered as one of the technologies for the Naya Pakistan Housing initiative. Final-year engineering students at NED compare LGS designs with reinforced concrete alternatives for cost and time to completion.</p>\n<h2>Questions for anyone considering it</h2>\n<ol>\n<li><strong>Approvals:</strong> does the local building authority accept the system for this use?</li>\n<li><strong>Corrosion:</strong> what galvanising and detailing protect the steel, especially near the coast?</li>\n<li><strong>Heat and sound:</strong> what insulation and boards are used, and how does the home perform in summer?</li>\n<li><strong>Skills:</strong> are trained installers available, and who supervises them?</li>\n<li><strong>Cost:</strong> how does the full cost — including finishes — compare with a conventional build?</li>\n</ol>\n<p>Light gauge steel framing has featured in Build Asia’s past conference programme, and pre-fabricated building components, pre-engineered steel buildings and prefab housing systems remain core exhibitor categories. <a href=\"{{a:pakistan-housing-gap-numbers}}\">Why faster building matters: the housing gap.</a></p>",
    "image": "cover-light-gauge-steel-framing-low-rise-homes.jpg",
-   "featured": 0
-  },
-  {
-   "slug": "buildings-electricity-energy-conservation-building-code",
-   "category": "sustainable-building",
-   "featured": 6,
-   "title": "Buildings use about 60% of Pakistan’s electricity. Can a building code change that?",
-   "excerpt": "The federal government wants the Energy Conservation Building Code 2023 applied to new construction. What the code is for, and what it means for designers and suppliers.",
-   "tags": [
-    "Energy efficiency",
-    "ECBC",
-    "Policy"
-   ],
-   "sources": [
-    {
-     "title": "Profit by Pakistan Today, \"Energy ministry links building code to power efficiency standards\", 30 May 2025",
-     "url": "https://profit.pakistantoday.com.pk/2025/05/30/energy-ministry-links-building-code-to-power-efficiency-standards"
-    }
-   ],
-   "body": "<p>Every summer, Pakistan’s grid is pushed to its limit by one thing above all: keeping buildings cool. According to the Federal Energy Minister, Sardar Awais Ahmed Khan Leghari, buildings account for <strong>about 60% of electricity use</strong> in the country.</p>\n<h2>The push for the code</h2>\n<p>In May 2025 the minister wrote to provincial Chief Ministers and federal officials urging them to adopt the <strong>Energy Conservation Building Code 2023 (ECBC-2023)</strong> as the national standard for new construction. His letters called for:</p>\n<ul>\n<li>ECBC-2023 to apply across all development plans;</li>\n<li>compliance by all government-funded projects under the Public Sector Development Programme;</li>\n<li>provinces to build it into their planning — with a proposal to link approval of future projects to compliance;</li>\n<li>efficient electrical systems in all new buildings.</li>\n</ul>\n<h2>What an energy code does</h2>\n<p>An energy conservation building code sets minimum standards for how much energy a building may use — typically through the building envelope (walls, roofs, windows and insulation), lighting, air-conditioning and electrical systems. The idea is simple: decisions made at design stage lock in a building’s electricity bills for decades.</p>\n<h2>What it means in practice</h2>\n<ul>\n<li><strong>Architects and engineers</strong> will need to show compliance at design stage, especially on public projects.</li>\n<li><strong>Developers</strong> can market lower running costs to buyers and tenants facing high tariffs.</li>\n<li><strong>Suppliers</strong> of insulation, high-performance glazing, reflective roofing, efficient air-conditioning, LED lighting and building controls stand to see demand grow.</li>\n</ul>\n<h2>The open questions</h2>\n<p>The success of any code depends on enforcement by local building authorities, on training for designers and inspectors, and on materials being available at prices builders can afford. Those are the conversations the industry will need to have over the coming years.</p>\n<p>Energy-efficient buildings and green construction practices are among the opportunity areas highlighted at Build Asia. <a href=\"{{a:rooftop-solar-7000-mw-building-design}}\">See also: how rooftop solar is changing building design.</a></p>",
-   "image": "cover-buildings-electricity-energy-conservation-building-code.jpg"
-  },
-  {
-   "slug": "rooftop-solar-7000-mw-building-design",
-   "category": "sustainable-building",
-   "title": "7,000 MW on the rooftops: how solar is reshaping building design",
-   "excerpt": "Net-metered solar grew 37-fold in six years. Roofs, structures and wiring now have to be designed for panels from day one.",
-   "tags": [
-    "Solar",
-    "Energy",
-    "Design"
-   ],
-   "sources": [
-    {
-     "title": "ProPakistani, \"Pakistan's solar boom reaches 7,000 MW as govt moves to replace net metering\", 17 July 2026",
-     "url": "https://propakistani.pk/2026/07/17/pakistans-solar-boom-reaches-7000-mw-as-govt-moves-to-replace-net-metering/"
-    }
-   ],
-   "body": "<p>Pakistan’s rooftops have changed faster than almost anyone expected. Solar generation under net metering grew from <strong>190 MW in FY2020 to about 6,978 MW by FY2026</strong> — nearly 37 times in six years — according to figures presented by Syed Faizan Ali, Energy Adviser to the Power Division.</p>\n<h2>Why it happened</h2>\n<p>The same presentation set out the drivers: electricity tariffs rose about <strong>140%</strong> between FY2021 and FY2025, while the rupee lost about 75% of its value and imported solar panel prices fell by about <strong>60%</strong>. For many homes and businesses, generating their own power became the obvious choice.</p>\n<h2>The rules are changing</h2>\n<p>Under the Prosumer Regulations 2026, which took effect on 8 February 2026, new consumers move to <strong>net billing</strong>: electricity they export to the grid is paid at a lower reference price rather than credited one-for-one. Consumers with 2015 net-metering agreements keep their terms until their contracts expire. The result is that it now pays to use more of your own solar power on site — which puts more weight on batteries and on efficient buildings.</p>\n<h2>What this means for building design</h2>\n<ul>\n<li><strong>Roofs:</strong> plan clear, shade-free areas, the right orientation, and safe access for cleaning and maintenance.</li>\n<li><strong>Structure:</strong> design for the weight of panels and mounting frames, and for wind loads.</li>\n<li><strong>Waterproofing:</strong> mounting penetrations are a common source of leaks if not detailed properly.</li>\n<li><strong>Electrical:</strong> space for inverters and batteries, proper earthing, and cable routes planned in advance.</li>\n<li><strong>Efficiency first:</strong> every unit of electricity saved by insulation and shading is one the panels do not need to produce.</li>\n</ul>\n<h2>Opportunities across the industry</h2>\n<p>Solar installers, inverter and battery suppliers, cable makers, roofing and waterproofing companies, and structural engineers all have a part in getting rooftop solar right. Generators, the solar industry, UPS systems and electrical cables are exhibitor categories at Build Asia. <a href=\"{{a:buildings-electricity-energy-conservation-building-code}}\">Read about the energy building code.</a></p>",
-   "image": "cover-rooftop-solar-7000-mw-building-design.jpg",
    "featured": 0
   },
   {
@@ -554,51 +1305,6 @@
    "featured": 0
   },
   {
-   "slug": "build-asia-2027-what-to-expect",
-   "category": "exhibition-news",
-   "featured": 1,
-   "title": "Build Asia 2027: 18–20 March at Karachi Expo Centre — what to expect",
-   "excerpt": "The 21st Build Asia brings building materials, construction machinery, property and stone together in Karachi. Dates, who exhibits, who visits, and how to take part.",
-   "tags": [
-    "Build Asia 2027",
-    "Karachi",
-    "Exhibition"
-   ],
-   "sources": [],
-   "body": "<p>The <strong>21st Build Asia International Exhibition and Conference</strong> takes place from <strong>18 to 20 March 2027</strong> at the <strong>Karachi Expo Centre</strong>, open daily from 10:00 to 18:00. It is Pakistan’s international building materials and construction machinery show, organised by Ecommerce Gateway Pakistan (Pvt) Ltd, a member of UFI, the Global Association of the Exhibition Industry.</p>\n<figure>{{img:buildasia-21-karachi-2027-banner.jpg|Build Asia 2027 — 18–20 March, Karachi Expo Centre}}<figcaption>The official banner of the 21st edition.</figcaption></figure>\n<h2>Why it matters</h2>\n<p>Build Asia is where Pakistan’s construction industry meets in one place: manufacturers, importers and distributors on one side; builders, developers, contractors, architects, engineers and government agencies on the other. It is also a gateway for international companies looking at Pakistan and the region, and for local firms seeking joint-venture partners and technology transfer.</p>\n<h2>What is on show</h2>\n<p>Exhibitors cover the whole building chain, including:</p>\n<ul>\n<li>cranes, earthmoving and hoisting machinery, drilling and mining equipment;</li>\n<li>pre-fabricated building components, pre-engineered steel buildings and prefab housing;</li>\n<li>steel, cement and concrete technology, construction chemicals;</li>\n<li>marble, granite, ceramics and tiles; wood and timber;</li>\n<li>paints and coatings, aluminium and PVC windows and doors, glazing and facades;</li>\n<li>pumps, pipes, cables, generators, solar and electrical systems;</li>\n<li>furniture, lighting, fire safety and security systems;</li>\n<li>builders, developers, banks, housing finance and real estate services.</li>\n</ul>\n<p>Co-located shows including Stonefair Asia and Furniture Asia run alongside. See the full <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>.</p>\n<h2>Who visits</h2>\n<p>The audience includes architects, engineers and town planners; builders, contractors and developers; interior designers; distributors and investors; government authorities and decision-makers; associations; consultants; real estate professionals; and foreign companies seeking joint ventures. See the <a href=\"https://buildasia.net/visitor-profile/\">visitor profile</a>.</p>\n<h2>How to take part</h2>\n<ul>\n<li><strong>Visiting:</strong> trade and corporate visitors can <a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">register online</a>; anyone who has not registered can register at the on-site desks.</li>\n<li><strong>Exhibiting:</strong> stands are available as ready-built shell scheme or bare space. <a href=\"{{a:exhibiting-shell-scheme-or-bare-space}}\">Which is right for you?</a> To enquire, <a href=\"https://buildasia.net/contact/?enquiry=stand\">book a stand</a>.</li>\n</ul>\n<p>The last Karachi edition drew more than 32,000 trade visitors and 350 exhibitors from over 21 countries. <a href=\"{{a:build-asia-2026-in-numbers}}\">See the results.</a></p>",
-   "image": "cover-build-asia-2027-what-to-expect.jpg"
-  },
-  {
-   "slug": "build-asia-2026-in-numbers",
-   "category": "exhibition-news",
-   "title": "Build Asia 2026 in numbers: 32,000 visitors, 350 exhibitors, 21 countries",
-   "excerpt": "The figures from the post-show report of the January 2026 Karachi edition, and who opened and supported it.",
-   "tags": [
-    "Build Asia 2026",
-    "Results",
-    "Karachi"
-   ],
-   "sources": [],
-   "body": "<p>The most recent Karachi edition of Build Asia was held from <strong>22 to 24 January 2026</strong> at the Karachi Expo Centre. These are the figures from its post-show report.</p>\n<table>\n<thead><tr><th>Build Asia Karachi 2026</th><th></th></tr></thead>\n<tbody>\n<tr><td>Trade visitors</td><td>32,000+</td></tr>\n<tr><td>Exhibitors, international and local</td><td>350+</td></tr>\n<tr><td>Countries taking part</td><td>21+</td></tr>\n<tr><td>Indoor exhibition space</td><td>190,000+ sq ft (about 18,000 m²)</td></tr>\n<tr><td>Outdoor area for heavy machinery</td><td>50,000+ sq ft (about 5,000 m²)</td></tr>\n</tbody>\n</table>\n<h2>Opening and closing</h2>\n<p>The edition was inaugurated by senior figures from the Association of Builders and Developers, together with the Consuls General of Oman and Iran, the Deputy Trade Representative of the Russian Federation Trade Mission, and the Principal Secretary to the Governor of Sindh. The closing ceremony was attended by the Minister for Local Government, Sindh.</p>\n<h2>Supporters</h2>\n<p>The event was supported by the Ministry of Industries and Production, the Trade Development Authority of Pakistan and the Pakistan Engineering Council. Build Asia’s supporters also include PASDEC, the All Pakistan Marble Industries Association, the All Karachi Marble Industries Association and the Karachi Chamber of Commerce and Industry.</p>\n<h2>Alongside the exhibition</h2>\n<p>The PROPTECH Convention ran with the show, covering housing, finance, design and technology in real estate. <a href=\"{{a:proptech-convention-2026-conference-themes}}\">Read what it covered.</a></p>\n<h2>Next edition</h2>\n<p>The 21st edition takes place from 18 to 20 March 2027 at the Karachi Expo Centre. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a> Photos from past editions are in the <a href=\"https://buildasia.net/gallery/\">gallery</a>.</p>",
-   "image": "cover-build-asia-2026-in-numbers.jpg",
-   "featured": 0
-  },
-  {
-   "slug": "planning-your-visit-build-asia-karachi",
-   "category": "exhibition-news",
-   "title": "Planning your visit to Build Asia: a guide for trade visitors",
-   "excerpt": "Registration, opening hours, getting the most from three days at the show, and help for visitors coming from abroad.",
-   "tags": [
-    "Visitors",
-    "Guide",
-    "Build Asia 2027"
-   ],
-   "sources": [],
-   "body": "<p>Three days at a large trade show go quickly. A little planning turns a walk around the halls into meetings that move your projects forward.</p>\n<h2>The essentials</h2>\n<ul>\n<li><strong>Dates:</strong> 18–20 March 2027</li>\n<li><strong>Hours:</strong> 10:00 to 18:00 each day</li>\n<li><strong>Venue:</strong> Karachi Expo Centre, Main University Road, Gulshan-e-Iqbal, Karachi</li>\n<li><strong>Who can attend:</strong> trade and corporate visitors</li>\n</ul>\n<h2>Register before you go</h2>\n<p><a href=\"https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web\">Register online</a> for your visitor pass to save time at the entrance. If you have not registered, you can still register at the on-site desks.</p>\n<h2>Make a plan</h2>\n<ol>\n<li><strong>List what you need:</strong> products to source, problems to solve, suppliers to compare.</li>\n<li><strong>Check who is exhibiting</strong> and mark the stands to visit first.</li>\n<li><strong>Book meetings</strong> with key suppliers in advance — their senior people are busy during show days.</li>\n<li><strong>Bring drawings or specifications</strong> for current projects, so suppliers can give useful answers.</li>\n<li><strong>Leave time to explore:</strong> the best finds are often stands you did not plan to visit.</li>\n<li><strong>Visit the outdoor area</strong> to see heavy machinery in person.</li>\n</ol>\n<h2>Coming from abroad</h2>\n<p>Recommended hotels are in the city centre, about 20–30 minutes from the Karachi Expo Centre. The organisers offer foreign visitor facilitation; contact details and travel information are on the <a href=\"https://buildasia.net/karachi/travel/\">travel page</a>.</p>\n<h2>After the show</h2>\n<p>Follow up within a week while conversations are fresh: send your requirements, ask for quotations and samples, and arrange site or factory visits with the suppliers that impressed you.</p>\n<p>Questions? Contact the Build Asia Secretariat at info@buildasia.net or (92-21) 111-222-444. <a href=\"{{a:build-asia-2027-what-to-expect}}\">What to expect at Build Asia 2027.</a></p>",
-   "image": "cover-planning-your-visit-build-asia-karachi.jpg",
-   "featured": 0
-  },
-  {
    "slug": "exhibiting-shell-scheme-or-bare-space",
    "category": "exhibition-news",
    "title": "Exhibiting at Build Asia: shell scheme or bare space?",
@@ -611,6 +1317,21 @@
    "sources": [],
    "body": "<p>Companies taking part in Build Asia choose between two kinds of stand. The right choice depends on what you are showing, your budget, and how you want to be seen.</p>\n<h2>Shell scheme: ready to use</h2>\n<p>A shell scheme stand is ready-built. The structure, fascia board with your company name, and basic furniture are supplied, so you arrive to a finished space and only need to bring products and graphics. Shell scheme starts at <strong>9 square metres</strong> and increases in 9 m² steps (9, 18, 27 …).</p>\n<p><strong>Best for:</strong> first-time exhibitors, smaller products, distributors, service companies, and anyone who wants a simple, predictable setup.</p>\n<h2>Bare space: your own design</h2>\n<p>Bare space is floor area only. You design and build your own stand, usually with a contractor. Bare space starts at <strong>18 square metres</strong> and increases in 9 m² steps (18, 27, 36 …).</p>\n<p><strong>Best for:</strong> established brands that want a distinctive presence, companies displaying large machinery, and anyone with a stand design they reuse across shows.</p>\n<p>Both options include a 200-word company profile in the official exhibition catalogue. Heavy machinery can also be shown in the outdoor area.</p>\n<h2>Tips for a stand that brings business</h2>\n<ol>\n<li><strong>Set a goal:</strong> leads, distributors, launches or brand awareness — and design for it.</li>\n<li><strong>Show, don’t just tell:</strong> working products, samples people can touch, and short demonstrations draw crowds.</li>\n<li><strong>Keep the message short:</strong> visitors should know what you do from the aisle in three seconds.</li>\n<li><strong>Staff it with decision-makers</strong> who can answer technical and commercial questions.</li>\n<li><strong>Capture every lead</strong> with notes on what the visitor needs.</li>\n<li><strong>Invite your customers</strong> before the show and give them a reason to come.</li>\n<li><strong>Follow up within a week.</strong></li>\n</ol>\n<p>Check whether your products fit the <a href=\"https://buildasia.net/exhibit-profile/\">exhibitor profile</a>, then <a href=\"https://buildasia.net/contact/?enquiry=stand\">book a stand</a> for 18–20 March 2027.</p>",
    "image": "cover-exhibiting-shell-scheme-or-bare-space.jpg",
+   "featured": 0
+  },
+  {
+   "slug": "waterproofing-before-monsoon-checklist",
+   "category": "building-materials",
+   "title": "Waterproofing before the monsoon: a checklist for owners and builders",
+   "excerpt": "Most leaks start at roofs, joints and wet areas. What to check, which systems to consider, and the questions to ask an applicator.",
+   "tags": [
+    "Waterproofing",
+    "Construction chemicals",
+    "Guide"
+   ],
+   "sources": [],
+   "body": "<p>Water is the slowest and most expensive enemy of a building. Leaks damage plaster and paint, rust reinforcement inside concrete, and grow mould that affects health. Most problems start in a few predictable places — which means they can be prevented.</p>\n<h2>Where to look first</h2>\n<ul>\n<li><strong>Roofs:</strong> cracks, ponding water, blocked drains, and the joint where roof meets parapet.</li>\n<li><strong>Bathrooms and kitchens:</strong> around drains, pipe entries and the base of walls.</li>\n<li><strong>Basements and water tanks:</strong> water pushing in from the soil or out from the tank.</li>\n<li><strong>External walls:</strong> hairline cracks, window and door frames, and where services enter the building.</li>\n<li><strong>Expansion joints</strong> in larger buildings, which need flexible sealants.</li>\n</ul>\n<h2>Common systems, in plain words</h2>\n<ul>\n<li><strong>Cementitious coatings:</strong> brushed or troweled on; suit tanks, basements and wet areas.</li>\n<li><strong>Liquid membranes</strong> (acrylic, polyurethane): form a seamless flexible skin; suit roofs.</li>\n<li><strong>Bituminous membranes:</strong> sheets laid on roofs and foundations; durable but need careful laying.</li>\n<li><strong>Crystalline admixtures:</strong> added to concrete so it seals its own pores.</li>\n<li><strong>Sealants:</strong> for joints, frames and pipe entries.</li>\n</ul>\n<h2>Questions to ask an applicator</h2>\n<ol>\n<li>How will the surface be prepared? Most failures come from poor preparation, not poor products.</li>\n<li>Is the system suited to our roof — exposed to sun, walked on, or covered?</li>\n<li>How thick will the coating be, and how many coats?</li>\n<li>What guarantee is given, and who gives it — the applicator or the manufacturer?</li>\n<li>Will you do a flood test on the roof before handing over?</li>\n</ol>\n<h2>Design it in from the start</h2>\n<p>The cheapest waterproofing is the one planned at design stage: proper roof slopes, enough drains, details at every joint, and good concrete. Repairs after leaks start always cost more.</p>\n<p>Waterproofing, insulation, sealants and adhesives, and construction chemicals are all exhibitor categories at Build Asia. <a href=\"{{a:paints-and-coatings-market-room-to-grow}}\">See also: the paints and coatings market.</a></p>",
+   "image": "cover-waterproofing-before-monsoon-checklist.jpg",
    "featured": 0
   },
   {

@@ -539,6 +539,18 @@ T::eq(Settings::get('event_start'), '2027-03-18', 'Empty event details are fille
 T::ok((int)Settings::get('logo_light', 0) > 0 && count((array)Settings::get('main_menu', [])) === 6, 'The logo and header menu are filled in');
 $again = ContentPack::import('buildasia', ['publish' => true, 'settings' => true]);
 T::eq((int)db()->value('SELECT COUNT(*) FROM {p}articles'), count($pk['articles']), 'Importing twice does not duplicate anything');
+// A blog that imported an older, smaller pack gets only the new articles and categories.
+$keepTitle = (string)db()->value("SELECT title FROM {p}articles WHERE slug = 'cement-sales-fy26-what-the-numbers-say'");
+db()->update('articles', ['title' => 'Edited by the team'], 'slug = ?', ['cement-sales-fy26-what-the-numbers-say']);
+$gone = (int)db()->value("SELECT id FROM {p}articles WHERE slug = 'psdp-2026-27-infrastructure-spending'");
+db()->exec('DELETE FROM {p}article_tags WHERE article_id = ?', [$gone]);
+db()->exec('DELETE FROM {p}articles WHERE id = ?', [$gone]);
+db()->exec("DELETE FROM {p}categories WHERE slug = 'infrastructure-projects' AND NOT EXISTS (SELECT 1 FROM {p}articles a WHERE a.category_id = {p}categories.id)");
+$newer = ContentPack::import('buildasia', ['publish' => true, 'settings' => true]);
+T::ok($newer['ok'] && (int)db()->value("SELECT COUNT(*) FROM {p}articles WHERE slug = 'psdp-2026-27-infrastructure-spending' AND status = 'published'") === 1, 'Importing a newer pack adds the articles that were missing');
+T::eq((string)db()->value("SELECT title FROM {p}articles WHERE slug = 'cement-sales-fy26-what-the-numbers-say'"), 'Edited by the team', '…and leaves articles the team edited alone');
+db()->update('articles', ['title' => $keepTitle], 'slug = ?', ['cement-sales-fy26-what-the-numbers-say']);
+T::eq((int)db()->value('SELECT COUNT(DISTINCT category_id) FROM {p}articles'), count($pk['categories']), 'Every category in the pack has articles');
 Cache::clear();
 T::eq(http('GET', '/market-insights/cement-sales-fy26-what-the-numbers-say')['status'], 200, 'A starter article opens on the blog');
 

@@ -14,3 +14,7 @@ blog/storage/*
 blog/uploads/*
 !blog/uploads/.htaccess
 !blog/uploads/index.html
+# Content pack working files (rebuilt by covers.py)
+tools/blog-content-pack/covers/
+tools/blog-content-pack/*.ttf
+tools/blog-content-pack/__pycache__/

@@ -302,6 +302,29 @@ branded cover images; the official logo and 2027 banner from the website
 zip; link library; counters; menus; slider. Imports only fill what is
 empty; safe to run twice.
 
+**Starter content, second batch (10 October 2026), at the owner's request.**
+The owner asked for more categories and 25 more articles on the investment
+opportunities in the sectors around the event. The opportunity is to be shown
+subtly, without an explicit foreign-investment pitch, so that it encourages
+international participation in the exhibition.
+
+- **Five new categories, five articles each:**
+  - Infrastructure & Projects
+  - Cities & Urban Development
+  - Industry & Manufacturing
+  - Trade & Supply Chains
+  - Economy & Business Climate
+- **How each article is written:**
+  - It shows the scale of demand, the gaps (such as imports and idle capacity), the incentives and the partners already active.
+  - It includes one honest "what to watch" line.
+  - It ends with a natural Build Asia 2027 line.
+- **Checking:** every fact was checked against its sources by a separate fact-checker.
+- **Result:** the pack now has 11 categories and 46 articles. Importing again into an existing blog adds only the new ones.
+- **Header menu:** it stays at six items so it fits on one line. The home page lists every category.
+- **Where the files are:**
+  - Writer brief: `tools/blog-content-pack/WRITER-BRIEF.md`
+  - Article list: `tools/blog-content-pack/NEW-SLUGS.txt`
+
 ## 6b. Still open
 
 - (Social agent, later) Same logins as the sales agent or separate? AI image

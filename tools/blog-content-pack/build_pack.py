@@ -4,6 +4,9 @@ from PIL import Image, ImageDraw, ImageFont
 from articles_1 import ARTICLES as A1
 from articles_2 import ARTICLES as A2
 from articles_3 import ARTICLES as A3
+import importlib
+NEW=[]
+for _n in range(4,9): NEW+=importlib.import_module(f'articles_{_n}').ARTICLES
 OUT='/home/claude/ai-sales-agent/blog/content-packs/buildasia'
 os.makedirs(OUT+'/images', exist_ok=True)
 NAVY=(20,42,92); DEEP=(13,29,66); ROYAL=(31,79,191); AMBER=(247,177,11)
@@ -34,13 +37,30 @@ def slide(name, seed, hue):
     d.polygon([(0,H-70),(W*0.2,H-70),(W*0.2-30,H),(0,H)],fill=AMBER+(255,)); d.polygon([(W*0.215,H-70),(W*0.7,H-70),(W*0.7-30,H),(W*0.215-30,H)],fill=ROYAL+(255,))
     Image.alpha_composite(im.convert('RGBA'),ov).convert('RGB').save(OUT+'/images/'+name, quality=82, optimize=True, progressive=True)
 slide('slide-build-asia-2027.jpg', 7, NAVY); slide('slide-industry-insights.jpg', 11, DEEP)
-for a in A1+A2+A3:
+for a in A1+A2+A3+NEW:
     shutil.copy('covers/'+a['slug']+'.jpg', OUT+'/images/cover-'+a['slug']+'.jpg')
 
 order=['build-asia-2027-what-to-expect','cement-sales-fy26-what-the-numbers-say','construction-machinery-imports-rise','pakistan-marble-granite-mechanised-quarrying',
        'pakistan-housing-gap-numbers','buildings-electricity-energy-conservation-building-code']
+# Publishing order (first = newest): the 2027 preview, then the growth-sector
+# articles mixed category by category with the first batch.
+def by_cat(lst):
+    cats={}
+    for a in lst: cats.setdefault(a['category'],[]).append(a)
+    out=[]; groups=list(cats.values())
+    while any(groups):
+        for g in groups:
+            if g: out.append(g.pop(0))
+    return out
+first=[a for a in A1+A2+A3 if a['slug']=='build-asia-2027-what-to-expect']
+old=by_cat([a for a in A1+A2+A3 if a['slug']!='build-asia-2027-what-to-expect']); new=by_cat(NEW)
+seq=first[:]
+while old or new:
+    if new: seq.append(new.pop(0))
+    if new: seq.append(new.pop(0))
+    if old: seq.append(old.pop(0))
 arts=[]
-for a in A1+A2+A3:
+for a in seq:
     b=dict(a); b['body']=b['body'].strip(); b['image']='cover-'+a['slug']+'.jpg'
     b['sources']=[{'title':t,'url':u} for t,u in a['sources']]
     b['featured']= order.index(a['slug'])+1 if a['slug'] in order else 0
@@ -52,8 +72,8 @@ for b in arts:
         b['body']=b['body'].replace('<h2>Why it matters</h2>','<figure>{{img:buildasia-21-karachi-2027-banner.jpg|Build Asia 2027 — 18–20 March, Karachi Expo Centre}}<figcaption>The official banner of the 21st edition.</figcaption></figure>\n<h2>Why it matters</h2>',1)
 
 pack={
- 'name':'Build Asia — starter content', 'version':'2026-10-09',
- 'description':'Six real-world categories and 21 researched starter articles for the Build Asia blog, with cover images, the official logo, the link library, counter figures, menus, slider and event details. Facts checked against published sources and Build Asia\'s approved information on 9 October 2026.',
+ 'name':'Build Asia — starter content', 'version':'2026-10-10',
+ 'description':'Eleven real-world categories and 46 researched starter articles for the Build Asia blog, with cover images, the official logo, the link library, counter figures, menus, slider and event details. Facts checked against published sources and Build Asia\'s approved information on 9–10 October 2026.',
  'author':{'name':'Build Asia Editorial Desk','title':'Build Asia','bio':'News, analysis and practical guides on Pakistan\'s building and construction industry, from the team behind Build Asia, Pakistan\'s international building materials and construction machinery exhibition.'},
  'settings_if_empty':{
    'site_name':'Build Asia Blog','site_tagline':'News and insight for Pakistan\'s building and construction industry',
@@ -79,6 +99,11 @@ pack={
    {'slug':'housing-real-estate','name':'Housing & Real Estate','description':'Housing need, affordable building systems, property finance and REITs in Pakistan.'},
    {'slug':'sustainable-building','name':'Sustainable Building','description':'Energy efficiency, solar, heat-resilient design and green construction for Pakistan\'s climate.'},
    {'slug':'exhibition-news','name':'Exhibition News','description':'Build Asia dates, results, conference themes and guides for visitors and exhibitors.'},
+   {'slug':'infrastructure-projects','name':'Infrastructure & Projects','description':'Dams, motorways, railways, water and transport projects: budgets, financing, progress and the work they create.'},
+   {'slug':'cities-urban-development','name':'Cities & Urban Development','description':'How Pakistan\'s cities are growing: new urban projects, high-rises, ports and housing programmes.'},
+   {'slug':'industry-manufacturing','name':'Industry & Manufacturing','description':'Cement, steel, glass, tiles and the economic zones where Pakistan\'s building products are made.'},
+   {'slug':'trade-supply-chains','name':'Trade & Supply Chains','description':'What Pakistan imports and exports for building, regional corridors and the mining and rail projects behind them.'},
+   {'slug':'economy-business-climate','name':'Economy & Business Climate','description':'Budget, interest rates, remittances, credit ratings and investment facilitation: the economy behind construction.'},
  ],
  'links':[
    {'label':'Register to visit (E-Pass)','url':'https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web','kind':'register','keywords':'register, visitor pass, e-pass, register online'},

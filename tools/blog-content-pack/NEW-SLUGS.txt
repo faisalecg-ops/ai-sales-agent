@@ -1,0 +1,45 @@
+Second batch (10 October 2026): 5 new categories, 25 articles on the growth
+sectors around Build Asia, written so a reader weighing the market sees the
+scale of demand, the gaps and the partners already active.
+
+New categories:
+  infrastructure-projects     = Infrastructure & Projects
+  cities-urban-development    = Cities & Urban Development
+  industry-manufacturing      = Industry & Manufacturing
+  trade-supply-chains         = Trade & Supply Chains
+  economy-business-climate    = Economy & Business Climate
+
+File articles_4.py (writer A) — infrastructure-projects
+  psdp-2026-27-infrastructure-spending       PSDP 2026-27: where the federal development money goes, and the contract pipeline it creates
+  dams-under-construction-materials-demand   Diamer-Bhasha, Mohmand, Dasu and other dams: scale, progress, financing, what they consume
+  motorways-highways-pipeline-2026           Motorways and highways pipeline (e.g. M-6 Sukkur–Hyderabad, KKH realignment): financing partners, status
+  karachi-infrastructure-projects-2026       Karachi's big projects (K-IV water, Red Line BRT, others): status in 2026 and what they need
+  ppp-projects-pipeline-pakistan             Public–private partnership projects: the PPP Authority pipeline and how private firms take part
+
+File articles_5.py (writer B) — cities-urban-development
+  pakistan-urbanisation-census-cities        Census 2023 urban figures: how fast Pakistan's cities are growing and what that means for building
+  gwadar-port-city-development-2026          Gwadar: port, new international airport, free zone — where development stands in 2026
+  lahore-new-urban-projects-ravi-cbd         Lahore's new urban projects: RUDA Ravi City and the Central Business District Punjab
+  high-rise-growth-pakistan-cities           Vertical growth in Karachi, Lahore and Islamabad: high-rise rules, approvals and what tall buildings need
+  punjab-housing-programme-apni-chhat        Punjab's Apni Chhat Apna Ghar and other housing programmes: homes funded, materials demand
+
+File articles_6.py (writer C) — industry-manufacturing
+  special-economic-zones-incentives          Special Economic Zones: incentives under the SEZ law, zones that are operating, who has invested
+  steel-industry-capacity-demand-2026        Pakistan's steel industry: capacity, demand, energy costs and modernisation (2025–26)
+  pakistan-glass-industry-float-glass        Pakistan's glass industry: float glass makers, capacity, construction demand
+  tiles-ceramics-sanitaryware-industry       Tiles, ceramics and sanitaryware: local makers, imports, gas costs, room for growth
+  cement-exports-and-capacity-expansion      Cement exports and new capacity: markets, port-side plants, expansions and efficiency
+
+File articles_7.py (writer D) — trade-supply-chains
+  construction-imports-what-pakistan-buys    What Pakistan imports for building and machinery (PBS data FY26) — the gaps local supply does not yet fill
+  building-materials-exports-markets         Building-material exports (cement, marble, tiles etc.): destinations and growth
+  regional-corridors-central-asia-trade      Regional corridors: Uzbekistan–Afghanistan–Pakistan railway, transit trade, CAREC — what they mean for construction
+  reko-diq-mining-construction-demand        Reko Diq and the minerals push: project size, financing, construction and machinery demand
+  ml-1-railway-upgrade-status                ML-1 Karachi–Peshawar railway upgrade: financing and status in 2026, what the works involve
+
+File articles_8.py (writer E) — economy-business-climate
+  budget-2026-27-what-it-means-for-construction   Budget 2026-27: property taxes, PSDP and other measures for construction
+  interest-rates-construction-finance-2026   SBP policy rate path to 2026 and what cheaper money means for building and construction finance
+  remittances-record-property-demand         Record remittances in FY26, Roshan Digital Accounts and overseas Pakistanis' demand for property
+  credit-ratings-reserves-recovery-2026      Credit rating upgrades, IMF programme reviews and reserves: Pakistan's macro picture in 2026
+  sifc-investment-facilitation-explained     The Special Investment Facilitation Council: what it does, single window, sectors and projects
