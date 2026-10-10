@@ -46,13 +46,13 @@ final class Auth
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
-        $https = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')
-            || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+        $https = request_is_https();
         // A name of its own, so the blog never shares a session with the main website.
-        session_name('blogadm_' . substr(hash('sha256', base_url() . app_key()), 0, 10));
+        // Based on where the blog really is, so fixing the Blog address does not sign anyone out.
+        session_name('blogadm_' . substr(hash('sha256', install_path() . app_key()), 0, 10));
         session_set_cookie_params([
             'lifetime' => 0,
-            'path'     => (base_path() === '' ? '' : base_path()) . '/admin/',
+            'path'     => install_path() . '/admin/',
             'secure'   => $https,
             'httponly' => true,
             'samesite' => 'Lax',

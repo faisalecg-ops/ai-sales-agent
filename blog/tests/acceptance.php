@@ -555,6 +555,37 @@ Cache::clear();
 T::eq(http('GET', '/market-insights/cement-sales-fy26-what-the-numbers-say')['status'], 200, 'A starter article opens on the blog');
 
 // =====================================================================
+T::section('Blog address out of date (styles must still load)');
+$savedUrl = (string)Settings::get('site_url', '');
+$cssOf = static function (string $html): string {
+    return preg_match('#<link rel="stylesheet" href="([^"]+)"#', $html, $m) ? html_entity_decode($m[1]) : '';
+};
+$origin = (string)preg_replace('#^(https?://[^/]+).*$#', '$1', TEST_BASE);
+// Saved as http://, opened over https (e.g. after the site got its SSL certificate).
+Settings::set('site_url', $origin . '/blog');
+Cache::clear();
+$sec = http('GET', '/', ['headers' => ['X-Forwarded-Proto: https']]);
+$css = $cssOf($sec['body']);
+T::ok(str_starts_with($css, '/blog/assets/css/blog.css'), 'Styles are linked from this website, not from the saved address');
+T::ok(str_contains($sec['body'], 'href="https://' . substr($origin, 7) . '/blog/'), 'On a secure visit, an http:// blog address is used as https://');
+// Saved for another domain (e.g. the review copy's address on the live site).
+Settings::set('site_url', 'https://buildasia.net/blog');
+Cache::clear();
+$other = http('GET', '/');
+$css = $cssOf($other['body']);
+T::ok(str_starts_with($css, '/blog/'), 'With a wrong domain saved, styles still come from this website');
+$got = http('GET', $origin . $css);
+T::ok($got['status'] === 200 && str_contains($got['headers'], 'text/css'), '…and the stylesheet loads');
+$adm = http('GET', '/admin/?p=dashboard', ['jar' => $jar]);
+T::has($adm['body'], 'The blog address does not match this website', 'The dashboard warns that the saved address is wrong');
+T::ok(str_contains($adm['body'], 'href="/blog/admin/assets/admin.css'), 'The admin styles still load');
+$fix = http('POST', '/admin/?p=dashboard', ['jar' => $jar, 'form' => ['do' => 'use_address', '_csrf' => csrf_from($adm['body'])]]);
+Settings::flush();
+T::eq(Settings::get('site_url'), $origin . '/blog', 'One click sets the address to the one in use');
+Settings::set('site_url', $savedUrl);
+Cache::clear();
+
+// =====================================================================
 T::section('Scheduled tasks');
 $out = (string)shell_exec('cd ' . escapeshellarg(dirname(__DIR__)) . ' && php -r ' . escapeshellarg(
     '$GLOBALS["BLOG_CONFIG_OVERRIDE"]=' . var_export($GLOBALS['BLOG_CONFIG_OVERRIDE'], true) . '; define("BLOG_TESTING",true); $argv=[]; require "cron.php";') . ' 2>&1');

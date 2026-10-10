@@ -57,7 +57,75 @@ function base_url(): string
     if ($url === '') {
         $url = (string)cfg('base_url', '');
     }
+    // The address was saved as http:// but this visit is secure: use https,
+    // otherwise browsers block the styles and scripts ("mixed content").
+    if (request_is_https() && str_starts_with($url, 'http://')
+        && strcasecmp((string)parse_url($url, PHP_URL_HOST), request_host()) === 0) {
+        $url = 'https://' . substr($url, 7);
+    }
     return $cached = rtrim($url, '/');
+}
+
+function request_is_https(): bool
+{
+    return (($_SERVER['HTTPS'] ?? '') !== '' && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+        || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https'
+        || strtolower((string)($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '')) === 'on'
+        || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
+}
+
+/** The host name of this visit, without a port (empty when run from cron). */
+function request_host(): string
+{
+    return strtolower((string)preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
+}
+
+/**
+ * The folder the blog is really installed in, as seen by this visit (e.g. "/blog").
+ * Styles, scripts and fonts are linked through it, so they always load from the
+ * same address the page was opened at — even if the Blog address setting is out
+ * of date (http instead of https, review domain instead of the live one).
+ */
+function install_path(): string
+{
+    static $p = null;
+    if ($p !== null && !defined('BLOG_TESTING')) {
+        return $p;
+    }
+    $script = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+    $file = (string)($_SERVER['SCRIPT_FILENAME'] ?? '');
+    $real = $file !== '' ? realpath(dirname($file)) : false;
+    $root = realpath(BLOG_ROOT);
+    if ($script === '' || PHP_SAPI === 'cli' || $real === false || $root === false || !str_starts_with($real, $root)) {
+        return $p = base_path();
+    }
+    $inside = str_replace('\\', '/', substr($real, strlen($root)));      // e.g. "/admin" or ""
+    $dir = rtrim(str_replace('\\', '/', dirname($script)), '/');            // e.g. "/blog/admin"
+    if ($inside !== '' && str_ends_with($dir, $inside)) {
+        $dir = substr($dir, 0, -strlen($inside));
+    }
+    return $p = rtrim($dir, '/');
+}
+
+/** Address of a file inside the blog folder, relative to this website. */
+function local_url(string $path): string
+{
+    return install_path() . '/' . ltrim($path, '/');
+}
+
+/** True when the Blog address setting does not match the address this visit used. */
+function address_mismatch(): ?string
+{
+    $host = request_host();
+    if ($host === '' || PHP_SAPI === 'cli') {
+        return null;
+    }
+    $hostPort = strtolower((string)($_SERVER['HTTP_HOST'] ?? $host));
+    $https = request_is_https();
+    $hostPort = (string)preg_replace($https ? '/:443$/' : '/:80$/', '', $hostPort);
+    $seen = ($https ? 'https://' : 'http://') . $hostPort . install_path();
+    $saved = rtrim((string)(Settings::get('site_url', '') ?: cfg('base_url', '')), '/');
+    return strcasecmp($seen, $saved) === 0 ? null : $seen;
 }
 
 /** The path part of the blog address, e.g. "/blog". */
@@ -79,7 +147,7 @@ function asset(string $path): string
 {
     $file = BLOG_ROOT . '/assets/' . ltrim($path, '/');
     $v = is_file($file) ? (string)filemtime($file) : BLOG_VERSION;
-    return url('assets/' . ltrim($path, '/')) . '?v=' . $v;
+    return local_url('assets/' . ltrim($path, '/')) . '?v=' . $v;
 }
 
 function now_utc(): string

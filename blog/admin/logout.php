@@ -7,4 +7,4 @@ if (Auth::user()) {
     Activity::log('logout');
 }
 Auth::logout();
-redirect(url('admin/'));
+redirect(local_url('admin/'));

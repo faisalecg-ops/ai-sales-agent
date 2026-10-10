@@ -25,14 +25,14 @@ Schema::upgrade();
 function admin_asset(string $file): string
 {
     $abs = __DIR__ . '/assets/' . $file;
-    return url('admin/assets/' . $file) . '?v=' . (is_file($abs) ? filemtime($abs) : BLOG_VERSION);
+    return local_url('admin/assets/' . $file) . '?v=' . (is_file($abs) ? filemtime($abs) : BLOG_VERSION);
 }
 
 /** Address of an admin page. */
 function aurl(string $page = 'dashboard', array $params = []): string
 {
     $q = array_merge(['p' => $page], $params);
-    return url('admin/') . '?' . http_build_query($q);
+    return local_url('admin/') . '?' . http_build_query($q);
 }
 
 function flash(string $type, string $message): void
@@ -238,7 +238,7 @@ function admin_render(string $title, string $body, string $active = '', array $o
   <span class="atop__space"></span>
   <a class="atop__link" href="<?= e(url()) ?>" target="_blank" rel="noopener">View blog ↗</a>
   <a class="atop__link" href="<?= e(aurl('profile')) ?>"><?= e($user['name']) ?> · <?= e(ucfirst((string)$user['role'])) ?></a>
-  <a class="atop__link" href="<?= e(url('admin/logout.php')) ?>">Sign out</a>
+  <a class="atop__link" href="<?= e(local_url('admin/logout.php')) ?>">Sign out</a>
 </header>
 <nav class="aside" id="anav" aria-label="Admin">
   <?php foreach (admin_menu() as $group => $items):

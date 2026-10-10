@@ -129,7 +129,7 @@ ob_start(); ?>
 <section class="card">
   <h2>Sponsor report</h2>
   <p class="help">A one-page report of views and clicks for one sponsor, ready to print or save as PDF, or as a spreadsheet file.</p>
-  <form method="get" action="<?= e(url('admin/')) ?>" class="grid4" target="_blank">
+  <form method="get" action="<?= e(local_url('admin/')) ?>" class="grid4" target="_blank">
     <input type="hidden" name="p" value="banners">
     <div class="field"><label for="r_s">Sponsor</label><select id="r_s" name="report"><?php foreach ($sponsors as $s): ?><option><?= e($s) ?></option><?php endforeach; ?></select></div>
     <?= f_text('from', 'From', gmdate('Y-m-01'), '', ['type' => 'date']) ?>

@@ -33,7 +33,25 @@ if (Auth::can('settings')) {
 }
 $open = array_filter($setup, static fn($s) => !$s[1]);
 
+// The saved Blog address differs from the address this page was opened at.
+$seenAt = Auth::can('settings') ? address_mismatch() : null;
+if ($seenAt !== null && is_post() && in('do') === 'use_address') {
+    post_guard();
+    Settings::set('site_url', $seenAt);
+    Cache::clear();
+    Activity::log('settings', 'Blog address set to ' . $seenAt . ' from the dashboard');
+    flash('ok', 'The blog address is now ' . $seenAt . '.');
+    back_to('dashboard');
+}
+
 ob_start(); ?>
+<?php if ($seenAt !== null): ?>
+<div class="flash flash--err">
+  <p><strong>The blog address does not match this website.</strong> It is saved as <code><?= e(rtrim((string)(Settings::get('site_url', '') ?: cfg('base_url', '')), '/')) ?></code>, but you opened the blog at <code><?= e($seenAt) ?></code>. Links and sharing use the saved address.</p>
+  <form method="post"><?= Auth::csrfField() ?><input type="hidden" name="do" value="use_address"><button class="btn btn--primary">Use <?= e($seenAt) ?></button></form>
+  <p class="small">Only press this if <?= e($seenAt) ?> is the blog's real address (for example after moving from the review copy to the live site).</p>
+</div>
+<?php endif; ?>
 <div class="stats">
   <a class="stat" href="<?= e(aurl('articles', ['status' => 'published'])) ?>"><span class="stat__n"><?= $counts['published'] ?></span><span class="stat__l">Published</span></a>
   <a class="stat<?= $counts['pending'] ? ' stat--alert' : '' ?>" href="<?= e(aurl('articles', ['status' => 'pending'])) ?>"><span class="stat__n"><?= $counts['pending'] ?></span><span class="stat__l">Awaiting approval</span></a>

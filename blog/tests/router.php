@@ -26,6 +26,8 @@ if ($rel !== '' && $rel !== '/' && is_file($file) && !str_ends_with($file, '.php
     return false;   // let the server send static files
 }
 if (str_starts_with($rel, '/api/')) {
+    $_SERVER['SCRIPT_NAME'] = '/blog/api/index.php';
+    $_SERVER['SCRIPT_FILENAME'] = $root . '/api/index.php';
     require $root . '/api/index.php';
     return true;
 }
@@ -35,8 +37,11 @@ if (preg_match('#^/(admin|install)(/.*)?$#', $rel, $m)) {
         $f = $root . '/' . $m[1] . '/index.php';
     }
     $_SERVER['SCRIPT_NAME'] = '/blog/' . $m[1] . '/' . basename($f);
+    $_SERVER['SCRIPT_FILENAME'] = $f;
     require $f;
     return true;
 }
+$_SERVER['SCRIPT_NAME'] = '/blog/index.php';
+$_SERVER['SCRIPT_FILENAME'] = $root . '/index.php';
 require $root . '/index.php';
 return true;

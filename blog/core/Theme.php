@@ -66,19 +66,19 @@ final class Theme
             // One variable file holds every weight and width.
             $range = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
             $css = "@font-face{font-family:'$family';font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;src:url("
-                . url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2-variations'),url(" . url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2');unicode-range:$range}";
+                . local_url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2-variations'),url(" . local_url('assets/fonts/' . $key . '-latin-variable.woff2') . ") format('woff2');unicode-range:$range}";
             if (is_file(BLOG_ROOT . '/assets/fonts/' . $key . '-latin-ext-variable.woff2')) {
                 $css .= "@font-face{font-family:'$family';font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;src:url("
-                    . url('assets/fonts/' . $key . '-latin-ext-variable.woff2') . ") format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}";
+                    . local_url('assets/fonts/' . $key . '-latin-ext-variable.woff2') . ") format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}";
             }
             return $css;
         }
         $css = '';
         foreach ($fonts[$key]['weights'] as $w) {
-            $css .= "@font-face{font-family:'$family';font-style:normal;font-weight:$w;font-display:swap;src:url(" . url('assets/fonts/' . $key . '-latin-' . $w . '-normal.woff2') . ") format('woff2')}";
+            $css .= "@font-face{font-family:'$family';font-style:normal;font-weight:$w;font-display:swap;src:url(" . local_url('assets/fonts/' . $key . '-latin-' . $w . '-normal.woff2') . ") format('woff2')}";
         }
         if (is_file(BLOG_ROOT . '/assets/fonts/' . $key . '-latin-400-italic.woff2')) {
-            $css .= "@font-face{font-family:'$family';font-style:italic;font-weight:400;font-display:swap;src:url(" . url('assets/fonts/' . $key . '-latin-400-italic.woff2') . ") format('woff2')}";
+            $css .= "@font-face{font-family:'$family';font-style:italic;font-weight:400;font-display:swap;src:url(" . local_url('assets/fonts/' . $key . '-latin-400-italic.woff2') . ") format('woff2')}";
         }
         return $css;
     }
@@ -90,7 +90,7 @@ final class Theme
         if (!$f) {
             return '';
         }
-        return !empty($f['variable']) ? url('assets/fonts/' . $key . '-latin-variable.woff2') : url('assets/fonts/' . $key . '-latin-' . $weight . '-normal.woff2');
+        return !empty($f['variable']) ? local_url('assets/fonts/' . $key . '-latin-variable.woff2') : local_url('assets/fonts/' . $key . '-latin-' . $weight . '-normal.woff2');
     }
 
     public static function preloadFonts(array $t): string

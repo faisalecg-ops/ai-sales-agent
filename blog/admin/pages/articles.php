@@ -37,7 +37,7 @@ $rows = db()->all("SELECT a.*, c.name AS category_name, c.slug AS cat, u.name AS
 $cats = db()->all('SELECT id, name FROM {p}categories ORDER BY sort, name');
 
 ob_start(); ?>
-<form class="filters" method="get" action="<?= e(url('admin/')) ?>">
+<form class="filters" method="get" action="<?= e(local_url('admin/')) ?>">
   <input type="hidden" name="p" value="articles">
   <input type="search" name="q" value="<?= e($q) ?>" placeholder="Search titles">
   <select name="status"><option value="">All except archived</option><?php foreach (Article::STATUSES as $k => $l): ?><option value="<?= $k ?>"<?= $status === $k ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?><option value="all"<?= $status === 'all' ? ' selected' : '' ?>>Everything</option></select>
