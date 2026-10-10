@@ -348,6 +348,43 @@ international participation in the exhibition.
   its top bar. It needs the owner's explicit approval as a separate small
   upgrade. Inside /social the switcher is ours.
 
+**Owner's answers, 10 Oct (later the same day):**
+1. **Same strategy on both platforms.** Event staff see only their events, in the
+   sales agent as well. This is **approved as a sales agent change**, done by the
+   sales agent chat from `docs/handover/2026-10-10-shared-login-and-event-access.md`:
+   - shared `admin_user_access` table;
+   - `staff` role;
+   - `Access.php` helper;
+   - event scoping;
+   - Users screen.
+   /social is built after that and uses it read-only.
+2. **The switcher is on both sides.** Its markup and placement are in the same
+   handover file, and it keeps the same exhibition when switching.
+3. **Exhibitor share kit: yes.** The confirmed exhibitor list comes from the
+   website, or is typed in.
+4. **Build Asia first.** LinkedIn, Facebook and Instagram first, X later.
+5. **Settings per event.** How much to post per week, and every similar
+   setting, goes on each event's configuration page in /social.
+
+**Connecting to the platforms ("like IFTTT, with ID and password").**
+- IFTTT does not hold anyone's password. You log in once on the platform's own
+  page and grant permission (OAuth). /social will do the same.
+- Logging in with a stored ID and password and driving the site like a robot
+  is ruled out:
+  - it breaks the platforms' rules, and pages can be locked;
+  - it fails on two-step verification;
+  - it can't run on cPanel;
+  - stored passwords are a security risk.
+- **Connection mode per platform per event:**
+  1. **Manual** (Copy, Download image, Done), available from day one.
+  2. **Through a ready-made service** that already holds the platforms'
+     approvals:
+     - Ayrshare (from $149 a month, up to 14 accounts);
+     - or IFTTT, Make or Zapier, through a webhook. IFTTT's LinkedIn service
+       is for personal profiles only, not company pages (IFTTT help, Feb 2026).
+  3. **Direct official connection**, once Meta and LinkedIn approve our app
+     (free, but needs app review).
+
 The brainstorm points and the decisions asked are in the chat of 10 Oct
 (content pillars, event-lifecycle calendar, exhibitor share kit, tracking from
 post to lead, cost control).

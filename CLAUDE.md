@@ -19,6 +19,10 @@ Read this before any task on this project.
   owner installed it on the live sales agent on 9 Oct 2026. Read
   `docs/sales-agent-status-2026-10-09.md` before any sales agent work.
   Never change the sales agent without the owner's explicit approval.
+  **Approved sales agent change (10 Oct 2026), done by the sales agent chat:**
+  shared login, per-event staff access on both platforms, and the platform
+  switcher. See `docs/handover/2026-10-10-shared-login-and-event-access.md`.
+  /social must wait for that file's "Done" section before building on it.
 - **Next: the Social Media Agent at `/social`** — still discussion only. Build
   nothing for it until the owner approves its plan in writing. Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
