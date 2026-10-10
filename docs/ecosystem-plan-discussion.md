@@ -366,6 +366,25 @@ international participation in the exhibition.
 5. **Settings per event.** How much to post per week, and every similar
    setting, goes on each event's configuration page in /social.
 
+**Content pillar "growth sectors and opportunity" (owner, 10 Oct).** /social
+also writes blog articles that highlight investment opportunities in the
+sectors relevant to each event.
+
+- **Tone:** there is no explicit foreign-investment pitch. The articles subtly
+  show the benefits and openings, so that foreign investors want to take part
+  in the exhibition.
+- **Method:** the same as the 25 Build Asia growth-sector articles (see
+  `tools/blog-content-pack/WRITER-BRIEF.md`):
+  - scale of demand, gaps (imports, idle capacity), incentives, partners
+    already active;
+  - one honest "what to watch" line;
+  - a natural closing line about the exhibition;
+  - facts only from cited, opened sources;
+  - no promised returns, no political claims;
+  - a fact check before approval.
+- **Settings per event:** the mix share of this pillar and the sectors to
+  cover.
+
 **Connecting to the platforms ("like IFTTT, with ID and password").**
 - IFTTT does not hold anyone's password. You log in once on the platform's own
   page and grant permission (OAuth). /social will do the same.
