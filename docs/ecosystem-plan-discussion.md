@@ -482,6 +482,41 @@ The brainstorm points and the decisions asked are in the chat of 10 Oct
 (content pillars, event-lifecycle calendar, exhibitor share kit, tracking from
 post to lead, cost control).
 
+## 6e. /social Stage 1 built (10 October 2026)
+
+The plan was approved by the owner (Kaleem) on 10 Oct 2026, with these choices:
+- Stage 3 waits for free direct approval from Meta and LinkedIn.
+- AI pictures are on, with a monthly limit.
+- Who receives the management report is still open.
+
+**What was built:** Stage 1 is built and tested in `public_html/social/`.
+- Shared login and both switchers.
+- Per-exhibition roles: admin, approver, editor, viewer.
+- Content plan with AI topic suggestions for the event's phase and content mix.
+- Articles: research from approved knowledge plus opened web pages, AI draft,
+  a separate fact check and automatic checks.
+- Approval that publishes on the event blog through its API, with a branded
+  cover.
+- A version per switched-on platform, each with a branded image in that
+  platform's size and the "Include the blog post link" box (tracked link;
+  "Link in bio" on Instagram).
+- Approval, then Post now or Schedule (Pakistan time), a calendar, a manual
+  posting panel (Copy, Download, Open page, "Done — I posted it") and email
+  reminders.
+- Media library, branded image builder, AI pictures within a monthly limit.
+- Event settings, blog and platform connections, activity log, "How it works".
+
+**Tests and review:**
+- 113 tests.
+- An independent review found 2 high and 7 medium issues, all fixed and tested:
+  - edits could slip past approval after a failed send;
+  - versions could be written twice;
+  - a form from another tab could land on the wrong exhibition;
+  - approvals now cover only the text the approver saw;
+  - and others.
+
+**Install guide:** `docs/social-installation-guide.md`.
+
 ## 6b. Still open
 
 - (Social agent, later) Same logins as the sales agent or separate? → answered

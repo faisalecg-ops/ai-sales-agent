@@ -27,11 +27,30 @@ Read this before any task on this project.
   tests now: `php tests/acceptance.php` (1,201) and `php tests/access-http.php`
   (82, end-to-end staff isolation). New admin pages must use
   `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
-- **Next: the Social Media Agent at `/social`.** Its plan is written, waiting for
-  the owner's written approval: Claude doc "AI Social Media Expert Agent — Plan"
-  (https://claude.ai/code/artifact/f54d7319-1688-4ef4-8d69-67690608eebf). It has
-  four stages; Stage 1 is the core cycle with manual posting, for Build Asia.
-  Build nothing until it is approved. Agreed points
+- **Social Media Agent at `/social` — plan APPROVED by the owner (Kaleem,
+  10 Oct 2026):** Claude doc "AI Social Media Expert Agent — Plan"
+  (https://claude.ai/code/artifact/f54d7319-1688-4ef4-8d69-67690608eebf).
+  - Four stages. **Stage 1 is BUILT (10 Oct 2026), not yet installed:** the core
+    cycle with manual posting, for Build Asia.
+    - Code: `public_html/social/`, version 1.0.0, package
+      `social-agent-1.0.0.zip`, guide `docs/social-installation-guide.md`.
+    - Pages are plain .php. Private code is in `lib/` (blocked from the web).
+      Its own tables are named `sm_` (`lib/SmSchema.php`, created on first
+      visit).
+    - It reuses the sales agent's bootstrap, login (`aisa_admin` session),
+      `Access`, AI providers, Tavily and mail profiles, all read-only, and
+      never writes to sales agent tables.
+    - It writes into the event blogs only through their API (`lib/SmBlog.php`).
+      It receives the blog's signed notice at `hook.php`. Its cron job is
+      `cron.php`.
+    - Tests: `php public_html/social/tests/acceptance.php` (113). They use real
+      sign-ins, a real test blog (database `smblog`) and stand-in AI and
+      research. An independent review was done and every finding was fixed.
+  - **Choices made with the approval:**
+    - Stage 3 waits for free direct approval from Meta and LinkedIn; no paid
+      posting service.
+    - AI-generated pictures are switched on, with a monthly limit per event.
+  - **Still to answer (Stage 4):** who receives the monthly management report. Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
   of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.
 - Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's

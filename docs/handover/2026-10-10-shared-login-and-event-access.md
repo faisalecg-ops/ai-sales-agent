@@ -338,3 +338,30 @@ loop, because `login.php` sends signed-in users straight on. Show a
   installing them never touches /social.
 - **Writes to `admin_users` and `admin_user_access` come only from the sales
   agent's Users screen and Your account page.** /social only reads them.
+
+---
+
+## Note from the /social chat (10 October 2026)
+
+/social Stage 1 now exists in the repository at `public_html/social/`. This
+affects one sales agent test file. Please fix it the next time you work on
+the sales agent; it is test code only and nothing deployed changes.
+
+- **The problem:** `tests/access-http.php` writes a placeholder
+  `public_html/social/index.php` and **deletes** it, and the `social` folder,
+  when it finishes. Run now, it deletes the real /social `index.php` in your
+  working copy. Its checks for "no switch while /social is not installed"
+  also no longer hold.
+- **Suggested fix:** move any existing `public_html/social/index.php` aside
+  before the placeholder test and restore it afterwards (never `rmdir` the
+  folder). Alternatively, point those checks at a temporary copy of
+  `public_html`.
+
+**/social's own tests:** `php public_html/social/tests/acceptance.php` (113
+checks).
+
+- They use the same `satest` database and an extra test blog database,
+  `smblog`.
+- They remove their `sm_` tables when they finish, so your check that the
+  sales agent never creates `sm_` tables still passes.
+- `tests/acceptance.php`: 1,201 pass with /social present.

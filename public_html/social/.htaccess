@@ -1,0 +1,14 @@
+# AI Social Media Expert Agent — folder rules.
+# Pages are plain .php files; the private folders below are never served.
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(lib|tests|storage)(/|$) - [F,L]
+RewriteRule (^|/)\. - [F,L]
+</IfModule>
+
+<FilesMatch "^_social\.php$">
+    Require all denied
+</FilesMatch>

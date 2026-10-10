@@ -18,3 +18,7 @@ blog/uploads/*
 tools/blog-content-pack/covers/
 tools/blog-content-pack/*.ttf
 tools/blog-content-pack/__pycache__/
+# /social runtime files
+public_html/social/uploads/*
+!public_html/social/uploads/.htaccess
+!public_html/social/uploads/index.html
