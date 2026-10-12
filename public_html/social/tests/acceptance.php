@@ -197,7 +197,7 @@ $boss = (new B($base))->login('boss', '/social/');
 T::equals('/social/', $boss->goesTo(), 'A super admin signing in with next=/social/ comes back here');
 $boss->get('/social/');
 T::ok($boss->status === 200 && str_contains($boss->body, 'Dashboard'), 'The dashboard opens');
-T::ok(str_contains($boss->body, '<nav class="platform-switch" aria-label="Platform"><a href="https://salesagent.ecgateway.net/admin/">AI Sales Agent</a><a href="https://salesagent.ecgateway.net/social/" aria-current="page">AI Social Media Expert Agent</a></nav><h1>'),
+T::ok(str_contains($boss->body, '<nav class="platform-switch" aria-label="Platform"><a href="' . e(url('admin/')) . '">AI Sales Agent</a><a href="' . e(url('social/')) . '" aria-current="page">AI Social Media Expert Agent</a></nav><h1>'),
     'The platform switch is the first thing in the top bar, social highlighted, same markup as the sales agent');
 $boss->get('/admin/');
 T::ok(str_contains($boss->body, 'aria-current="page">AI Sales Agent</a>') && str_contains($boss->body, '/social/">AI Social Media Expert Agent</a>'), 'The sales agent now shows the switch too (social is installed)');

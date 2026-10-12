@@ -431,8 +431,10 @@ The working name is "Industry Voices", renamable in the admin.
 - **Approval:** an editor approves it.
 - **On social media:** posts made from sponsored articles are labelled as
   sponsored / partnership, as the platforms' rules require.
-- **Selling it:** a sponsored-post package can be added to the sales agent's
-  knowledge and pricing by the owner, as content only, with no code change.
+- **Selling it:** the owner adds a sponsored-post package as a **Sponsorship
+  tier** in the sales agent (Content → Sponsorship), not in Knowledge: the
+  chat suppresses any price that is not on its pricing pages (sales agent
+  chat, 12 Oct 2026). Content only, no code change.
 
 **2. /social: "Post now" and "Schedule".**
 For each approved post on each platform there are two buttons:

@@ -178,6 +178,10 @@ something to show. If a category already uses the address `industry-voices`
 or `write-for-us`, change the section's address in Industry Voices →
 Contributors → Section settings.
 
+To sell sponsored articles through the chat, add the package and its price in
+the AI Sales Agent under Content → Sponsorship (a sponsorship tier). Prices
+written in Knowledge are not quoted by the chat.
+
 ## If something goes wrong
 
 - **"Configuration missing" or the installer appears again**: the file
