@@ -387,7 +387,8 @@ sectors relevant to each event.
 
 **More owner notes (10 Oct, evening).**
 
-**Added 12 Oct 2026 (owner: "yes add the both") — /social 1.1.0, blog 1.2.3:**
+**Added 12 Oct 2026 (owner: "yes add the both") — /social 1.1.0, blog 1.2.3,
+installed live by the owner on 12 Oct 2026:**
 articles written and published directly in the blog admin are picked up by
 /social and get draft social posts for the normal approval; the /social
 dashboard lists articles waiting for approval in the blog, with a link to
@@ -493,7 +494,10 @@ post to lead, cost control).
 The plan was approved by the owner (Kaleem) on 10 Oct 2026, with these choices:
 - Stage 3 waits for free direct approval from Meta and LinkedIn.
 - AI pictures are on, with a monthly limit.
-- Who receives the management report is still open.
+- Who receives the management report: **the admin** (answered by the owner
+  on 12 Oct 2026). Read as: each exhibition's /social Admins receive that
+  exhibition's monthly report; platform super admins receive every
+  exhibition's report.
 
 **What was built:** Stage 1 is built and tested in `public_html/social/`.
 - Shared login and both switchers.

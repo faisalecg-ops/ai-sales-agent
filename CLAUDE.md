@@ -32,7 +32,7 @@ Read this before any task on this project.
   (https://claude.ai/code/artifact/f54d7319-1688-4ef4-8d69-67690608eebf).
   - Four stages. **Stage 1 is BUILT and INSTALLED live (1.0.0, 10 Oct 2026):** the core
     cycle with manual posting, for Build Asia.
-    - **1.1.0 built 12 Oct 2026, not yet installed** (needs blog 1.2.3 first):
+    - **1.1.0 built and INSTALLED live 12 Oct 2026** (with blog 1.2.3):
       articles written directly in the blog admin are picked up (signed notice
       or cron check with a (published_at, id) cursor that starts at the blog's
       newest article, so the archive is never posted) and get draft posts;
@@ -57,7 +57,10 @@ Read this before any task on this project.
     - Stage 3 waits for free direct approval from Meta and LinkedIn; no paid
       posting service.
     - AI-generated pictures are switched on, with a monthly limit per event.
-  - **Still to answer (Stage 4):** who receives the monthly management report. Agreed points
+    - **The monthly management report (Stage 4) goes to the admin** (owner,
+      12 Oct 2026): each exhibition's /social Admins get that exhibition's
+      report; platform super admins get every exhibition's report.
+  - Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
   of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.
 - Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's
