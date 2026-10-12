@@ -76,8 +76,10 @@ final class LinkPolicy
      * @param string[] $sources addresses the writer declared as sources
      * @return array{links: array, flagged: int, count: int, warnings: string[]}
      */
-    public static function review(string $html, array $sources = []): array
+    public static function review(string $html, array $sources = [], string $sponsorUrl = ''): array
     {
+        // In a sponsored article, links to the sponsor's own website are expected.
+        $sponsorHost = $sponsorUrl !== '' ? preg_replace('/^www\./', '', strtolower((string)parse_url($sponsorUrl, PHP_URL_HOST))) : '';
         $sourceSet = [];
         foreach ($sources as $s) {
             if (is_string($s) && $s !== '') {
@@ -100,17 +102,19 @@ final class LinkPolicy
                 $label = (string)$a['title'];
             } elseif (isset($sourceSet[$norm])) {
                 $kind = 'source';
+            } elseif ($sponsorHost !== '' && preg_replace('/^www\./', '', strtolower((string)parse_url($link['url'], PHP_URL_HOST))) === $sponsorHost) {
+                $kind = 'sponsor';
             } elseif (is_internal_url($link['url'])) {
                 $kind = 'blog_page';
             } elseif ($mainHost !== '' && preg_replace('/^www\./', '', strtolower((string)parse_url($link['url'], PHP_URL_HOST))) === $mainHost) {
                 $kind = 'event_site';
             }
-            $allowed = in_array($kind, ['library', 'article', 'source'], true);
+            $allowed = in_array($kind, ['library', 'article', 'source', 'sponsor'], true);
             if (!$allowed) {
                 $flagged++;
             }
             $rows[] = $link + ['kind' => $kind, 'label' => $label, 'allowed' => $allowed,
-                'external' => !is_internal_url($link['url']), 'sponsored' => isset($library[$norm]) && (int)$library[$norm]['sponsored'] === 1];
+                'external' => !is_internal_url($link['url']), 'sponsored' => $kind === 'sponsor' || (isset($library[$norm]) && (int)$library[$norm]['sponsored'] === 1)];
         }
         $warnings = [];
         $n = count($rows);

@@ -430,7 +430,7 @@ T::has($bad['body'], 'expired', 'A forged sign-in form is refused');
 $ok = http('POST', '/admin/', ['jar' => $jar, 'form' => ['_csrf' => csrf_from($login['body']), 'email' => $admin['email'], 'password' => 'Password123']]);
 T::eq($ok['status'], 302, 'The admin signs in');
 $pages = ['dashboard', 'articles', 'article', 'media', 'categories', 'comments', 'home', 'slides', 'banners', 'event', 'links', 'branding', 'menus', 'settings',
-    'seo', 'chat', 'email', 'subscribers', 'users', 'profile', 'apikeys', 'activity'];
+    'seo', 'chat', 'email', 'subscribers', 'users', 'profile', 'apikeys', 'activity', 'contributors', 'submissions', 'sponsored'];
 $allOk = true;
 foreach ($pages as $p) {
     $r = http('GET', '/admin/?p=' . $p, ['jar' => $jar]);
@@ -607,6 +607,172 @@ Settings::flush();
 T::eq(Settings::get('site_url'), $origin . '/blog', 'One click sets the address to the one in use');
 Settings::set('site_url', $savedUrl);
 Cache::clear();
+
+// =====================================================================
+T::section('Industry Voices');
+Settings::set('site_url', TEST_BASE);
+Auth::actAs($admin);
+$vCat = make_category('Opinion');
+$cid = Voices::save(null, ['name' => 'Ayesha Malik', 'designation' => 'Chief Executive', 'company' => 'Indus Cement', 'company_url' => 'https://induscement.example.com',
+    'linkedin_url' => 'https://www.linkedin.com/in/ayesha-malik', 'bio' => 'Twenty years in cement.', 'email' => 'ayesha@example.com', 'photo_id' => test_image('ayesha', 600, 600),
+    'company_logo_id' => test_image('induslogo', 400, 200)]);
+T::ok($cid > 0 && Voices::find($cid)['slug'] === 'ayesha-malik', 'An industry leader gets a contributor profile (no login needed)');
+T::eq(Voices::save(null, ['name' => 'Bad Links', 'linkedin_url' => 'javascript:alert(1)', 'company_url' => 'not a url']) > 0, true, 'A profile with bad web addresses is still saved…');
+T::eq(Voices::find((int)db()->value("SELECT id FROM {p}contributors WHERE name = 'Bad Links'"))['linkedin_url'], '', '…without the bad addresses');
+$va = publish_article('Why cement demand will rise', $vCat, ['contributor_id' => $cid, 'body' => '<p>' . str_repeat('Housing needs cement. ', 15) . '</p>']);
+Cache::clear();
+$vp = http('GET', '/opinion/' . $va['slug']);
+T::eq($vp['status'], 200, 'An Industry Voices article opens');
+T::has($vp['body'], 'flag--voice', 'It carries the "Industry Voice" badge');
+T::has($vp['body'], 'By Ayesha Malik</a>, Chief Executive, Indus Cement', 'The byline names the writer, designation and company');
+T::has($vp['body'], 'About the author', 'A profile box follows the article');
+T::has($vp['body'], 'href="https://www.linkedin.com/in/ayesha-malik" rel="nofollow noopener"', 'Their LinkedIn is linked (not passed on as a recommendation to Google)');
+T::has($vp['body'], 'Views are the author&#039;s own and do not necessarily reflect those of Build Asia.', 'The "views are the author\'s own" line is shown, with the event\'s name');
+T::has($vp['body'], '"author":{"@type":"Person","name":"Ayesha Malik"', 'Google is told the writer is Ayesha Malik');
+$home = http('GET', '/');
+T::has($home['body'], 'id="h-voices"', 'The home page has an Industry Voices section');
+T::has($home['body'], 'href="' . TEST_BASE . '/industry-voices/">Industry Voices</a></li>', 'The header menu gets "Industry Voices" automatically');
+$sec = http('GET', '/industry-voices/');
+T::ok($sec['status'] === 200 && str_contains($sec['body'], 'Why cement demand will rise') && str_contains($sec['body'], 'voices-people'), 'The section page lists the articles and the contributors');
+T::eq(http('GET', '/industry-voices')['status'], 301, 'Without the final slash it forwards to the section');
+$prof = http('GET', '/industry-voices/ayesha-malik');
+T::ok($prof['status'] === 200 && str_contains($prof['body'], '"@type":"ProfilePage"') && str_contains($prof['body'], 'Indus Cement'), 'Each contributor has a profile page');
+T::eq(http('GET', '/industry-voices/nobody-here')['status'], 404, 'An unknown contributor is not found');
+T::eq(http('GET', '/industry-voices/bad-links')['status'], 404, 'A contributor with no published article has no page yet');
+$sm = Seo::sitemap();
+T::ok(str_contains($sm, '/industry-voices/</loc>') && str_contains($sm, '/industry-voices/ayesha-malik</loc>'), 'The section and profiles are in the sitemap');
+$pl = Webhook::articlePayload(Article::find((int)$va['id']));
+T::ok(($pl['voice']['name'] ?? '') === 'Ayesha Malik' && $pl['voice']['company'] === 'Indus Cement' && $pl['voice']['linkedin_url'] !== '' && $pl['sponsor'] === null,
+    'The notice to the Social Media Agent says who wrote it, for tagging');
+$plainCard = View::card(Article::published('a.id = ?', [(int)publish_article('A plain article', $vCat)['id']])[0]);
+T::lacks($plainCard, 'flag--voice', 'Ordinary articles have no badge');
+// An author account linked to a contributor writes as them.
+$voiceAuthor = make_user('author', 'Imran Qureshi');
+$cid2 = Voices::save(null, ['name' => 'Imran Qureshi', 'company' => 'Steelco', 'user_id' => $voiceAuthor['id']]);
+$jar3 = BLOG_STORAGE . '/tmp/test-cookies-3.txt';
+@unlink($jar3);
+$l3 = http('GET', '/admin/', ['jar' => $jar3]);
+http('POST', '/admin/', ['jar' => $jar3, 'form' => ['_csrf' => csrf_from($l3['body']), 'email' => $voiceAuthor['email'], 'password' => 'Password123']]);
+$ed = http('GET', '/admin/?p=article', ['jar' => $jar3]);
+http('POST', '/admin/?p=article', ['jar' => $jar3, 'form' => ['_csrf' => csrf_from($ed['body']), 'do' => 'submit', 'title' => 'Steel from the inside',
+    'body' => '<p>' . str_repeat('Steel mills explained. ', 10) . '</p>', 'category_id' => (string)$vCat, 'contributor_id' => (string)$cid, 'sponsor_name' => 'Sneaky Sponsor']]);
+$sa = db()->one("SELECT * FROM {p}articles WHERE title = 'Steel from the inside'");
+T::ok($sa && (int)$sa['contributor_id'] === $cid2 && $sa['status'] === 'pending', 'A leader with an author account writes as themselves and can only send for approval');
+T::eq((string)$sa['sponsor_name'], '', 'An author cannot mark an article as sponsored');
+// A category cannot take the section's address.
+$catPage = http('GET', '/admin/?p=categories', ['jar' => $jar]);
+http('POST', '/admin/?p=categories', ['jar' => $jar, 'form' => ['_csrf' => csrf_from($catPage['body']), 'do' => 'save_cat', 'name' => 'Industry Voices']]);
+T::eq((int)db()->value("SELECT COUNT(*) FROM {p}categories WHERE slug = 'industry-voices'"), 0, 'No category can take the Industry Voices address');
+$cpage = http('GET', '/admin/?p=contributors', ['jar' => $jar]);
+T::ok(str_contains($cpage['body'], 'Ayesha Malik') && str_contains($cpage['body'], 'Section settings'), 'Admins see the contributors and the section settings');
+$cset = http('GET', '/admin/?p=contributors&tab=settings', ['jar' => $jar]);
+http('POST', '/admin/?p=contributors', ['jar' => $jar, 'form' => ['_csrf' => csrf_from($cset['body']), 'do' => 'settings', 'voices_enabled' => '1', 'voices_name' => 'Leaders Speak',
+    'voices_slug' => 'leaders', 'voices_badge' => 'Leader', 'voices_intro' => 'x', 'voices_disclaimer' => 'Own views.', 'voices_menu' => '1', 'voices_home_count' => '4',
+    'write_enabled' => '1', 'write_slug' => 'write-for-us', 'write_title' => 'Write for us', 'write_intro' => 'Send us your ideas.', 'write_consent' => 'It is my own work.', 'write_notify' => 'editor@example.com, not-an-email']]);
+Settings::flush();
+Cache::clear();
+T::ok(Voices::slug() === 'leaders' && http('GET', '/leaders/')['status'] === 200 && http('GET', '/industry-voices/')['status'] === 404, 'The section can be renamed and moved to another address');
+T::eq((string)Settings::get('write_notify'), 'editor@example.com', 'Only valid addresses are kept for proposal emails');
+Settings::set('voices_enabled', false);
+Cache::clear();
+T::eq(http('GET', '/leaders/')['status'], 404, 'Switched off, the section disappears…');
+T::lacks(http('GET', '/opinion/' . $va['slug'])['body'], 'flag--voice', '…and so do the badges');
+Settings::setMany(['voices_enabled' => true, 'voices_slug' => 'industry-voices', 'voices_name' => 'Industry Voices', 'voices_badge' => 'Industry Voice']);
+Cache::clear();
+
+T::section('"Write for us"');
+$w = http('GET', '/write-for-us');
+T::ok($w['status'] === 200 && str_contains($w['body'], 'name="designation"') && str_contains($w['body'], 'It is my own work.'), 'The public form opens, with the consent line');
+$oldTs = static function (): string {
+    $t = time() - 30;
+    return $t . '.' . substr(hash_hmac('sha256', (string)$t, app_key()), 0, 16);
+};
+$form = ['name' => 'Bilal Khan', 'email' => 'bilal@example.com', 'designation' => 'Director', 'company' => 'Khan Builders', 'company_url' => 'https://khan.example.com',
+    'linkedin_url' => 'https://www.linkedin.com/in/bilal', 'kind' => 'draft', 'title' => 'Prefab housing in Karachi',
+    'body' => "Prefab is changing housing.\n\nHere is how we build faster.", 'consent' => '1', '_ts' => $oldTs(), 'website' => ''];
+$miss = http('POST', '/write-for-us', ['form' => array_merge($form, ['company' => ''])]);
+T::has((string)$miss['location'], 'w=missing', 'Missing details are refused with a message');
+$noc = http('POST', '/write-for-us', ['form' => array_diff_key($form, ['consent' => 1])]);
+T::has((string)$noc['location'], 'w=consent', 'The consent box must be ticked');
+db()->exec('DELETE FROM {p}mail_outbox');
+$sent = http('POST', '/write-for-us', ['form' => $form]);
+T::has((string)$sent['location'], 'w=thanks', 'A complete proposal is accepted');
+$sub = db()->one("SELECT * FROM {p}submissions WHERE email = 'bilal@example.com'");
+T::ok($sub && $sub['status'] === 'new' && $sub['kind'] === 'draft' && $sub['consent_text'] === 'It is my own work.', 'It waits for the editors, with the consent the writer agreed to');
+$mails = array_column(db()->all('SELECT to_email FROM {p}mail_outbox'), 'to_email');
+T::ok(in_array('editor@example.com', $mails, true) && in_array('bilal@example.com', $mails, true), 'The editors are told, and the writer gets a thank-you email');
+http('POST', '/write-for-us', ['form' => array_merge($form, ['website' => 'spam.example.com', 'email' => 'robot@example.com'])]);
+T::eq((int)db()->value("SELECT COUNT(*) FROM {p}submissions WHERE email = 'robot@example.com'"), 0, 'Robots filling the hidden field are ignored');
+T::eq((int)db()->value("SELECT COUNT(*) FROM {p}articles WHERE title = 'Prefab housing in Karachi'"), 0, 'Nothing is published or even drafted by itself');
+$inbox = http('GET', '/admin/?p=submissions', ['jar' => $jar]);
+T::has($inbox['body'], 'Prefab housing in Karachi', 'The proposal appears in the admin');
+$one = http('GET', '/admin/?p=submissions&id=' . $sub['id'], ['jar' => $jar]);
+$acc = http('POST', '/admin/?p=submissions', ['jar' => $jar, 'form' => ['_csrf' => csrf_from($one['body']), 'id' => (string)$sub['id'], 'do' => 'accept']]);
+$draft = db()->one("SELECT * FROM {p}articles WHERE title = 'Prefab housing in Karachi'");
+$bilal = $draft ? Voices::find((int)$draft['contributor_id']) : null;
+T::ok($draft && $draft['status'] === 'draft' && str_contains((string)$draft['body'], '<p>Here is how we build faster.</p>'), '"Make it a draft article" creates a draft with the writer\'s text');
+T::ok($bilal && $bilal['company'] === 'Khan Builders' && $bilal['email'] === 'bilal@example.com', '…and the writer\'s contributor profile');
+T::has((string)$acc['location'], 'p=article', 'The editor is taken straight to the draft');
+T::eq((string)db()->value('SELECT status FROM {p}submissions WHERE id = ?', [$sub['id']]), 'accepted', 'The proposal is marked as done');
+Settings::set('write_enabled', false);
+T::eq(http('GET', '/write-for-us')['status'], 404, 'The form can be switched off');
+Settings::set('write_enabled', true);
+
+T::section('Sponsored articles');
+$sCat = make_category('Partner News');
+$sp = Article::save(null, ['title' => 'Faster concrete with Acme admixtures', 'category_id' => $sCat,
+    'body' => '<p>' . str_repeat('Admixtures cut curing time. ', 12) . ' <a href="https://acme.example.com/admix">See the range</a> and <a href="' . TEST_BASE . '/opinion/' . $va['slug'] . '">our view</a>.</p>',
+    'sponsor_name' => 'Acme Chemicals', 'sponsor_url' => 'https://acme.example.com', 'sponsor_label' => 'sponsored', 'sponsor_ends' => gmdate('Y-m-d H:i:s', time() + 86400 * 20)], []);
+T::eq(Article::transition($sp, 'published')['ok'], true, 'An approver publishes a sponsored article');
+Cache::clear();
+$spa = Article::find($sp);
+$spp = http('GET', '/partner-news/' . $spa['slug']);
+T::has($spp['body'], 'flag--sponsor">Sponsored</span>', 'Readers see the "Sponsored" label');
+T::has($spp['body'], 'This article was paid for by Acme Chemicals. The Build Asia editors reviewed it before publishing.', '…and the disclosure line, with the sponsor and event filled in');
+T::has($spp['body'], 'href="' . TEST_BASE . '/go/a/' . $sp . '?u=https%3A%2F%2Facme.example.com%2Fadmix&amp;s=', 'Outside links go through the blog, so clicks are counted');
+T::ok((bool)preg_match('#go/a/' . $sp . '\?u=https%3A%2F%2Facme\.example\.com%2Fadmix[^"]*" rel="sponsored noopener" target="_blank"#', $spp['body']), '…and are marked "sponsored" for Google');
+T::has($spp['body'], 'href="' . TEST_BASE . '/opinion/' . $va['slug'] . '"', 'Links to the blog\'s own pages stay as they are');
+$home = http('GET', '/');
+T::ok(str_contains($home['body'], 'id="h-partner"') && str_contains($home['body'], 'Sponsored · Acme Chemicals'), 'During its paid period it is listed in "From our partners" on the home page, labelled');
+$go = Sponsored::goUrl($sp, 'https://acme.example.com/admix');
+$clk = http('GET', substr($go, strlen(TEST_BASE)));
+T::ok($clk['status'] === 302 && $clk['location'] === 'https://acme.example.com/admix', 'A click takes the reader to the sponsor');
+T::eq((int)db()->value('SELECT SUM(clicks) FROM {p}article_clicks WHERE article_id = ?', [$sp]), 1, 'The click is counted');
+http('GET', substr($go, strlen(TEST_BASE)), ['ua' => 'Googlebot/2.1']);
+T::eq((int)db()->value('SELECT SUM(clicks) FROM {p}article_clicks WHERE article_id = ?', [$sp]), 1, 'Search robots are not counted');
+T::eq(http('GET', '/go/a/' . $sp . '?u=' . rawurlencode('https://evil.example.com') . '&s=0000')['status'], 404, 'The counting address cannot be used to send people elsewhere');
+db()->exec('INSERT INTO {p}article_views (article_id, day, views) VALUES (?, ?, 40)', [$sp, gmdate('Y-m-d')]);
+$csv = http('GET', '/admin/?p=sponsored&report=' . $sp . '&format=csv', ['jar' => $jar]);
+T::ok(str_contains($csv['body'], 'Date,"Readers (views)","Clicks to outside links"') && str_contains($csv['body'], 'Total,40,1'), 'The sponsor report downloads as a spreadsheet, with readers and clicks');
+$rp = http('GET', '/admin/?p=sponsored&report=' . $sp, ['jar' => $jar]);
+T::ok(str_contains($rp['body'], 'Sponsor report: Acme Chemicals') && str_contains($rp['body'], 'Faster concrete with Acme admixtures') && str_contains($rp['body'], 'Print / Save as PDF'), '…or as a printable page for the sponsor');
+$list = http('GET', '/admin/?p=sponsored', ['jar' => $jar]);
+T::ok(str_contains($list['body'], 'Acme Chemicals') && str_contains($list['body'], 'Running'), 'The admin lists sponsored articles with their state');
+$plS = Webhook::articlePayload($spa);
+T::ok(($plS['sponsor']['name'] ?? '') === 'Acme Chemicals' && $plS['sponsor']['label'] === 'Sponsored', 'The Social Media Agent is told it is sponsored, so its posts are labelled');
+// Paid period that starts later: approval schedules it.
+$later = Article::save(null, ['title' => 'Partner launch next week', 'category_id' => $sCat, 'body' => '<p>' . str_repeat('A launch is coming. ', 10) . '</p>',
+    'sponsor_name' => 'Beta Tiles', 'sponsor_label' => 'partner', 'sponsor_starts' => gmdate('Y-m-d H:i:00', time() + 86400 * 3)], []);
+$res = Article::transition($later, 'published');
+$la = Article::find($later);
+T::ok($res['ok'] && $la['status'] === 'scheduled' && $la['publish_at'] === $la['sponsor_starts'], 'Approved before its paid period starts, it goes live when the period starts');
+T::eq(Sponsored::label($la), 'Partner content', 'The "Partner content" label can be used instead');
+$bad = Article::save(null, ['title' => 'Wrong dates', 'category_id' => $sCat, 'body' => '<p>' . str_repeat('Dates are wrong. ', 10) . '</p>',
+    'sponsor_name' => 'Gamma', 'sponsor_starts' => '2026-12-10 00:00:00', 'sponsor_ends' => '2026-12-01 00:00:00'], []);
+T::eq(Article::transition($bad, 'published')['ok'], false, 'A paid period that ends before it starts is refused');
+// End of the paid period.
+$gone = publish_article('Old partner article', $sCat, ['sponsor_name' => 'Delta', 'sponsor_after' => 'archive']);
+$kept = publish_article('Kept partner article', $sCat, ['sponsor_name' => 'Epsilon', 'sponsor_after' => 'keep']);
+db()->exec("UPDATE {p}articles SET sponsor_ends = ? WHERE id IN (?, ?)", [gmdate('Y-m-d H:i:s', time() - 60), $gone['id'], $kept['id']]);
+T::eq(Sponsored::endDue(), 1, 'When the paid period ends, an article set to "take it off" is archived');
+T::ok(Article::find((int)$gone['id'])['status'] === 'archived' && Article::find((int)$kept['id'])['status'] === 'published', '…and one set to "keep" stays, still labelled');
+Cache::clear();
+$hb = http('GET', '/')['body'];
+$partnerPart = (string)strstr((string)strstr($hb, 'id="h-partner"'), '</section>', true);
+T::ok($partnerPart !== '' && str_contains($partnerPart, 'Acme') && !str_contains($partnerPart, 'Kept partner article'), 'After its paid period it leaves the "From our partners" section');
+$edS = http('GET', '/admin/?p=article&id=' . $sp, ['jar' => $jar]);
+T::ok(str_contains($edS['body'], 'name="sponsor_name"') && str_contains($edS['body'], 'Sponsor report'), 'The article editor has the sponsored-article panel and the report link');
+Auth::actAs(null);
 
 // =====================================================================
 T::section('Scheduled tasks');

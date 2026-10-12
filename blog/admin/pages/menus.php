@@ -32,6 +32,12 @@ if (is_post()) {
 
 $cats = db()->all('SELECT name, slug FROM {p}categories ORDER BY sort, name');
 $quick = array_map(static fn($c) => ['label' => $c['name'], 'url' => url($c['slug'] . '/')], $cats);
+if (Voices::enabled()) {
+    $quick[] = ['label' => Voices::name(), 'url' => Voices::sectionUrl()];
+    if (Voices::writeOpen()) {
+        $quick[] = ['label' => (string)Settings::get('write_title', 'Write for us'), 'url' => url(Voices::writeSlug())];
+    }
+}
 foreach (['main_site_url' => 'Home (main website)', 'register_url' => 'Register to visit', 'book_stand_url' => 'Book a stand'] as $k => $l) {
     if ($u = Event::get($k)) {
         $quick[] = ['label' => $l, 'url' => $u];

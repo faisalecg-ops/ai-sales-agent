@@ -39,6 +39,9 @@ if ($facts['starts'] === '') {
 if ($lastCron === '' || strtotime($lastCron . ' UTC') < time() - 3600) {
     $todo[] = ['The scheduled task (cron) is not running yet, so scheduled posts will not remind anyone', sm_url('guide.php') . '#cron'];
 }
+if (trim((string)$settings['report_emails']) === '') {
+    $todo[] = ['Add the email addresses that receive the monthly management report', sm_url('settings.php') . '#report'];
+}
 if (trim((string)$settings['reminder_emails']) === '') {
     $todo[] = ['Add the email addresses that get "time to post" reminders', sm_url('settings.php') . '#people'];
 }

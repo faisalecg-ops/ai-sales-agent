@@ -21,6 +21,9 @@ $cron = '/usr/local/bin/php ' . SM_ROOT . '/cron.php';
 </ol>
 <h2>Articles written directly in the blog</h2>
 <p>When the blog's own team writes and publishes an article in the blog admin, it appears here under Blog articles, marked <em>Written in the blog</em>, and its social media versions are written as drafts for the normal approval. Articles still waiting for an editor in the blog are listed on the dashboard, with a link to approve them there. (This can be switched off in Event settings.)</p>
+<h2>Industry Voices and sponsored articles</h2>
+<p>Articles the blog marks as <em>Industry Voices</em> (written by an outside expert) show the writer here, and their posts name the writer and their company. When you post, tag them: the posting steps show their LinkedIn and company links.</p>
+<p>Articles the blog marks as <em>Sponsored</em> or <em>Partner content</em> are paid for. Every post about them starts with a line such as “Sponsored · Acme Chemicals”; a post without it cannot be approved. On Facebook and Instagram also switch on the <em>paid partnership</em> label when you post.</p>
 <h2>Posts without an article</h2>
 <p>Event reminders, show-day photos and announcements: <a href="<?= e(sm_url('posts.php', ['new' => 1])) ?>">New post without an article</a>. Write the facts in a sentence or two; the agent writes one version per platform.</p>
 <h2>Pictures</h2>
@@ -37,6 +40,8 @@ $cron = '/usr/local/bin/php ' . SM_ROOT . '/cron.php';
 <tr><td><strong>Viewer</strong></td><td>Reads everything; changes nothing.</td></tr>
 </tbody></table>
 <p class="muted small">People and their exhibitions are managed in the AI Sales Agent → Set-up → Users.</p>
+<h2>Monthly report</h2>
+<p>The monthly management report goes to the email addresses in <a href="<?= e(sm_url('settings.php')) ?>#report">Event settings → Monthly report</a> (usually the exhibition's admins). The report itself arrives with Stage 4.</p>
 <h2 id="cron">The scheduled task (for whoever looks after the server)</h2>
 <p>In cPanel → Cron Jobs, run this every 5 minutes (<code>*/5 * * * *</code>):</p>
 <p><code class="sm-code"><?= e($cron) ?></code></p>

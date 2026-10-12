@@ -67,6 +67,8 @@ final class Settings
                 ['key' => 'event_panel',   'enabled' => true],
                 ['key' => 'stats',         'enabled' => true],
                 ['key' => 'latest',        'enabled' => true],
+                ['key' => 'voices',        'enabled' => true],
+                ['key' => 'partner',       'enabled' => true],
                 ['key' => 'banner_middle', 'enabled' => true],
                 ['key' => 'categories',    'enabled' => true],
                 ['key' => 'most_read',     'enabled' => true],
@@ -93,6 +95,29 @@ final class Settings
             'newsletter_consent' => 'I agree to receive email updates and can unsubscribe at any time.',
             'show_reading_time'  => true,
             'show_share_buttons' => true,
+
+            // Industry Voices (outside experts) and "Write for us"
+            'voices_enabled'     => true,
+            'voices_name'        => 'Industry Voices',
+            'voices_slug'        => 'industry-voices',
+            'voices_badge'       => 'Industry Voice',
+            'voices_intro'       => 'Leaders of the industry share their experience and views.',
+            'voices_disclaimer'  => 'Views are the author\'s own and do not necessarily reflect those of {event}.',
+            'voices_menu'        => true,
+            'voices_home_count'  => 4,
+            'write_enabled'      => true,
+            'write_slug'         => 'write-for-us',
+            'write_title'        => 'Write for us',
+            'write_intro'        => 'Are you a leader in the industry? Share your experience with our readers. Send an outline or a full draft: our editors review every proposal and reply by email.',
+            'write_consent'      => 'I confirm this is my own work, and I agree that the editors may edit it and contact me about it.',
+            'write_notify'       => '',      // emails told about new proposals; empty = the contact email
+
+            // Sponsored articles
+            'sponsored_text'       => 'Sponsored',
+            'partner_text'         => 'Partner content',
+            'sponsored_disclosure' => 'This article was paid for by {sponsor}. The {event} editors reviewed it before publishing.',
+            'partner_disclosure'   => 'Produced in partnership with {sponsor}. The {event} editors reviewed it before publishing.',
+            'partner_section'      => 'From our partners',
 
             // Sales agent chat
             'chat_enabled'  => false,

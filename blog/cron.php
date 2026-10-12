@@ -38,6 +38,7 @@ $step = static function (string $name, callable $fn) use (&$report): void {
 
 Schema::upgrade();
 $step('scheduled articles published', static fn() => Article::publishDue());
+$step('sponsorships ended (taken off)', static fn() => Sponsored::endDue());
 $step('notices sent to the social agent', static fn() => Webhook::flush(20));
 $step('emails sent', static fn() => Mailer::flush(20));
 

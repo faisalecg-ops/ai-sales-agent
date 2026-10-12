@@ -11,7 +11,7 @@ its own admin and its own content.
 
 ## What you need
 
-- The package **event-blog-1.2.3.zip**.
+- The package **event-blog-1.3.0.zip**.
 - cPanel access for the event website.
 - The exhibition's logo (PNG, ideally with a transparent background, plus a
   white version for dark backgrounds), its brand colours, and the addresses
@@ -47,7 +47,7 @@ account name in front, e.g. `cpaneluser_buildasia_blog`).
 cPanel → **File Manager** → open `public_html` (the main website's folder):
 
 1. Create a folder named **`blog`**.
-2. Open it, **Upload** `event-blog-1.2.3.zip`, then right-click it → **Extract**.
+2. Open it, **Upload** `event-blog-1.3.0.zip`, then right-click it → **Extract**.
 3. Delete the zip file afterwards.
 
 You should now see `public_html/blog/index.php`, `admin`, `assets` and the
@@ -164,11 +164,19 @@ database) as it is — the blog carries on unchanged under the new site.
 
 ## Updating the blog later
 
-Upload the new **event-blog-1.2.3.zip** into `public_html/blog` and extract it,
+Upload the new **event-blog-1.3.0.zip** into `public_html/blog` and extract it,
 replacing files. Your settings (`config/config.php`), uploaded images
 (`uploads/`) and saved data are not in the package, so they are never
 overwritten. Then open the admin once: any database changes are applied
 automatically.
+
+**New in 1.3.0 (12 Oct 2026):** Industry Voices (contributor profiles, the
+section page, badges, the public "Write for us" form) and sponsored articles
+(labels, disclosure line, paid period, click counting and the sponsor report).
+Both new home page sections are switched on and only appear once they have
+something to show. If a category already uses the address `industry-voices`
+or `write-for-us`, change the section's address in Industry Voices →
+Contributors → Section settings.
 
 ## If something goes wrong
 

@@ -44,6 +44,7 @@ final class SmEvent
             'reminder_emails'   => '',
             'blog_link_default' => true,
             'blog_written_posts'=> true,
+            'report_emails'     => '',   // who receives the monthly management report (Stage 4)
             'lead_minutes'      => 30,
             'brand_primary'     => '#142A5C',
             'brand_secondary'   => '#1F4FBF',

@@ -11,7 +11,7 @@ defined('SM_BOOT') || exit;
  */
 final class SmSchema
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     public static function ensure(): void
     {
@@ -37,6 +37,9 @@ final class SmSchema
         self::addColumn('sm_events', 'blog_seen_id', 'INT UNSIGNED NOT NULL DEFAULT 0');
         self::addColumn('sm_events', 'blog_pending', 'MEDIUMTEXT NULL');
         self::addColumn('sm_events', 'blog_pending_at', 'DATETIME NULL');
+        // Version 3 (12 Oct 2026): who wrote it (Industry Voices) and who paid for it (sponsored), from the blog.
+        self::addColumn('sm_articles', 'voice', 'TEXT NULL');
+        self::addColumn('sm_articles', 'sponsor', 'TEXT NULL');
         if (!db()->value("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'sm_articles' AND index_name = 'uq_sm_blog_article'")) {
             try {
                 db()->raw()->query('ALTER TABLE sm_articles ADD UNIQUE KEY uq_sm_blog_article (agent_id, blog_article_id)');

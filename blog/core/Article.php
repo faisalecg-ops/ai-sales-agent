@@ -61,7 +61,8 @@ final class Article
         $old = $id ? self::find($id) : null;
         $row = [];
         foreach (['title', 'excerpt', 'body', 'category_id', 'author_id', 'image_id', 'seo_title', 'meta_description',
-                     'share_image_id', 'is_featured', 'featured_order', 'lang', 'external_ref', 'review_note', 'sources'] as $k) {
+                     'share_image_id', 'is_featured', 'featured_order', 'lang', 'external_ref', 'review_note', 'sources', 'contributor_id',
+                     'sponsor_name', 'sponsor_label', 'sponsor_url', 'sponsor_logo_id', 'sponsor_starts', 'sponsor_ends', 'sponsor_after', 'sponsor_email'] as $k) {
             if (array_key_exists($k, $data)) {
                 $row[$k] = $data[$k];
             }
@@ -73,7 +74,23 @@ final class Article
             $row['body'] = Html::clean((string)$row['body']);
             $row['reading_minutes'] = Html::readingMinutes($row['body']);
         }
-        foreach (['category_id', 'author_id', 'image_id', 'share_image_id'] as $k) {
+        foreach (['sponsor_name' => 160, 'sponsor_url' => 500, 'sponsor_email' => 190] as $k => $max) {
+            if (array_key_exists($k, $row)) {
+                $row[$k] = mb_substr(trim((string)$row[$k]), 0, $max);
+            }
+        }
+        if (array_key_exists('sponsor_label', $row)) {
+            $row['sponsor_label'] = $row['sponsor_label'] === 'partner' ? 'partner' : 'sponsored';
+        }
+        if (array_key_exists('sponsor_after', $row)) {
+            $row['sponsor_after'] = $row['sponsor_after'] === 'archive' ? 'archive' : 'keep';
+        }
+        foreach (['sponsor_starts', 'sponsor_ends'] as $k) {
+            if (array_key_exists($k, $row)) {
+                $row[$k] = $row[$k] ? (string)$row[$k] : null;
+            }
+        }
+        foreach (['category_id', 'author_id', 'image_id', 'share_image_id', 'contributor_id', 'sponsor_logo_id'] as $k) {
             if (array_key_exists($k, $row)) {
                 $row[$k] = (int)$row[$k] > 0 ? (int)$row[$k] : null;
             }
@@ -190,7 +207,7 @@ final class Article
         if (empty($a['category_id'])) {
             $p[] = 'Choose a category.';
         }
-        return $p;
+        return array_merge($p, Sponsored::problems($a));
     }
 
     /**
@@ -211,6 +228,11 @@ final class Article
             if ($problems) {
                 return ['ok' => false, 'error' => implode(' ', $problems)];
             }
+        }
+        // A sponsored article approved before its paid period starts goes live when it starts.
+        if ($to === 'published' && Sponsored::is($a) && !empty($a['sponsor_starts']) && $a['sponsor_starts'] > now_utc() && $a['status'] !== 'published') {
+            $to = 'scheduled';
+            $publishAtUtc = (string)$a['sponsor_starts'];
         }
         $row = ['status' => $to];
         if ($to === 'scheduled') {
@@ -240,7 +262,7 @@ final class Article
             Webhook::queue('article.published', $fresh);
         }
         Cache::clear();
-        return ['ok' => true];
+        return ['ok' => true, 'status' => $to];
     }
 
     /** Publish scheduled articles whose time has come. Runs from cron and, as a back-up, on page views. */
@@ -288,10 +310,12 @@ final class Article
     // Lists for the public pages (published only)
     // ------------------------------------------------------------------
 
-    private const SELECT = "SELECT a.*, c.name AS category_name, c.slug AS cat, u.name AS author_name, u.slug AS author_slug, u.show_as_author
+    private const SELECT = "SELECT a.*, c.name AS category_name, c.slug AS cat, u.name AS author_name, u.slug AS author_slug, u.show_as_author,
+        ct.name AS contributor_name, ct.slug AS contributor_slug, ct.designation AS contributor_designation, ct.company AS contributor_company
         FROM {p}articles a
         LEFT JOIN {p}categories c ON c.id = a.category_id
-        LEFT JOIN {p}users u ON u.id = a.author_id";
+        LEFT JOIN {p}users u ON u.id = a.author_id
+        LEFT JOIN {p}contributors ct ON ct.id = a.contributor_id";
 
     public static function published(string $where = '1=1', array $params = [], string $order = 'a.published_at DESC', int $limit = 12, int $offset = 0): array
     {

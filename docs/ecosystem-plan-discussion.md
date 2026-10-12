@@ -394,6 +394,13 @@ articles written and published directly in the blog admin are picked up by
 dashboard lists articles waiting for approval in the blog, with a link to
 approve them there. Approval of the article itself stays in the blog.
 
+**Stage 2 built 12 Oct 2026 (owner: "I am ready for Stage 2") — blog 1.3.0,
+/social 1.2.0:** 1a and 1b below, as specified. Choices taken: the paid period's
+end date has a per-article choice (keep, still labelled, or archive); during the
+period the article is listed in "From our partners" on the home page; approval
+before the start date schedules it for the start; links to the sponsor's own
+website are approved links; contributor links are nofollow.
+
 **1a. Event Blog: an editorial section where industry leaders publish.**
 The working name is "Industry Voices", renamable in the admin.
 
@@ -495,9 +502,8 @@ The plan was approved by the owner (Kaleem) on 10 Oct 2026, with these choices:
 - Stage 3 waits for free direct approval from Meta and LinkedIn.
 - AI pictures are on, with a monthly limit.
 - Who receives the management report: **the admin** (answered by the owner
-  on 12 Oct 2026). Read as: each exhibition's /social Admins receive that
-  exhibition's monthly report; platform super admins receive every
-  exhibition's report.
+  on 12 Oct 2026), at the email addresses set in each event's /social Event
+  settings → Monthly report (owner, 12 Oct 2026).
 
 **What was built:** Stage 1 is built and tested in `public_html/social/`.
 - Shared login and both switchers.

@@ -87,3 +87,4 @@
   .sm-cal-d.is-out { display: none; }
 }
 .sm-guide li { margin: 6px 0; }
+.alert-info { background: var(--accent-wash); border-color: #BCCFE6; border-left-color: var(--accent); color: var(--accent); }

@@ -134,7 +134,16 @@ final class SmWriter
             $tags = trim((string)($row['hashtags'] ?? ''));
             $rules[] = "- $p: " . self::PLATFORM_RULES[$p] . ($tags !== '' ? " Always include these hashtags: $tags." : '');
         }
+        $credits = SmFlow::credits(isset($article['id']) ? (int)$article['id'] : null);
         $sponsored = '';
+        if ($v = $credits['voice']) {
+            $who = $v['name'] . (trim($v['designation'] . ', ' . $v['company'], ', ') !== '' ? ' (' . trim($v['designation'] . ', ' . $v['company'], ', ') . ')' : '');
+            $sponsored .= "\nThis article was written by a guest author for the blog's Industry Voices section: $who. In every post, credit them by name"
+                . ($v['company'] !== '' ? " and name their company, {$v['company']}" : '') . ". Their views are their own: say \"writes\" or \"argues\", never present their opinions as the event's.";
+        }
+        if ($sp = $credits['sponsor']) {
+            $sponsored .= "\nThis is paid content for {$sp['name']}. Start every post with the line \"" . SmFlow::disclosure($sp) . "\". Do not hide or soften that it is sponsored, and make no claims about {$sp['name']} beyond the article.";
+        }
         $system = self::base($agent)
             . "\n\nThe article below has been approved and published on the event's blog. Write a separate post for each platform, each written for that platform's audience — not a plain 'read our new blog post'."
             . "\nUse only facts that are in the article. The link to the article is added by the system: do not write any URL."

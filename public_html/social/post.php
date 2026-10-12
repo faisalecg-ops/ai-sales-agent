@@ -177,6 +177,21 @@ $media = $p['media_id'] ? SmMedia::find($aid, (int)$p['media_id']) : null;
 $checks = SmChecks::post($agent, $p, $link);
 $article = $p['article_id'] ? db()->one('SELECT id, title, status, blog_url FROM sm_articles WHERE id = ?', [(int)$p['article_id']]) : null;
 $pname = SmEvent::PLATFORMS[$p['platform']];
+// Industry Voices writer to tag, and the paid-partnership label for sponsored articles.
+$credits = SmFlow::credits($p['article_id'] ? (int)$p['article_id'] : null);
+$creditSteps = '';
+if ($v = $credits['voice']) {
+    $creditSteps .= '<li>Tag the writer, <strong>' . e((string)$v['name']) . '</strong>'
+        . ($v['linkedin_url'] !== '' ? ' (<a href="' . e((string)$v['linkedin_url']) . '" target="_blank" rel="noopener">LinkedIn ↗</a>)' : '')
+        . ($v['company'] !== '' ? ', and their company, <strong>' . e((string)$v['company']) . '</strong>' . ($v['company_url'] !== '' ? ' (<a href="' . e((string)$v['company_url']) . '" target="_blank" rel="noopener">website ↗</a>)' : '') : '')
+        . '. Type @ and their name in the post to tag them.</li>';
+}
+if ($sp = $credits['sponsor']) {
+    $creditSteps .= '<li><strong>Paid content for ' . e((string)$sp['name']) . ':</strong> keep the first line "' . e(SmFlow::disclosure($sp)) . '"'
+        . (in_array($p['platform'], ['facebook', 'instagram'], true) ? ', and switch on <em>Add paid partnership label</em> (tag ' . e((string)$sp['name']) . ' as the brand partner)'
+            : ($p['platform'] === 'linkedin' ? ', and switch on <em>Brand partnership</em> if LinkedIn offers it on the page' : ', and add #ad'))
+        . '. The platforms\' rules require it.</li>';
+}
 $editable = sm_can('editor') && !in_array($p['status'], ['posted', 'cancelled'], true);
 
 // Suggested time: the platform's usual time, next time it comes round.
@@ -190,6 +205,12 @@ $suggest = $p['scheduled_at'] && $p['status'] === 'scheduled'
 
 sm_layout_start($pname . ' post');
 
+if ($credits['voice'] || $credits['sponsor']) {
+    echo '<div class="alert alert-info"><p style="margin:0">'
+       . ($credits['sponsor'] ? '<strong>' . e((string)($credits['sponsor']['label'] ?: 'Sponsored')) . '</strong> article, paid for by ' . e((string)$credits['sponsor']['name']) . '. Every post must say so. ' : '')
+       . ($credits['voice'] ? '<strong>Industry Voices</strong> article by ' . e((string)$credits['voice']['name']) . ($credits['voice']['company'] !== '' ? ', ' . e((string)$credits['voice']['company']) : '') . ': credit and tag them.' : '')
+       . '</p></div>';
+}
 echo '<div class="card"><p style="margin-top:0">' . sm_pill((string)$p['status'])
    . ($p['scheduled_at'] && in_array($p['status'], ['scheduled', 'due'], true) ? ' <strong>' . e(sm_time($p['scheduled_at'])) . '</strong>' : '')
    . ($p['status'] === 'posted' ? ' <span class="muted">' . e(sm_time($p['posted_at'])) . '</span>' . ($p['posted_url'] ? ' · <a href="' . e((string)$p['posted_url']) . '" target="_blank" rel="noopener">See the post ↗</a>' : '') : '')
@@ -206,6 +227,7 @@ if (in_array($p['status'], ['due', 'approved', 'scheduled'], true) && sm_can('ed
        . ($media ? '<li><a class="btn btn-small" href="' . e(SmMedia::url($media)) . '" download>Download the ' . ($media['kind'] === 'video' ? 'video' : 'picture') . '</a></li>' : '')
        . '<li>' . ($plat['page_url'] ? '<a class="btn btn-small" href="' . e((string)$plat['page_url']) . '" target="_blank" rel="noopener">Open the event\'s ' . e($pname) . ' page ↗</a>' : 'Open the event\'s ' . e($pname) . ' page <span class="muted small">(add its address under Blog and platforms)</span>') . '</li>'
        . ($p['platform'] === 'instagram' && $link ? '<li>Put this link in the bio or a story: <code class="sm-code">' . e($link) . '</code> <button class="btn btn-small btn-quiet" type="button" data-copy-text="' . e($link) . '">Copy link</button></li>' : '')
+       . $creditSteps
        . '<li>Paste the text, add the ' . ($media && $media['kind'] === 'video' ? 'video' : 'picture') . ', post it, then:</li></ol>'
        . '<form method="post" class="filters">' . sm_csrf() . '<input type="hidden" name="do" value="done"><input type="hidden" name="id" value="' . $id . '">'
        . f_text('posted_url', 'Link to the post (optional)', '', ['placeholder' => 'https://…'])

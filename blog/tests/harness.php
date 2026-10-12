@@ -75,6 +75,7 @@ function reset_blog(): void
     if (!$db->tableExists('settings')) {
         Schema::install();
     }
+    Schema::upgrade();   // an older test database gets the new columns
     $db->raw()->query('SET FOREIGN_KEY_CHECKS = 0');
     foreach ($db->all("SELECT table_name AS t FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE 'bt\\_%'") as $r) {
         $db->raw()->query('TRUNCATE TABLE `' . $r['t'] . '`');

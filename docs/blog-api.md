@@ -88,8 +88,13 @@ to *awaiting approval* (or is published, under the same rules as above).
 {"ok":true,"article":{"id":42,"external_ref":"sm-2026-10-0042","title":"…","status":"published",
  "status_label":"Published","url":"https://buildasia.net/blog/market-insights/cement-exports-climb",
  "published_at":"2026-10-12T04:00:00+00:00","publish_at":null,"category":"Market Insights",
- "tags":["Cement"],"excerpt":"…","image_url":"https://…","review_note":null}}
+ "tags":["Cement"],"excerpt":"…","image_url":"https://…","review_note":null,
+ "voice":null,"sponsor":null}}
 ```
+From version 1.3.0 every article (here, in `/published` and in the notice) also carries:
+- `voice` — for Industry Voices articles, the writer: `{"name","designation","company","linkedin_url","company_url","profile_url"}`; otherwise `null`.
+- `sponsor` — for sponsored articles: `{"name","label","kind":"sponsored"|"partner","url"}`; otherwise `null`.
+Posts made from a sponsored article must say so; posts from an Industry Voices article should credit and tag the writer.
 `url` is `null` until the article is published. Statuses: `draft` (a person
 sent it back — see `review_note`), `pending`, `scheduled`, `published`,
 `archived`.

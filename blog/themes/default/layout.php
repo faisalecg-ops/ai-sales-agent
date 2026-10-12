@@ -7,6 +7,11 @@ $logo = Media::find((int)Settings::get('logo_light', 0));
 $logoDark = Media::find((int)Settings::get('logo_dark', 0)) ?: $logo;
 $favicon = Media::find((int)Settings::get('favicon', 0));
 $menu = array_filter((array)Settings::get('main_menu', []), static fn($m) => !empty($m['label']) && !empty($m['url']));
+// Industry Voices gets its own menu item once it has an article (unless the menu already links to it).
+if (Voices::enabled() && Settings::get('voices_menu', true) && !in_array(Voices::sectionUrl(), array_column($menu, 'url'), true)
+    && Article::countPublished('a.contributor_id IS NOT NULL') > 0) {
+    $menu[] = ['label' => Voices::name(), 'url' => Voices::sectionUrl()];
+}
 $headerStyle = (string)$theme['header_style'];
 $headerLogo = $headerStyle === 'light' ? $logo : $logoDark;
 $isHome = !empty($isHome);

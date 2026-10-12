@@ -118,10 +118,25 @@ final class SmChecks
         if (preg_match('#https?://#i', (string)$post['body'])) {
             $out[] = ['level' => 'warn', 'message' => 'The text contains a web address. Use the "Include the blog post link" box instead, so the link is tracked.'];
         }
+        $credits = SmFlow::credits(!empty($post['article_id']) ? (int)$post['article_id'] : null);
+        if (($sp = $credits['sponsor']) && !self::hasDisclosure($full, $sp)) {
+            $out[] = ['level' => 'bad', 'message' => 'The article is paid content for ' . $sp['name'] . ', so the post must say so: keep the line "' . SmFlow::disclosure($sp) . '".'];
+        }
+        if (($v = $credits['voice']) && mb_stripos($full, (string)$v['name']) === false) {
+            $out[] = ['level' => 'warn', 'message' => 'The article was written by ' . $v['name'] . '. Name them in the post (and tag them when you post).'];
+        }
         if (!$out) {
             $out[] = ['level' => 'ok', 'message' => 'Length, hashtags and picture are fine for ' . SmEvent::PLATFORMS[$p] . '.'];
         }
         return $out;
+    }
+
+    /** The post says it is sponsored and names the sponsor. */
+    public static function hasDisclosure(string $text, array $sponsor): bool
+    {
+        $label = trim((string)($sponsor['label'] ?? '')) ?: 'Sponsored';
+        return mb_stripos($text, (string)$sponsor['name']) !== false
+            && (mb_stripos($text, $label) !== false || preg_match('/\b(sponsored|paid partnership|#ad)\b/iu', $text) === 1);
     }
 
     /** The post exactly as it will appear on the platform. */

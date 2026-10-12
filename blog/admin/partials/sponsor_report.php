@@ -1,5 +1,7 @@
 <?php
-/** @var array $r  A sponsor's report, designed to print on one page (or Save as PDF). */
+/** @var array $r  A sponsor's report, designed to print on one page (or Save as PDF). @var ?array $articleReport  set for a sponsored article */
+$articleReport ??= null;
+$shown = $articleReport ? 'Readers' : 'Times shown';
 $logo = Media::find((int)Settings::get('logo_light', 0));
 $theme = Settings::theme();
 $maxV = max(1, ...array_map(static fn($d) => (int)$d['views'], $r['days'] ?: [['views' => 1]]));
@@ -24,25 +26,28 @@ table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}th,td{p
 <div class="page">
   <header><?php if ($logo): ?><img src="<?= e(Media::url($logo, 400)) ?>" alt="<?= e(Event::name()) ?>"><?php else: ?><strong><?= e(Event::name()) ?></strong><?php endif; ?><span class="muted"><?= e(preg_replace('#^https?://#', '', base_url())) ?></span></header>
   <h1>Sponsor report: <?= e($r['sponsor']) ?></h1>
+  <?php if ($articleReport): ?><p><strong><?= e($articleReport['label']) ?>:</strong> <?= e($articleReport['title']) ?><?php if ($articleReport['url'] !== ''): ?><br><span class="muted"><?= e(preg_replace('#^https?://#', '', $articleReport['url'])) ?></span><?php endif; ?></p><?php endif; ?>
   <p class="muted"><?= e($fmt($r['from'])) ?> to <?= e($fmt($r['to'])) ?></p>
   <div class="kpis">
-    <div class="kpi"><b><?= number_format($r['views']) ?></b>Times shown</div>
-    <div class="kpi"><b><?= number_format($r['clicks']) ?></b>Clicks to your website</div>
+    <div class="kpi"><b><?= number_format($r['views']) ?></b><?= e($shown) ?></div>
+    <div class="kpi"><b><?= number_format($r['clicks']) ?></b><?= $articleReport ? 'Clicks on links in the article' : 'Clicks to your website' ?></div>
     <div class="kpi"><b><?= $r['ctr'] ?>%</b>Click rate</div>
   </div>
+  <?php if (!$articleReport): ?>
   <h2>Your banners</h2>
   <table><thead><tr><th>Banner</th><th>Place</th><th>Link</th><th class="n">Shown</th><th class="n">Clicks</th></tr></thead><tbody>
   <?php foreach ($r['banners'] as $b): $p = $r['per_banner'][(int)$b['id']] ?? ['views' => 0, 'clicks' => 0]; ?>
     <tr><td><?= e($b['title'] ?: 'Banner ' . (int)$b['id']) ?></td><td><?= e(ucfirst((string)$b['position'])) ?></td><td><?= e(preg_replace('#^https?://#', '', (string)$b['link'])) ?></td><td class="n"><?= number_format((int)$p['views']) ?></td><td class="n"><?= number_format((int)$p['clicks']) ?></td></tr>
   <?php endforeach; ?>
   </tbody></table>
+  <?php endif; ?>
   <h2>Day by day</h2>
   <?php if (!$r['days']): ?><p class="muted">No views in this period.</p><?php else: ?>
-  <table><thead><tr><th>Date</th><th class="n">Shown</th><th class="n">Clicks</th><th style="width:40%"></th></tr></thead><tbody>
+  <table><thead><tr><th>Date</th><th class="n"><?= $articleReport ? 'Readers' : 'Shown' ?></th><th class="n">Clicks</th><th style="width:40%"></th></tr></thead><tbody>
   <?php foreach ($r['days'] as $d): ?>
     <tr><td><?= e($fmt((string)$d['day'])) ?></td><td class="n"><?= number_format((int)$d['views']) ?></td><td class="n"><?= number_format((int)$d['clicks']) ?></td><td><div class="bar" style="width:<?= round((int)$d['views'] / $maxV * 100) ?>%"></div></td></tr>
   <?php endforeach; ?>
   </tbody></table>
   <?php endif; ?>
-  <p class="foot">“Shown” counts each time a reader's browser displayed the banner; “clicks” counts readers who opened your link. Automated visits by search engines are excluded. Report produced <?= e(local_date(now_utc(), 'j F Y')) ?> by <?= e(Event::name()) ?>.</p>
+  <p class="foot"><?= $articleReport ? '“Readers” counts each time a reader opened the article; “clicks” counts readers who opened a link in it.' : '“Shown” counts each time a reader\'s browser displayed the banner; “clicks” counts readers who opened your link.' ?> Automated visits by search engines are excluded. Report produced <?= e(local_date(now_utc(), 'j F Y')) ?> by <?= e(Event::name()) ?>.</p>
 </div></body></html>

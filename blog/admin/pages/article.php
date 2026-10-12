@@ -19,7 +19,8 @@ if (isset($_GET['ajax']) && is_post()) {
     post_guard();
     $html = Html::clean((string)in('body'));
     $sources = $a ? (json_decode((string)$a['sources'], true) ?: []) : [];
-    $review = LinkPolicy::review($html, $sources);
+    $sponsorUrl = Auth::can('sponsors') && in_str('sponsor_name', 160) !== '' ? in_str('sponsor_url', 500) : (string)($a['sponsor_url'] ?? '');
+    $review = LinkPolicy::review($html, $sources, is_web_url($sponsorUrl) ? $sponsorUrl : '');
     json_out(['ok' => true, 'review' => $review, 'suggest' => LinkPolicy::suggest($html, $id ?: null, (int)in('category_id') ?: null)]);
 }
 
@@ -84,6 +85,22 @@ if (is_post()) {
     ];
     if (!$a) {
         $data['author_id'] = (int)Auth::id();
+        // An author account linked to an Industry Voices profile writes as that contributor.
+        if ($mine = Voices::forUser((int)Auth::id())) {
+            $data['contributor_id'] = (int)$mine['id'];
+        }
+    }
+    if (Auth::can('articles.all') && isset($_POST['contributor_id'])) {
+        $data['contributor_id'] = (int)in('contributor_id');
+    }
+    if (Auth::can('sponsors') && isset($_POST['sponsor_name'])) {
+        $sStart = local_to_utc(in_str('sponsor_starts', 30));
+        $sEnd = local_to_utc(in_str('sponsor_ends', 30));
+        $data += [
+            'sponsor_name' => in_str('sponsor_name', 160), 'sponsor_label' => (string)in('sponsor_label'), 'sponsor_url' => in_str('sponsor_url', 500),
+            'sponsor_logo_id' => (int)in('sponsor_logo_id'), 'sponsor_starts' => $sStart, 'sponsor_ends' => $sEnd,
+            'sponsor_after' => (string)in('sponsor_after'), 'sponsor_email' => in_str('sponsor_email', 190),
+        ];
     }
     if (Auth::can('articles.all') && in('author_id', '') !== '') {
         $data['author_id'] = (int)in('author_id');
@@ -110,7 +127,8 @@ if (is_post()) {
         $msg = $res['ok'] ? 'Saved and sent for approval.' : $res['error'];
     } elseif ($do === 'publish' && $canPublish) {
         $res = Article::transition($id, 'published');
-        $msg = $res['ok'] ? 'Published. It is now live on the blog.' : 'Saved, but not published: ' . $res['error'];
+        $msg = !$res['ok'] ? 'Saved, but not published: ' . $res['error']
+            : (($res['status'] ?? '') === 'scheduled' ? 'Approved. It goes live when the sponsorship starts, ' . local_date((string)Article::find($id)['publish_at'], 'j F Y, H:i') . '.' : 'Published. It is now live on the blog.');
     } elseif ($do === 'schedule' && $canPublish) {
         $res = Article::transition($id, 'scheduled', local_to_utc(in_str('publish_at', 30)));
         $msg = $res['ok'] ? 'Scheduled for ' . local_date((string)Article::find($id)['publish_at'], 'j F Y, H:i') . '.' : 'Saved, but not scheduled: ' . $res['error'];
@@ -124,7 +142,9 @@ $draft = $_SESSION['article_draft'] ?? null;
 unset($_SESSION['article_draft']);
 $v = $a ?? ['id' => 0, 'title' => '', 'slug' => '', 'excerpt' => '', 'body' => '', 'category_id' => 0, 'image_id' => 0, 'share_image_id' => 0,
     'seo_title' => '', 'meta_description' => '', 'status' => 'draft', 'is_featured' => 0, 'featured_order' => 0, 'author_id' => Auth::id(),
-    'publish_at' => null, 'published_at' => null, 'source' => 'admin', 'review_note' => '', 'sources' => null, 'updated_at' => null];
+    'publish_at' => null, 'published_at' => null, 'source' => 'admin', 'review_note' => '', 'sources' => null, 'updated_at' => null,
+    'contributor_id' => (Voices::forUser((int)Auth::id())['id'] ?? 0), 'sponsor_name' => '', 'sponsor_label' => 'sponsored', 'sponsor_url' => '', 'sponsor_logo_id' => 0,
+    'sponsor_starts' => null, 'sponsor_ends' => null, 'sponsor_after' => 'keep', 'sponsor_email' => ''];
 if (is_array($draft)) {
     foreach (['title', 'excerpt', 'body', 'seo_title', 'meta_description'] as $k) {
         $v[$k] = (string)($draft[$k] ?? $v[$k]);
@@ -142,11 +162,18 @@ foreach ($cats as $c) {
     }
 }
 $liveUrl = $a ? Article::urlFor($a) : '';
+$contributors = Auth::can('articles.all') && Voices::enabled() ? Voices::all() : [];
+$myVoice = Voices::find((int)$v['contributor_id']);
 $editable = !$a || Auth::canEditArticle($a);
 
 ob_start(); ?>
 <?php if ($a && $a['source'] === 'api'): ?>
   <div class="flash flash--info">Written by the <strong>Social Media Agent</strong>. Check the facts, the tone and every link below before approving.<?php if ($sources): ?> The agent says it used these sources: <?php foreach ($sources as $s): ?><a href="<?= e($s) ?>" target="_blank" rel="noopener"><?= e(parse_url((string)$s, PHP_URL_HOST) ?: $s) ?></a> <?php endforeach; ?><?php endif; ?></div>
+<?php endif; ?>
+<?php if (Sponsored::is($v)): ?>
+  <div class="flash flash--info"><strong><?= e(Sponsored::label($v)) ?> for <?= e($v['sponsor_name']) ?>.</strong> Readers see the label, the sponsor and this line: <em><?= e(Sponsored::disclosure($v)) ?></em> Every outside link is marked as sponsored and its clicks are counted for the sponsor's report.</div>
+<?php elseif ($myVoice): ?>
+  <div class="flash flash--info"><strong><?= e(Voices::name()) ?>:</strong> written by <?= e($myVoice['name']) ?><?= Voices::role($myVoice) !== '' ? ', ' . e(Voices::role($myVoice)) : '' ?>. Readers see the “<?= e(Voices::badge()) ?>” badge, the author's profile and this line: <em><?= e(Voices::disclaimer()) ?></em></div>
 <?php endif; ?>
 <?php if ($a && trim((string)$a['review_note']) !== '' && in_array($a['status'], ['draft', 'pending'], true)): ?>
   <div class="flash flash--warn"><strong><?= $a['status'] === 'draft' ? 'Note from the approver:' : 'Note:' ?></strong> <?= nl2br(e($a['review_note'])) ?></div>
@@ -265,7 +292,28 @@ ob_start(); ?>
       <?= f_select('category_id', 'Category', ['' => '— choose —'] + array_column($cats, 'name', 'id'), (string)$v['category_id'], '', ['required' => true]) ?>
       <?= f_text('tags', 'Tags', $tagStr, 'Separate with commas, e.g. Cement, Market data', ['data-tags' => true]) ?>
       <?php if ($authors): ?><?= f_select('author_id', 'Author', array_column($authors, 'name', 'id'), (string)$v['author_id']) ?><?php endif; ?>
+      <?php if ($contributors): ?>
+        <?= f_select('contributor_id', Voices::name(), ['' => '— not an ' . Voices::name() . ' article —'] + array_map(static fn($c) => $c['name'] . ($c['company'] !== '' ? ' (' . $c['company'] . ')' : ''), array_column($contributors, null, 'id')), (string)($v['contributor_id'] ?: ''), 'Written by an outside expert? Choose them. Add people in <a href="' . e(aurl('contributors')) . '">Contributors</a>.') ?>
+      <?php elseif ($myVoice): ?>
+        <p class="small muted"><?= e(Voices::name()) ?>: <?= e($myVoice['name']) ?></p>
+      <?php endif; ?>
     </section>
+
+    <?php if (Auth::can('sponsors')): ?>
+    <section class="card">
+      <details<?= Sponsored::is($v) ? ' open' : '' ?>><summary><strong>Sponsored article</strong> <span class="small muted">— paid content</span></summary>
+        <?= f_text('sponsor_name', 'Sponsor', (string)$v['sponsor_name'], 'Leave empty for an ordinary article. With a name, the article is marked as paid content.', ['maxlength' => 160]) ?>
+        <?= f_select('sponsor_label', 'Label', ['sponsored' => (string)Settings::get('sponsored_text', 'Sponsored'), 'partner' => (string)Settings::get('partner_text', 'Partner content')], (string)$v['sponsor_label']) ?>
+        <?= f_text('sponsor_url', 'Sponsor\'s website', (string)$v['sponsor_url'], 'Optional. Their name or logo links here.', ['type' => 'url', 'maxlength' => 500, 'placeholder' => 'https://']) ?>
+        <?= f_media('sponsor_logo_id', 'Sponsor\'s logo', (int)$v['sponsor_logo_id'], 'Optional. Shown next to the label.') ?>
+        <?= f_text('sponsor_starts', 'Paid period starts (Pakistan time)', utc_to_input($v['sponsor_starts']), 'Approving before this date schedules it to go live then.', ['type' => 'datetime-local']) ?>
+        <?= f_text('sponsor_ends', 'Paid period ends', utc_to_input($v['sponsor_ends']), 'Until then it is shown in “' . e((string)Settings::get('partner_section', 'From our partners')) . '” on the home page.', ['type' => 'datetime-local']) ?>
+        <?= f_select('sponsor_after', 'When the paid period ends', ['keep' => 'Keep it on the blog (still labelled)', 'archive' => 'Take it off the blog (archive)'], (string)$v['sponsor_after']) ?>
+        <?= f_text('sponsor_email', 'Sponsor\'s contact email (private)', (string)$v['sponsor_email'], 'For your records; the report is sent by you.', ['type' => 'email', 'maxlength' => 190]) ?>
+        <?php if ($a && Sponsored::is($v)): ?><p><a class="btn btn--small btn--ghost" href="<?= e(aurl('sponsored', ['report' => $id])) ?>" target="_blank" rel="noopener">Sponsor report ↗</a></p><?php endif; ?>
+      </details>
+    </section>
+    <?php endif; ?>
 
     <section class="card">
       <?= f_media('image_id', 'Featured image', (int)$v['image_id'], 'Shown at the top of the article and on cards. Best at least 1600 px wide.') ?>

@@ -203,6 +203,7 @@ final class SmFlow
     /** Store what the blog says about the article; on first publish, write the platform versions. */
     public static function applyRemote(array $agent, int $articleId, array $remote): void
     {
+        self::rememberCredits($articleId, $remote);
         $status = (string)($remote['status'] ?? '');
         $blogId = (int)($remote['id'] ?? 0) ?: null;
         if ($status === 'published' && !empty($remote['url'])) {
@@ -228,6 +229,48 @@ final class SmFlow
             $data += ['status' => 'sent', 'error' => null];
         }
         db()->update('sm_articles', $data, "id = ? AND status <> 'published'", [$articleId]);
+    }
+
+    /**
+     * Who wrote the article (Industry Voices) and who paid for it (sponsored), as the blog
+     * says. Posts then credit the writer and carry the sponsored label.
+     */
+    public static function rememberCredits(int $articleId, array $remote): void
+    {
+        if (!array_key_exists('voice', $remote) && !array_key_exists('sponsor', $remote)) {
+            return;   // an older blog that does not send them
+        }
+        $clean = static function ($v, array $keys): ?string {
+            if (!is_array($v) || trim((string)($v['name'] ?? '')) === '') {
+                return null;
+            }
+            $out = [];
+            foreach ($keys as $k) {
+                $out[$k] = mb_substr(trim(strip_tags((string)($v[$k] ?? ''))), 0, 300);
+                if (str_ends_with($k, 'url') && $out[$k] !== '' && !preg_match('#^https?://#i', $out[$k])) {
+                    $out[$k] = '';
+                }
+            }
+            return json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        };
+        db()->update('sm_articles', [
+            'voice' => $clean($remote['voice'] ?? null, ['name', 'designation', 'company', 'linkedin_url', 'company_url', 'profile_url']),
+            'sponsor' => $clean($remote['sponsor'] ?? null, ['name', 'label', 'kind', 'url']),
+        ], 'id = ?', [$articleId]);
+    }
+
+    /** @return array{voice:?array, sponsor:?array} */
+    public static function credits(?int $articleId): array
+    {
+        $r = $articleId ? db()->one('SELECT voice, sponsor FROM sm_articles WHERE id = ?', [$articleId]) : null;
+        return ['voice' => $r && $r['voice'] ? (json_decode((string)$r['voice'], true) ?: null) : null,
+                'sponsor' => $r && $r['sponsor'] ? (json_decode((string)$r['sponsor'], true) ?: null) : null];
+    }
+
+    /** The first line every post about a sponsored article must carry, e.g. "Sponsored · Acme Chemicals". */
+    public static function disclosure(array $sponsor): string
+    {
+        return (trim((string)($sponsor['label'] ?? '')) ?: 'Sponsored') . ' · ' . trim((string)$sponsor['name']);
     }
 
     // -----------------------------------------------------------------
@@ -286,11 +329,16 @@ final class SmFlow
         // The article's cover is already a built image; build fresh ones on the plain background.
         $bg = $photo && $photo['origin'] !== 'built' ? (int)$photo['id'] : null;
         $default = SmEvent::settings($aid)['blog_link_default'];
+        $sponsor = self::credits($articleId)['sponsor'];
         foreach ($platforms as $p => $row) {
             $post = (array)($out['posts'][$p] ?? []);
             $text = trim((string)($post['text'] ?? ''));
             if ($text === '') {
                 continue;
+            }
+            // Paid content is always marked, whatever the AI wrote.
+            if ($sponsor && !SmChecks::hasDisclosure($text, $sponsor)) {
+                $text = self::disclosure($sponsor) . "\n\n" . $text;
             }
             $shape = SmMedia::PLATFORM_SHAPE[$p];
             if ($photo && $photo['kind'] === 'video') {
@@ -442,6 +490,7 @@ final class SmFlow
             return 0;   // already known
         }
         $id = (int)db()->value('SELECT id FROM sm_articles WHERE agent_id = ? AND blog_article_id = ?', [$aid, $blogId]);
+        self::rememberCredits($id, $remote);
         SmActivity::log($aid, 'blog_article_found', (string)($remote['title'] ?? ''), ['id' => 0, 'full_name' => 'Blog', 'username' => 'blog']);
         // Its cover picture goes into the library and behind the post images.
         $blog = SmBlog::forAgent($aid);

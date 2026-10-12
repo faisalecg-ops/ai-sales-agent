@@ -31,6 +31,20 @@ final class Router
             header('X-Robots-Tag: noindex');
             $to ? redirect($to, 302) : self::notFound();
         }
+        if ($n === 3 && $parts[0] === 'go' && $parts[1] === 'a' && ctype_digit($parts[2])) {
+            $to = Sponsored::click((int)$parts[2], (string)($_GET['u'] ?? ''), (string)($_GET['s'] ?? ''));
+            header('X-Robots-Tag: noindex');
+            $to ? redirect($to, 302) : self::notFound();
+        }
+        if ($n === 1 && $parts[0] === Voices::writeSlug() && Voices::writeOpen()) {
+            if ($method === 'POST') {
+                $res = Voices::submit($_POST);
+                redirect(url(Voices::writeSlug()) . '?w=' . ($res['ok'] ? 'thanks' : ($res['error'] ?? 'error')) . '#write', 303);
+            }
+            header('Cache-Control: no-store');
+            echo Pages::write((string)($_GET['w'] ?? ''));
+            exit;
+        }
         if ($path === 'go/beacon' && $method === 'POST') {
             self::beacon();
         }
@@ -51,7 +65,7 @@ final class Router
         // Pages that are the same for every visitor are served from the page cache.
         $page = max(1, (int)($_GET['page'] ?? 1));
         $cacheable = $path !== 'search' && array_diff(array_keys($_GET), ['page']) === [];
-        $key = 'page:' . $path . ':' . $page;
+        $key = 'page:' . $path . ($trailing ? '/' : '') . ':' . $page;
         if ($cacheable && ($hit = Cache::get($key)) !== null) {
             header('X-Cache: HIT');
             echo $hit;
@@ -64,6 +78,8 @@ final class Router
             $path === 'search' => Pages::search((string)($_GET['q'] ?? ''), $page),
             $n === 2 && $parts[0] === 'tag' => Pages::tag($parts[1], $page),
             $n === 2 && $parts[0] === 'author' => Pages::author($parts[1], $page),
+            $n === 1 && $parts[0] === Voices::slug() && Voices::enabled() => Pages::voices($page, $trailing),
+            $n === 2 && $parts[0] === Voices::slug() && Voices::enabled() => Pages::contributor($parts[1], $page),
             $n === 1 => Pages::category($parts[0], $page, $trailing),
             $n === 2 => Pages::article($parts[0], $parts[1]),
             default => null,

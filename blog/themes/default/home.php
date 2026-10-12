@@ -1,5 +1,5 @@
 <?php
-/** @var array $sections @var array $slides @var array $featured @var array $latest @var array $blocks @var array $mostRead @var array $tags */
+/** @var array $sections @var array $slides @var array $featured @var array $latest @var array $blocks @var array $mostRead @var array $tags @var array $voices @var array $partner */
 $transition = Settings::get('slider_transition', 'fade') === 'slide' ? 'slide' : 'fade';
 $speed = max(3, min(20, (int)Settings::get('slider_speed', 6)));
 $first = true;
@@ -76,6 +76,28 @@ foreach ($sections as $section):
 <section class="wrap section" aria-labelledby="h-latest">
   <div class="section-head reveal"><h2 class="section-h" id="h-latest"><?= e(t('latest')) ?></h2><a class="more" href="<?= e(url('latest')) ?>"><?= e(t('view_all')) ?> →</a></div>
   <div class="grid grid--3"><?php foreach ($latest as $a) echo View::card($a); ?></div>
+</section>
+<?php   break;
+
+    case 'voices':
+        if (!$voices) {
+            break;
+        } ?>
+<section class="wrap section voices-home" aria-labelledby="h-voices">
+  <div class="section-head reveal"><h2 class="section-h" id="h-voices"><a href="<?= e(Voices::sectionUrl()) ?>"><?= e(Voices::name()) ?></a></h2>
+    <?php if (Voices::writeOpen()): ?><a class="more" href="<?= e(url(Voices::writeSlug())) ?>"><?= e(t('write_cta')) ?></a><?php endif; ?>
+    <a class="more" href="<?= e(Voices::sectionUrl()) ?>"><?= e(t('view_all')) ?> →</a></div>
+  <div class="grid grid--4"><?php foreach ($voices as $a) echo View::card($a); ?></div>
+</section>
+<?php   break;
+
+    case 'partner':
+        if (!$partner) {
+            break;
+        } ?>
+<section class="wrap section partner-home" aria-labelledby="h-partner">
+  <h2 class="section-h reveal" id="h-partner"><?= e((string)Settings::get('partner_section', '') ?: 'From our partners') ?></h2>
+  <div class="grid grid--4"><?php foreach ($partner as $a) echo View::card($a); ?></div>
 </section>
 <?php   break;
 

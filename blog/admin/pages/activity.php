@@ -8,6 +8,8 @@ $labels = [
     'article.archived' => 'Archived', 'article.deleted' => 'Deleted article', 'media.uploaded' => 'Uploaded image', 'media.deleted' => 'Deleted image',
     'branding.updated' => 'Changed branding', 'branding.undo' => 'Undid branding change', 'home.updated' => 'Changed home page',
     'api.article.created' => 'Agent sent an article', 'api.article.updated' => 'Agent updated an article',
+    'submission.received' => '"Write for us" proposal received', 'submission.accepted' => 'Proposal turned into a draft', 'submission.declined' => 'Proposal declined',
+    'contributor.saved' => 'Saved contributor', 'voices.settings' => 'Changed Industry Voices settings', 'sponsored.settings' => 'Changed sponsored-article wording',
 ];
 $page = max(1, (int)($_GET['page'] ?? 1));
 $total = (int)db()->value('SELECT COUNT(*) FROM {p}activity');

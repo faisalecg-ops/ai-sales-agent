@@ -187,7 +187,10 @@ final class Seo
         if ($img) {
             $data['image'] = [Media::url($img, 1200)];
         }
-        if (!empty($a['author_name']) && (int)($a['show_as_author'] ?? 1) === 1) {
+        if (!empty($a['contributor_name']) && !empty($a['contributor_slug'])) {
+            $data['author'] = ['@type' => 'Person', 'name' => $a['contributor_name'], 'url' => Voices::profileUrl(['slug' => $a['contributor_slug']])]
+                + (!empty($a['contributor_designation']) ? ['jobTitle' => $a['contributor_designation']] : []);
+        } elseif (!empty($a['author_name']) && (int)($a['show_as_author'] ?? 1) === 1) {
             $data['author'] = ['@type' => 'Person', 'name' => $a['author_name'], 'url' => url('author/' . $a['author_slug'])];
         } else {
             $data['author'] = ['@id' => url() . '#organization'];
@@ -221,6 +224,16 @@ final class Seo
         }
         foreach (db()->all("SELECT DISTINCT u.slug FROM {p}users u JOIN {p}articles a ON a.author_id = u.id AND a.status = 'published' WHERE u.show_as_author = 1") as $u) {
             $x .= self::urlEntry(url('author/' . $u['slug']), null, null);
+        }
+        if (Voices::enabled()) {
+            $voices = db()->all("SELECT ct.slug, MAX(a.updated_at) m FROM {p}contributors ct JOIN {p}articles a ON a.contributor_id = ct.id AND a.status = 'published'
+                WHERE ct.active = 1 GROUP BY ct.id");
+            if ($voices) {
+                $x .= self::urlEntry(Voices::sectionUrl(), (string)max(array_column($voices, 'm')), null);
+            }
+            foreach ($voices as $c) {
+                $x .= self::urlEntry(Voices::profileUrl($c), (string)$c['m'], null);
+            }
         }
         return $x . '</urlset>' . "\n";
     }

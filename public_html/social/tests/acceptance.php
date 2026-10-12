@@ -519,6 +519,58 @@ SmFlow::syncAllBlogs();
 T::equals(0, (int)db()->value('SELECT COUNT(*) FROM sm_articles WHERE blog_article_id = ? AND agent_id = ?', [$own3['id'], $idA]), 'With the setting off, articles written in the blog are left alone');
 $sx['blog_written_posts'] = true;
 SmEvent::saveSettings($idA, $sx);
+
+// =====================================================================
+T::group('Industry Voices and sponsored articles from the blog');
+$voiceArt = $cli('voice', 'Precast is the future of housing');
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'Ayesha Malik of Indus Cement on precast housing.', 'hashtags' => ''], 'facebook' => ['text' => 'Precast housing is coming.', 'hashtags' => ''],
+    'instagram' => ['text' => 'Ayesha Malik on precast.', 'hashtags' => '']], 'image_headline' => 'Precast housing']);
+$hook(json_encode(['event' => 'article.published', 'site' => $blogInfo['base'], 'sent_at' => gmdate('c'), 'article' => ['id' => $voiceArt['id'], 'external_ref' => null, 'status' => 'published', 'url' => $voiceArt['url'], 'title' => 'Precast is the future of housing']]), $blogInfo['secret']);
+$vRow = db()->one('SELECT * FROM sm_articles WHERE agent_id = ? AND blog_article_id = ?', [$idA, $voiceArt['id']]);
+$vCred = SmFlow::credits((int)$vRow['id']);
+T::ok(($vCred['voice']['name'] ?? '') === 'Ayesha Malik' && $vCred['voice']['company'] === 'Indus Cement' && $vCred['voice']['linkedin_url'] === 'https://www.linkedin.com/in/ayesha-malik',
+    'The writer of an Industry Voices article is picked up from the blog');
+$calls = SmTestBus::entries('ai-calls');
+T::ok(str_contains((string)end($calls)['system'], 'Ayesha Malik') && str_contains((string)end($calls)['system'], 'Indus Cement'), 'The AI is told to credit the writer and their company');
+$vPosts = db()->all('SELECT * FROM sm_posts WHERE article_id = ? ORDER BY id', [(int)$vRow['id']]);
+$fbPost = array_values(array_filter($vPosts, static fn($x) => $x['platform'] === 'facebook'))[0];
+$warns = array_column(SmChecks::post($agentA, $fbPost, null), 'message');
+T::ok((bool)array_filter($warns, static fn($m) => str_contains($m, 'written by Ayesha Malik')), 'A post that does not name the writer gets a reminder');
+$liPost = array_values(array_filter($vPosts, static fn($x) => $x['platform'] === 'linkedin'))[0];
+db()->update('sm_posts', ['status' => 'approved'], 'id = ?', [(int)$liPost['id']]);
+$soc->get('/social/post.php?id=' . $liPost['id']);
+T::ok(str_contains($soc->body, 'Tag the writer, <strong>Ayesha Malik</strong>') && str_contains($soc->body, 'https://www.linkedin.com/in/ayesha-malik'), 'When posting, the steps say whom to tag, with their LinkedIn');
+$soc->get('/social/article.php?id=' . $vRow['id']);
+T::ok(str_contains($soc->body, 'Industry Voices</span> by <strong>Ayesha Malik</strong>'), 'The article page shows who wrote it');
+
+$spArt = $cli('sponsored', 'Faster curing with admixtures');
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'Cut curing time with admixtures.', 'hashtags' => ''], 'facebook' => ['text' => 'Sponsored · Acme Chemicals' . "\n\n" . 'Faster curing.', 'hashtags' => ''],
+    'instagram' => ['text' => 'Faster curing.', 'hashtags' => '']], 'image_headline' => 'Faster curing']);
+SmFlow::syncAllBlogs();
+$sRow = db()->one('SELECT * FROM sm_articles WHERE agent_id = ? AND blog_article_id = ?', [$idA, $spArt['id']]);
+T::ok($sRow && (SmFlow::credits((int)$sRow['id'])['sponsor']['name'] ?? '') === 'Acme Chemicals', 'A sponsored article is picked up with its sponsor');
+$sPosts = db()->all('SELECT * FROM sm_posts WHERE article_id = ? ORDER BY id', [(int)$sRow['id']]);
+T::ok(count($sPosts) === 3 && !array_filter($sPosts, static fn($x) => !str_starts_with((string)$x['body'], 'Sponsored · Acme Chemicals')), 'Every post about it starts with "Sponsored · Acme Chemicals", even when the AI left it out');
+T::equals(1, substr_count((string)array_values(array_filter($sPosts, static fn($x) => $x['platform'] === 'facebook'))[0]['body'], 'Sponsored · Acme Chemicals'), '…and the line is never doubled');
+$spLi = array_values(array_filter($sPosts, static fn($x) => $x['platform'] === 'linkedin'))[0];
+$soc->post('/social/post.php', ['do' => 'save', 'id' => $spLi['id'], 'body' => 'Cut curing time with admixtures.', 'hashtags' => '', 'include_link' => 1], '/social/post.php?id=' . $spLi['id']);
+$spLi = db()->one('SELECT * FROM sm_posts WHERE id = ?', [(int)$spLi['id']]);
+T::ok(str_contains((string)SmFlow::blocker($agentA, $spLi), 'paid content for Acme Chemicals'), 'If someone removes the sponsored line, the post cannot be approved');
+$fbSp = array_values(array_filter($sPosts, static fn($x) => $x['platform'] === 'facebook'))[0];
+db()->update('sm_posts', ['status' => 'approved'], 'id = ?', [(int)$fbSp['id']]);
+$soc->get('/social/post.php?id=' . $fbSp['id']);
+T::ok(str_contains($soc->body, 'Add paid partnership label'), 'On Facebook the posting steps say to switch on the paid-partnership label');
+
+// The monthly report recipients.
+$boss->get('/social/settings.php');
+T::ok(str_contains($boss->body, 'Monthly management report') && str_contains($boss->body, 'name="report_emails"'), 'Event settings has "Monthly management report" with the addresses that receive it');
+$sx = SmEvent::settings($idA);
+$boss->post('/social/settings.php', ['articles_per_week' => $sx['articles_per_week'], 'mix' => $sx['mix'], 'sectors' => $sx['sectors'], 'audience' => $sx['audience'], 'voice' => $sx['voice'],
+    'avoid' => $sx['avoid'], 'writing_model' => $sx['writing_model'], 'text_limit' => $sx['text_limit'], 'image_limit' => $sx['image_limit'], 'reminder_emails' => $sx['reminder_emails'],
+    'blog_link_default' => 1, 'blog_written_posts' => 1, 'brand_primary' => $sx['brand_primary'], 'brand_secondary' => $sx['brand_secondary'], 'brand_accent' => $sx['brand_accent'],
+    'report_emails' => 'kaleem@buildasia.net, not-an-email; admin@buildasia.net'] + ($sx['ai_images'] ? ['ai_images' => 1] : []) + ($sx['allow_prices'] ? ['allow_prices' => 1] : []), '/social/settings.php');
+T::equals('kaleem@buildasia.net, admin@buildasia.net', (string)SmEvent::settings($idA)['report_emails'], 'Only valid addresses are saved');
+
 $boss->post('/social/connections.php', ['do' => 'blog', 'blog_url' => $blogInfo['base'], 'blog_api_key' => $blogInfo['drafts']], '/social/connections.php');
 
 // =====================================================================

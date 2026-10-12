@@ -8,11 +8,11 @@ Read this before any task on this project.
   research, prospecting, analytics, reorganised admin). 1,201 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
 - **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
-  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.2.3: Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
+  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.3.0: Industry Voices + sponsored articles (Stage 2), Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
   MySQLi script installed per event website at `/blog` on cPanel **shared**
   hosting, table prefix `blog_`. Every reader option (comments, newsletter,
   sponsor reports, branding, language) is a setting in the blog admin.
-  263 tests: `php blog/tests/acceptance.php` (database `blogtest`, prefix
+  327 tests (run from the repo root): `php blog/tests/acceptance.php` (database `blogtest`, prefix
   `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
   `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
   a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — the
@@ -39,8 +39,15 @@ Read this before any task on this project.
       setting `blog_written_posts`; dashboard card "Waiting for approval in the
       blog" from the blog's `GET /pending`. Blog-written articles are read-only
       in /social (`sm_articles.origin = 'blog'`).
-    - Code: `public_html/social/`, version 1.1.0, package
-      `social-agent-1.1.0.zip`, guide `docs/social-installation-guide.md`.
+    - **Stage 2 BUILT 12 Oct 2026, not yet installed:** blog 1.3.0 (Industry Voices:
+      `core/Voices.php`, `{p}contributors`, `{p}submissions`, /industry-voices/,
+      /write-for-us; sponsored articles: `core/Sponsored.php`, `sponsor_*` columns,
+      `{p}article_clicks`, go/a/ signed click links, admin "Sponsored articles" +
+      report) and /social 1.2.0 (credits from the blog payload `voice`/`sponsor`
+      in `sm_articles.voice/sponsor`; sponsored posts must carry
+      "Sponsored · [sponsor]"; tag reminders; Event settings `report_emails`).
+    - Code: `public_html/social/`, version 1.2.0, package
+      `social-agent-1.2.0.zip`, guide `docs/social-installation-guide.md`.
     - Pages are plain .php. Private code is in `lib/` (blocked from the web).
       Its own tables are named `sm_` (`lib/SmSchema.php`, created on first
       visit).
@@ -50,7 +57,7 @@ Read this before any task on this project.
     - It writes into the event blogs only through their API (`lib/SmBlog.php`).
       It receives the blog's signed notice at `hook.php`. Its cron job is
       `cron.php`.
-    - Tests: `php public_html/social/tests/acceptance.php` (128). They use real
+    - Tests: `php public_html/social/tests/acceptance.php` (140). They use real
       sign-ins, a real test blog (database `smblog`) and stand-in AI and
       research. An independent review was done and every finding was fixed.
   - **Choices made with the approval:**
@@ -58,8 +65,8 @@ Read this before any task on this project.
       posting service.
     - AI-generated pictures are switched on, with a monthly limit per event.
     - **The monthly management report (Stage 4) goes to the admin** (owner,
-      12 Oct 2026): each exhibition's /social Admins get that exhibition's
-      report; platform super admins get every exhibition's report.
+      12 Oct 2026), at the email addresses typed in each event's /social
+      Event settings → Monthly report (`report_emails`).
   - Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
   of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.

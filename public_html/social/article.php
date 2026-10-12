@@ -167,6 +167,11 @@ echo '<div class="card"><p style="margin-top:0">' . sm_pill((string)$a['status']
                : ' <span class="muted small">' . e(SmEvent::PILLARS[$a['pillar']][0] ?? '') . ' · asked for by '
    . e($writer ? (string)($writer['full_name'] ?: $writer['username']) : '—') . ' · ' . e(sm_time($a['created_at'])) . '</span></p>')
    . '<h2 style="margin:.2rem 0">' . e((string)$a['title']) . '</h2>';
+$cr = SmFlow::credits($id);
+if ($cr['voice'] || $cr['sponsor']) {
+    echo '<p>' . ($cr['voice'] ? '<span class="pill pill-info">Industry Voices</span> by <strong>' . e((string)$cr['voice']['name']) . '</strong>' . (trim($cr['voice']['designation'] . ', ' . $cr['voice']['company'], ', ') !== '' ? ', ' . e(trim($cr['voice']['designation'] . ', ' . $cr['voice']['company'], ', ')) : '') . ' ' : '')
+       . ($cr['sponsor'] ? '<span class="pill pill-warn">' . e((string)($cr['sponsor']['label'] ?: 'Sponsored')) . '</span> paid for by <strong>' . e((string)$cr['sponsor']['name']) . '</strong> — its posts carry the label' : '') . '</p>';
+}
 if ($a['status'] === 'writing') {
     echo '<p class="lede">The agent is researching and writing this article. It usually takes one to three minutes. <a href="' . e(sm_url('article.php', ['id' => $id])) . '">Refresh</a> to see it.</p>';
 }

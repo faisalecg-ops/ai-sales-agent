@@ -37,7 +37,9 @@ final class Pages
             'canonical'   => url(),
             'ld'          => [Seo::organization(), Seo::website(), Seo::event()],
         ];
+        $voices = Voices::enabled() ? Article::published('a.contributor_id IS NOT NULL', [], 'a.published_at DESC', max(2, min(8, (int)Settings::get('voices_home_count', 4)))) : [];
         return View::page('home', [
+            'voices' => $voices, 'partner' => Sponsored::runningList(4),
             'sections' => (array)Settings::get('home_sections', []), 'slides' => $slides, 'featured' => $featured,
             'latest' => $latest, 'blocks' => $blocks, 'mostRead' => Article::mostRead(5), 'tags' => $tags, 'isHome' => true,
         ], $seo);
@@ -139,6 +141,76 @@ final class Pages
             [[t('home'), url()], [(string)$u['name'], $link]]);
     }
 
+    /** Industry Voices: every article by an outside expert, with the contributors. */
+    public static function voices(int $page, bool $trailing): ?string
+    {
+        $u = Voices::sectionUrl();
+        if (!$trailing) {
+            redirect($u . ($page > 1 ? '?page=' . $page : ''), 301);
+        }
+        $per = max(1, (int)Settings::get('posts_per_page', 12));
+        $where = 'a.contributor_id IS NOT NULL';
+        $total = Article::countPublished($where);
+        if ($page > 1 && ($page - 1) * $per >= $total) {
+            return null;
+        }
+        $contributors = $page === 1 ? db()->all("SELECT ct.*, COUNT(a.id) n FROM {p}contributors ct JOIN {p}articles a ON a.contributor_id = ct.id AND a.status = 'published'
+            WHERE ct.active = 1 GROUP BY ct.id ORDER BY MAX(a.published_at) DESC LIMIT 12") : [];
+        $name = Voices::name();
+        $per = max(1, $per);
+        $pages = max(1, (int)ceil($total / $per));
+        $crumbs = [[t('home'), url()], [$name, $u]];
+        $seo = ['title' => $name . ($page > 1 ? ' — ' . t('page_n', ['n' => $page]) : ''), 'description' => (string)Settings::get('voices_intro', ''),
+            'canonical' => $page > 1 ? $u . '?page=' . $page : $u, 'ld' => [Seo::organization(), Seo::breadcrumbs($crumbs)],
+            'prev' => $page > 1 ? ($page === 2 ? $u : $u . '?page=' . ($page - 1)) : null, 'next' => $page < $pages ? $u . '?page=' . ($page + 1) : null];
+        return View::page('voices', ['heading' => $name, 'intro' => (string)Settings::get('voices_intro', ''), 'contributors' => $contributors,
+            'articles' => Article::published($where, [], 'a.published_at DESC', $per, ($page - 1) * $per), 'page' => $page, 'pages' => $pages,
+            'baseUrl' => $u, 'crumbs' => $crumbs], $seo);
+    }
+
+    /** One contributor's profile and articles. */
+    public static function contributor(string $slug, int $page): ?string
+    {
+        $c = db()->one('SELECT * FROM {p}contributors WHERE slug = ? AND active = 1', [$slug]);
+        if (!$c) {
+            return null;
+        }
+        $per = max(1, (int)Settings::get('posts_per_page', 12));
+        $total = Article::countPublished('a.contributor_id = ?', [(int)$c['id']]);
+        if ($total === 0) {
+            return null;
+        }
+        $link = Voices::profileUrl($c);
+        $pages = max(1, (int)ceil($total / $per));
+        $person = ['@type' => 'Person', 'name' => $c['name'], 'url' => $link];
+        if ($c['designation'] !== '') {
+            $person['jobTitle'] = $c['designation'];
+        }
+        if ($c['company'] !== '') {
+            $person['worksFor'] = ['@type' => 'Organization', 'name' => $c['company']] + ($c['company_url'] !== '' ? ['url' => $c['company_url']] : []);
+        }
+        if ($c['linkedin_url'] !== '') {
+            $person['sameAs'] = [$c['linkedin_url']];
+        }
+        $crumbs = [[t('home'), url()], [Voices::name(), Voices::sectionUrl()], [(string)$c['name'], $link]];
+        $intro = trim(Voices::role($c) . '. ' . (string)$c['bio'], '. ');
+        return View::page('contributor', ['c' => $c, 'articles' => Article::published('a.contributor_id = ?', [(int)$c['id']], 'a.published_at DESC', $per, ($page - 1) * $per),
+            'page' => $page, 'pages' => $pages, 'baseUrl' => $link, 'crumbs' => $crumbs],
+            ['title' => $c['name'] . ($c['company'] !== '' ? ' — ' . $c['company'] : ''), 'description' => excerpt($intro, 160), 'canonical' => $page > 1 ? $link . '?page=' . $page : $link,
+                'type' => 'profile', 'image' => Media::find((int)$c['photo_id']),
+                'ld' => [Seo::organization(), ['@type' => 'ProfilePage', 'mainEntity' => $person], Seo::breadcrumbs($crumbs)]]);
+    }
+
+    /** The public "Write for us" form. */
+    public static function write(string $state): string
+    {
+        $u = url(Voices::writeSlug());
+        $title = trim((string)Settings::get('write_title', '')) ?: 'Write for us';
+        return View::page('write', ['state' => $state, 'heading' => $title, 'intro' => (string)Settings::get('write_intro', ''),
+            'consent' => (string)Settings::get('write_consent', ''), 'action' => $u, 'crumbs' => [[t('home'), url()], [$title, $u]]],
+            ['title' => $title, 'description' => excerpt((string)Settings::get('write_intro', ''), 160), 'canonical' => $u, 'ld' => [Seo::organization()]]);
+    }
+
     public static function search(string $q, int $page): string
     {
         $per = max(1, (int)Settings::get('posts_per_page', 12));
@@ -163,6 +235,10 @@ final class Pages
         }
         [$body, $toc] = Html::withHeadingIds((string)$a['body']);
         $body = Html::enhanceImages($body);
+        if (Sponsored::is($a) && !$preview) {
+            $body = Sponsored::trackLinks($body, (int)$a['id']);
+        }
+        $contributor = Voices::find((int)($a['contributor_id'] ?? 0));
         $tags = Article::tags((int)$a['id']);
         $img = Media::find((int)$a['image_id']);
         $share = Media::find((int)$a['share_image_id']) ?: $img;
@@ -183,7 +259,7 @@ final class Pages
         return View::page('article', [
             'a' => $a, 'body' => $body, 'toc' => count($toc) >= 3 ? $toc : [], 'tags' => $tags, 'image' => $img,
             'related' => $preview ? [] : Article::related($a, 3), 'crumbs' => $crumbs, 'comments' => $comments,
-            'isPreview' => $preview !== null, 'articleId' => $preview ? 0 : (int)$a['id'],
+            'isPreview' => $preview !== null, 'articleId' => $preview ? 0 : (int)$a['id'], 'contributor' => $contributor,
         ], $seo);
     }
 

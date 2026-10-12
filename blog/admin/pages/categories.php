@@ -13,7 +13,7 @@ if (is_post()) {
             flash('err', 'A category needs a name.');
             back_to('categories');
         }
-        if (in_array($slug, Article::RESERVED, true)) {
+        if (in_array($slug, Article::RESERVED, true) || in_array($slug, Voices::reservedSlugs(), true)) {
             flash('err', '"' . $slug . '" is used by the blog itself. Choose another web address.');
             back_to('categories', ['edit' => $cid]);
         }

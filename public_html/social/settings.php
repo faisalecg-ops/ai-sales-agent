@@ -16,6 +16,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
     $hex = static fn(string $v, string $d) => preg_match('/^#[0-9a-f]{6}$/i', trim($v)) ? strtoupper(trim($v)) : $d;
     $emails = array_values(array_filter(array_map('trim', preg_split('/[,;\s]+/', sm_in('reminder_emails')) ?: []), static fn($e) => Validator::email($e) !== null));
+    $reportTo = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,;\s]+/', sm_in('report_emails')) ?: []), static fn($e) => Validator::email($e) !== null)));
     $new = array_replace($s, [
         'articles_per_week' => max(0, min(21, (int)sm_in('articles_per_week'))),
         'mix'               => $mix,
@@ -29,6 +30,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'image_limit'       => max(0, min(1000, (int)sm_in('image_limit'))),
         'ai_images'         => isset($_POST['ai_images']),
         'reminder_emails'   => implode(', ', $emails),
+        'report_emails'     => implode(', ', array_slice($reportTo, 0, 10)),
         'blog_link_default' => isset($_POST['blog_link_default']),
         'blog_written_posts'=> isset($_POST['blog_written_posts']),
         'brand_primary'     => $hex(sm_in('brand_primary'), '#142A5C'),
@@ -43,7 +45,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 sm_layout_start('Event settings');
-echo '<nav class="set-nav"><a href="#amounts">Amounts and mix</a><a href="#voice">Subject and voice</a><a href="#ai">AI</a><a href="#people">Reminders</a><a href="#brand">Branding</a></nav>';
+echo '<nav class="set-nav"><a href="#amounts">Amounts and mix</a><a href="#voice">Subject and voice</a><a href="#ai">AI</a><a href="#people">Reminders</a><a href="#report">Monthly report</a><a href="#brand">Branding</a></nav>';
 echo '<form method="post" class="settings-form">' . sm_csrf();
 
 echo '<section class="set-card" id="amounts"><div class="set-head"><h2>Amounts and content mix</h2><p>How much to publish for ' . e((string)$agent['name']) . ', and in which proportions. Posts per week are set for each platform on "Blog and platforms".</p></div><div class="set-body">'
@@ -73,6 +75,10 @@ echo '<section class="set-card" id="ai"><div class="set-head"><h2>AI</h2><p>Whic
 
 echo '<section class="set-card" id="people"><div class="set-head"><h2>Reminders</h2><p>Who is emailed when a scheduled post is due, for platforms posted by hand.</p></div><div class="set-body">'
    . f_area('reminder_emails', 'Email addresses (comma separated)', (string)$s['reminder_emails'], ['rows' => 2, 'hint' => 'Sent from the exhibition\'s own email profile in the sales agent when it is set up.'])
+   . '</div></section>';
+
+echo '<section class="set-card" id="report"><div class="set-head"><h2>Monthly management report</h2><p>Who receives this exhibition\'s one-page report each month: posts and articles published, the best ones, visits to the website, chats and leads from social media, and AI cost. Usually the exhibition\'s admins.</p></div><div class="set-body">'
+   . f_area('report_emails', 'Send the report to (comma separated)', (string)$s['report_emails'], ['rows' => 2, 'hint' => 'Up to 10 addresses. Sent from the exhibition\'s own email profile. The report itself is part of Stage 4; until then nothing is sent.'])
    . '</div></section>';
 
 echo '<section class="set-card" id="brand"><div class="set-head"><h2>Branding on built images</h2><p>Colours used by the image builder. The logo is chosen in "Pictures and videos" (Use as logo).</p></div><div class="set-body"><div class="form-grid">'

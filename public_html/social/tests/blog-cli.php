@@ -34,6 +34,20 @@ if ($cmd === 'own') {
     echo json_encode(['id' => (int)$a['id'], 'url' => Article::urlFor(Article::find((int)$a['id']) + ['cat' => 'building-materials'])]);
     exit;
 }
+if ($cmd === 'voice' || $cmd === 'sponsored') {
+    // Published in the blog admin: an Industry Voices article, or a sponsored one.
+    $cat = (int)db()->value("SELECT id FROM {p}categories WHERE slug = 'building-materials'");
+    $extra = ['body' => '<p>' . str_repeat('Precast plants are expanding in Punjab. ', 10) . '</p>'];
+    if ($cmd === 'voice') {
+        $extra['contributor_id'] = Voices::save(null, ['name' => 'Ayesha Malik', 'designation' => 'Chief Executive', 'company' => 'Indus Cement',
+            'linkedin_url' => 'https://www.linkedin.com/in/ayesha-malik', 'company_url' => 'https://induscement.example.com']);
+    } else {
+        $extra += ['sponsor_name' => 'Acme Chemicals', 'sponsor_label' => 'sponsored', 'sponsor_url' => 'https://acme.example.com'];
+    }
+    $a = publish_article((string)$argv[2], $cat, $extra);
+    echo json_encode(['id' => (int)$a['id'], 'url' => Article::urlFor(Article::find((int)$a['id']) + ['cat' => 'building-materials'])]);
+    exit;
+}
 if ($cmd === 'same-second') {
     // Give article B exactly the publishing time of article A.
     $at = (string)db()->value('SELECT published_at FROM {p}articles WHERE id = ?', [(int)$argv[2]]);

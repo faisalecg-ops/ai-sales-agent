@@ -1,5 +1,7 @@
 <?php
-/** @var array $a @var string $body @var array $toc @var array $tags @var ?array $image @var array $related @var array $crumbs @var ?array $comments */
+/** @var array $a @var string $body @var array $toc @var array $tags @var ?array $image @var array $related @var array $crumbs @var ?array $comments @var ?array $contributor */
+$sponsored = Sponsored::is($a);
+$voice = $contributor && Voices::enabled() ? $contributor : null;
 $canonical = Article::urlFor($a);
 $sideBanner = Banner::render('sidebar');
 $hasSide = $sideBanner !== '' || $toc;
@@ -12,16 +14,30 @@ $hasSide = $sideBanner !== '' || $toc;
 
 <article class="post">
   <header class="wrap post__head<?= $hasSide ? ' has-side' : '' ?>">
+    <?php if ($sponsored): ?>
+      <div class="sponsor-bar">
+        <span class="flag flag--sponsor"><?= e(Sponsored::label($a)) ?></span>
+        <?php $slogo = Media::find((int)$a['sponsor_logo_id']); ?>
+        <?php if ($a['sponsor_url'] !== ''): ?><a class="sponsor-bar__who" href="<?= e(Sponsored::goUrl((int)$a['id'], (string)$a['sponsor_url'])) ?>" rel="sponsored noopener" target="_blank"><?php else: ?><span class="sponsor-bar__who"><?php endif; ?>
+          <?php if ($slogo): ?><img src="<?= e(Media::url($slogo, 400)) ?>" alt="<?= e($a['sponsor_name']) ?>" class="sponsor-bar__logo"><?php else: ?><?= e($a['sponsor_name']) ?><?php endif; ?>
+        <?php if ($a['sponsor_url'] !== ''): ?></a><?php else: ?></span><?php endif; ?>
+      </div>
+    <?php elseif ($voice): ?>
+      <a class="flag flag--voice" href="<?= e(Voices::sectionUrl()) ?>"><?= e(Voices::badge()) ?></a>
+    <?php endif; ?>
     <?php if ($a['category_name']): ?><a class="fly" href="<?= e(url($a['cat'] . '/')) ?>"><?= e($a['category_name']) ?></a><?php endif; ?>
     <h1 class="post__title"><?= e($a['title']) ?></h1>
     <?php if (trim((string)$a['excerpt']) !== ''): ?><p class="post__standfirst"><?= e($a['excerpt']) ?></p><?php endif; ?>
     <p class="meta post__meta">
-      <?php if (!empty($a['author_name']) && (int)$a['show_as_author'] === 1): ?>
+      <?php if ($voice): ?>
+        <a href="<?= e(Voices::profileUrl($voice)) ?>" rel="author"><?= e(t('by_voice', ['name' => $voice['name']])) ?></a><?php if (Voices::role($voice) !== ''): ?>, <?= e(Voices::role($voice)) ?><?php endif; ?> <span aria-hidden="true">·</span>
+      <?php elseif (!empty($a['author_name']) && (int)$a['show_as_author'] === 1): ?>
         <a href="<?= e(url('author/' . $a['author_slug'])) ?>" rel="author"><?= e(t('by', ['name' => $a['author_name']])) ?></a> <span aria-hidden="true">·</span>
       <?php endif; ?>
       <?php if ($a['published_at']): ?><time datetime="<?= e(gmdate('c', strtotime($a['published_at'] . ' UTC'))) ?>"><?= e(local_date($a['published_at'])) ?></time><?php endif; ?>
       <?php if (Settings::get('show_reading_time', true)): ?><span aria-hidden="true">·</span> <?= e(t('min_read', ['n' => (int)$a['reading_minutes']])) ?><?php endif; ?>
     </p>
+    <?php if ($sponsored): ?><p class="disclosure"><?= e(Sponsored::disclosure($a)) ?></p><?php endif; ?>
   </header>
 
   <?php if ($image): ?>
@@ -39,6 +55,11 @@ $hasSide = $sideBanner !== '' || $toc;
         <details class="toc toc--inline"><summary><?= e(t('contents')) ?></summary><ol><?php foreach ($toc as $h): ?><li class="toc__l<?= $h['level'] ?>"><a href="#<?= e($h['id']) ?>"><?= e($h['text']) ?></a></li><?php endforeach; ?></ol></details>
       <?php endif; ?>
       <div class="prose"><?= $body ?></div>
+
+      <?php if ($voice): ?>
+        <?php if (Voices::disclaimer() !== ''): ?><p class="disclaimer"><?= e(Voices::disclaimer()) ?></p><?php endif; ?>
+        <?= View::render('partials/contributor_box', ['c' => $voice]) ?>
+      <?php endif; ?>
 
       <?php if ($tags): ?>
         <ul class="tags tags--post" aria-label="<?= e(t('tags')) ?>"><?php foreach ($tags as $tg): ?><li><a href="<?= e(url('tag/' . $tg['slug'])) ?>"><?= e($tg['name']) ?></a></li><?php endforeach; ?></ul>

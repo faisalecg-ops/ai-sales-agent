@@ -250,10 +250,10 @@
 
     // Link check and suggestions
     var panel = $('[data-linkpanel]');
-    var kindLabel = { library: ['Link library', 'ok'], article: ['This blog', 'ok'], source: ['Declared source', 'ok'], blog_page: ['Blog page — check', 'meh'], event_site: ['Event site, not in library', 'meh'], unknown: ['Not approved — check', 'bad'] };
+    var kindLabel = { library: ['Link library', 'ok'], article: ['This blog', 'ok'], source: ['Declared source', 'ok'], sponsor: ['Sponsor\'s website', 'ok'], blog_page: ['Blog page — check', 'meh'], event_site: ['Event site, not in library', 'meh'], unknown: ['Not approved — check', 'bad'] };
     var checkLinks = function () {
       sync();
-      var fd = new FormData(); fd.append('_csrf', A.csrf); fd.append('body', body.value); fd.append('category_id', ($('#f_category_id') || {}).value || '');
+      var fd = new FormData(); fd.append('_csrf', A.csrf); fd.append('body', body.value); fd.append('category_id', ($('#f_category_id') || {}).value || ''); fd.append('sponsor_name', ($('#f_sponsor_name') || {}).value || ''); fd.append('sponsor_url', ($('#f_sponsor_url') || {}).value || '');
       $('[data-linklist]', panel).innerHTML = '<p class="muted small">Checking…</p>';
       fetch(form.getAttribute('data-ajax'), { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (j) {
         var rv = j.review; lastReview = rv;

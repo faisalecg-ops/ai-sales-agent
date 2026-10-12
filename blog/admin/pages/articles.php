@@ -56,6 +56,8 @@ ob_start(); ?>
         <td><a href="<?= e(aurl('article', ['id' => $a['id']])) ?>"><strong><?= e($a['title'] ?: '(no title)') ?></strong></a>
           <?php if ($a['source'] === 'api'): ?> <span class="tag tag--api" title="Written by the Social Media Agent">Agent</span><?php endif; ?>
           <?php if ($a['is_featured']): ?> <span class="tag" title="Shown in Featured on the home page">Featured</span><?php endif; ?>
+          <?php if (!empty($a['contributor_id'])): ?> <span class="tag tag--voice" title="<?= e(Voices::name()) ?>"><?= e(Voices::badge()) ?></span><?php endif; ?>
+          <?php if (Sponsored::is($a)): ?> <span class="tag tag--sponsor" title="Paid content for <?= e($a['sponsor_name']) ?>"><?= e(Sponsored::label($a)) ?></span><?php endif; ?>
           <?php if ($a['status'] === 'published'): ?><br><a class="small muted" href="<?= e(Article::urlFor($a)) ?>" target="_blank" rel="noopener">View on blog ↗</a><?php endif; ?></td>
         <td><?= badge((string)$a['status']) ?><?php if ($a['status'] === 'scheduled'): ?><br><span class="small muted"><?= e(local_date($a['publish_at'], 'j M, H:i')) ?></span><?php endif; ?></td>
         <td class="hide-s"><?= e($a['category_name'] ?? '—') ?></td>

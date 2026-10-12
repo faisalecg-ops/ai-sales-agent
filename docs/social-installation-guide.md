@@ -14,12 +14,19 @@ folder `public_html/social` and its own database tables (all named `sm_…`).
 
 cPanel → **File Manager** → open `public_html`:
 
-1. **Upload** `social-agent-1.1.0.zip`, then right-click it → **Extract**.
+1. **Upload** `social-agent-1.2.0.zip`, then right-click it → **Extract**.
    This creates the folder `public_html/social`.
 2. Delete the zip file afterwards.
 
 Updating later works the same way. Extract the new zip over the old folder;
 pictures in `social/uploads` and all data are kept.
+
+**Updating from 1.1.0 to 1.2.0 (12 Oct 2026):** first update every event blog
+to **1.3.0**, then extract `social-agent-1.2.0.zip` over `public_html/social` and
+open `/social` once. New: posts about Industry Voices articles credit the writer
+and show whom to tag; posts about sponsored articles always start with
+"Sponsored · [sponsor]" and cannot be approved without it; Event settings →
+Monthly report holds the addresses that receive the monthly report.
 
 **Updating from 1.0.0 to 1.1.0 (12 Oct 2026):**
 1. First update the event blog to **1.2.3** (`event-blog-1.2.3.zip` over

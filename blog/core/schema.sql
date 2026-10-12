@@ -102,6 +102,15 @@ CREATE TABLE IF NOT EXISTS {p}articles (
   sources          TEXT NULL,                   -- JSON list of source addresses the writer used
   review_note      TEXT NULL,
   approved_by      INT UNSIGNED NULL,
+  contributor_id   INT UNSIGNED NULL,           -- Industry Voices: the outside expert who wrote it
+  sponsor_name     VARCHAR(160) NOT NULL DEFAULT '',  -- not empty = a sponsored article
+  sponsor_label    ENUM('sponsored','partner') NOT NULL DEFAULT 'sponsored',
+  sponsor_url      VARCHAR(500) NOT NULL DEFAULT '',
+  sponsor_logo_id  INT UNSIGNED NULL,
+  sponsor_starts   DATETIME NULL,               -- paid period (UTC)
+  sponsor_ends     DATETIME NULL,
+  sponsor_after    ENUM('keep','archive') NOT NULL DEFAULT 'keep',
+  sponsor_email    VARCHAR(190) NOT NULL DEFAULT '',
   created_by       INT UNSIGNED NULL,
   updated_by       INT UNSIGNED NULL,
   created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -113,6 +122,8 @@ CREATE TABLE IF NOT EXISTS {p}articles (
   KEY idx_art_author (author_id),
   KEY idx_art_featured (is_featured, featured_order),
   KEY idx_art_ext (api_key_id, external_ref),
+  KEY idx_art_contrib (contributor_id, status),
+  KEY idx_art_sponsor (sponsor_name),
   FULLTEXT KEY ft_art (title, excerpt, body)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -316,5 +327,59 @@ CREATE TABLE IF NOT EXISTS {p}article_views (
   article_id INT UNSIGNED NOT NULL,
   day        DATE NOT NULL,
   views      INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (article_id, day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Industry Voices: outside experts who write for the blog (no login needed).
+CREATE TABLE IF NOT EXISTS {p}contributors (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name          VARCHAR(120) NOT NULL,
+  slug          VARCHAR(120) NOT NULL,
+  designation   VARCHAR(160) NOT NULL DEFAULT '',
+  company       VARCHAR(160) NOT NULL DEFAULT '',
+  company_url   VARCHAR(500) NOT NULL DEFAULT '',
+  company_logo_id INT UNSIGNED NULL,
+  photo_id      INT UNSIGNED NULL,
+  linkedin_url  VARCHAR(500) NOT NULL DEFAULT '',
+  bio           TEXT NULL,
+  email         VARCHAR(190) NOT NULL DEFAULT '',   -- private, never shown
+  phone         VARCHAR(40) NOT NULL DEFAULT '',    -- private, never shown
+  user_id       INT UNSIGNED NULL,                  -- when they also have an author account
+  active        TINYINT(1) NOT NULL DEFAULT 1,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_contrib_slug (slug),
+  KEY idx_contrib_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- "Write for us": what outside experts send, waiting for an editor.
+CREATE TABLE IF NOT EXISTS {p}submissions (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name          VARCHAR(120) NOT NULL,
+  email         VARCHAR(190) NOT NULL,
+  phone         VARCHAR(40) NOT NULL DEFAULT '',
+  designation   VARCHAR(160) NOT NULL DEFAULT '',
+  company       VARCHAR(160) NOT NULL DEFAULT '',
+  company_url   VARCHAR(500) NOT NULL DEFAULT '',
+  linkedin_url  VARCHAR(500) NOT NULL DEFAULT '',
+  kind          ENUM('outline','draft') NOT NULL DEFAULT 'outline',
+  title         VARCHAR(255) NOT NULL,
+  body          MEDIUMTEXT NOT NULL,
+  status        ENUM('new','accepted','declined','spam') NOT NULL DEFAULT 'new',
+  article_id    INT UNSIGNED NULL,
+  contributor_id INT UNSIGNED NULL,
+  handled_by    INT UNSIGNED NULL,
+  consent_text  VARCHAR(500) NOT NULL DEFAULT '',
+  ip_hash       CHAR(64) NOT NULL DEFAULT '',
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_sub_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Clicks from sponsored articles to outside websites, per day (for the sponsor's report).
+CREATE TABLE IF NOT EXISTS {p}article_clicks (
+  article_id INT UNSIGNED NOT NULL,
+  day        DATE NOT NULL,
+  clicks     INT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (article_id, day)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

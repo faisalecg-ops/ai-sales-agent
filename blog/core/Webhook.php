@@ -47,7 +47,25 @@ final class Webhook
             'tags'         => array_column(Article::tags((int)$a['id']), 'name'),
             'excerpt'      => Article::summary($a, 300),
             'image_url'    => $img ? Media::url($img, 1200) : null,
+            'voice'        => self::voicePayload($a),
+            'sponsor'      => Sponsored::is($a) ? [
+                'name'  => (string)$a['sponsor_name'],
+                'label' => Sponsored::label($a),
+                'kind'  => (string)($a['sponsor_label'] ?? 'sponsored'),
+                'url'   => (string)($a['sponsor_url'] ?? ''),
+            ] : null,
         ];
+    }
+
+    /** Industry Voices: who wrote it, so social posts can tag them. */
+    private static function voicePayload(array $a): ?array
+    {
+        $c = Voices::find((int)($a['contributor_id'] ?? 0));
+        if (!$c) {
+            return null;
+        }
+        return ['name' => (string)$c['name'], 'designation' => (string)$c['designation'], 'company' => (string)$c['company'],
+            'linkedin_url' => (string)$c['linkedin_url'], 'company_url' => (string)$c['company_url'], 'profile_url' => Voices::profileUrl($c)];
     }
 
     public static function sign(string $body): string

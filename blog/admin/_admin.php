@@ -179,7 +179,9 @@ function admin_menu(): array
 {
     $pending = 0;
     $comments = 0;
+    $proposals = 0;
     try {
+        $proposals = (int)db()->value("SELECT COUNT(*) FROM {p}submissions WHERE status = 'new'");
         $pending = (int)db()->value("SELECT COUNT(*) FROM {p}articles WHERE status = 'pending'");
         $comments = (int)db()->value("SELECT COUNT(*) FROM {p}comments WHERE status = 'pending'");
     } catch (Throwable) {
@@ -192,10 +194,15 @@ function admin_menu(): array
             ['categories', 'Categories & tags', 'content', 0],
             ['comments', 'Comments', 'comments', $comments],
         ],
+        'Industry Voices' => [
+            ['contributors', 'Contributors', 'content', 0],
+            ['submissions', 'Write for us', 'content', $proposals],
+        ],
         'Home page & sponsors' => [
             ['home', 'Home page builder', 'content', 0],
             ['slides', 'Slider', 'content', 0],
             ['banners', 'Sponsor banners', 'sponsors', 0],
+            ['sponsored', 'Sponsored articles', 'sponsors', 0],
         ],
         'Event & links' => [
             ['event', 'Event & courtesy', 'settings', 0],
