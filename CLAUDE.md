@@ -60,7 +60,8 @@ Read this before any task on this project.
     - Tests: `php public_html/social/tests/acceptance.php` (218; set `SM_SHOTS=1` for screenshots). They use real
       sign-ins, a real test blog (database `smblog`) and stand-in AI and
       research. An independent review was done and every finding was fixed.
-  - **Stage 3 BUILT 12 Oct 2026 (/social 1.3.0), not yet installed.** Owner's
+  - **Stage 3 BUILT and INSTALLED live 12 Oct 2026 (/social 1.3.0, owner); the owner has
+    done the Platform apps step and started the Meta/LinkedIn/X applications.** Owner's
     choices (12 Oct): X both ways (by hand free, or automatic pay-per-use with a
     monthly cap `x_auto_limit`); exhibitor list all three ways (website page read
     by AI with on-page checks + weekly refresh, typed, CSV/XLSX upload), admin
@@ -80,6 +81,15 @@ Read this before any task on this project.
     needs the Community Management API (business review, no fixed time);
     Meta needs app review (screencast, test account) and usually Business
     verification.
+  - **Next: Stage 4 (results)** — review with the owner at the start of the next
+    session: tracking post → visit → chat → lead, engagement figures, the monthly
+    management report (to `report_emails`), Pharma Asia as the second event.
+    Found 12 Oct: chats store only `conversations.page_url` (location.href where
+    the chat began), so reliable "chats/leads from social" needs a small sales
+    agent widget change (remember the first visit's utm_* for the session) —
+    needs the owner's explicit approval. Engagement counts need no new platform
+    permissions (FB pages_read_engagement, IG instagram_basic, LinkedIn
+    r_organization_social); X charges per read (about $0.005).
   - **Choices made with the approval:**
     - Stage 3 waits for free direct approval from Meta and LinkedIn; no paid
       posting service.
