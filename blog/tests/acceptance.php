@@ -503,6 +503,29 @@ $up = http('POST', '/api/v1/media', $auth($drafts) + ['json' => ['filename' => '
 $uj = json_decode($up['body'], true);
 T::ok($up['status'] === 201 && ($uj['media']['id'] ?? 0) > 0, 'The agent can upload an image');
 T::eq(http('POST', '/api/v1/media', $auth($drafts) + ['json' => ['data' => base64_encode('not an image')]])['status'], 422, 'Non-images are refused');
+// Read-only views for the Social Media Agent: articles written in the blog itself.
+$machCat = (int)db()->value("SELECT id FROM {p}categories WHERE slug = 'machinery'");
+$own = publish_article('Written in the blog by the team', $machCat, ['body' => '<p>' . str_repeat('Cranes on site this season. ', 12) . '</p>']);
+$waitId = Article::save(null, ['title' => 'Waiting for the editor', 'body' => '<p>' . str_repeat('Draft text. ', 20) . '</p>', 'category_id' => $machCat], []);
+Article::transition($waitId, 'pending');
+$pub = json_decode(http('GET', '/api/v1/published?since=' . rawurlencode(gmdate('c', time() - 3600)), $auth($drafts))['body'], true);
+$mine = array_values(array_filter($pub['articles'] ?? [], static fn($x) => $x['id'] === (int)$own['id']));
+T::ok($mine && str_contains($mine[0]['body'], 'Cranes on site') && $mine[0]['from_api'] === false && str_contains((string)$mine[0]['url'], '/machinery/'), 'The agent can read published articles written in the blog, with their text and address');
+T::ok(!in_array($waitId, array_column($pub['articles'] ?? [], 'id'), true), '…but never unpublished ones');
+T::eq(http('GET', '/api/v1/published/' . $waitId, $auth($drafts))['status'], 404, 'An unpublished article cannot be read one by one either');
+$one = json_decode(http('GET', '/api/v1/published/' . (int)$own['id'], $auth($drafts))['body'], true);
+T::eq($one['article']['title'] ?? '', 'Written in the blog by the team', 'One published article can be read by its number');
+$pend = json_decode(http('GET', '/api/v1/pending', $auth($drafts))['body'], true);
+$w = array_values(array_filter($pend['articles'] ?? [], static fn($x) => $x['id'] === $waitId));
+T::ok($w && str_contains($w[0]['admin_url'], '/admin/?p=article&id=' . $waitId) && !isset($w[0]['body']), 'The list of articles waiting for approval gives titles and a link to approve them in the blog admin, not their text');
+T::eq(http('POST', '/api/v1/pending', $auth($publish))['status'], 404, 'These views are read-only');
+$own2 = publish_article('Same second as the last one', $machCat, ['body' => '<p>' . str_repeat('Excavators on site. ', 12) . '</p>']);
+$at = (string)db()->value('SELECT published_at FROM {p}articles WHERE id = ?', [(int)$own['id']]);
+db()->update('articles', ['published_at' => $at], 'id = ?', [(int)$own2['id']]);
+$after = json_decode(http('GET', '/api/v1/published?since=' . rawurlencode(gmdate('c', strtotime($at . ' UTC'))) . '&after_id=' . (int)$own['id'], $auth($drafts))['body'], true);
+T::eq(array_column($after['articles'] ?? [], 'id'), [(int)$own2['id']], 'An article published in the same second as the last one read is still listed (by its position), and the one already read is not');
+$newest = json_decode(http('GET', '/api/v1/published?newest=1', $auth($drafts))['body'], true);
+T::ok(count($newest['articles'] ?? []) === 1 && $newest['articles'][0]['id'] === (int)$own2['id'], 'The newest published article can be asked for on its own');
 for ($i = 0, $limited = false; $i < 65 && !$limited; $i++) {
     $limited = http('GET', '/api/v1/ping', $auth($drafts))['status'] === 429;
 }

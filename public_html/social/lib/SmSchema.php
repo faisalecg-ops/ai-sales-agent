@@ -11,7 +11,7 @@ defined('SM_BOOT') || exit;
  */
 final class SmSchema
 {
-    public const VERSION = 1;
+    public const VERSION = 2;
 
     public static function ensure(): void
     {
@@ -31,7 +31,28 @@ final class SmSchema
         foreach (self::statements() as $sql) {
             db()->raw()->query($sql);
         }
+        // Version 2 (12 Oct 2026): articles written in the blog itself, and the blog's waiting list.
+        self::addColumn('sm_articles', 'origin', "ENUM('agent','blog') NOT NULL DEFAULT 'agent' AFTER agent_id");
+        self::addColumn('sm_events', 'blog_seen_at', 'DATETIME NULL');
+        self::addColumn('sm_events', 'blog_seen_id', 'INT UNSIGNED NOT NULL DEFAULT 0');
+        self::addColumn('sm_events', 'blog_pending', 'MEDIUMTEXT NULL');
+        self::addColumn('sm_events', 'blog_pending_at', 'DATETIME NULL');
+        if (!db()->value("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'sm_articles' AND index_name = 'uq_sm_blog_article'")) {
+            try {
+                db()->raw()->query('ALTER TABLE sm_articles ADD UNIQUE KEY uq_sm_blog_article (agent_id, blog_article_id)');
+            } catch (Throwable) {
+                // Old duplicate rows: importFromBlog() also checks before adding, so carry on without the key.
+            }
+        }
         db()->exec("INSERT INTO sm_meta (k, v) VALUES ('schema_version', ?) ON DUPLICATE KEY UPDATE v = VALUES(v)", [(string)self::VERSION]);
+    }
+
+    private static function addColumn(string $table, string $column, string $definition): void
+    {
+        $have = (int)db()->value('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?', [$table, $column]);
+        if ($have === 0) {
+            db()->raw()->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+        }
     }
 
     /** @return list<string> */

@@ -18,13 +18,14 @@ if (!$a) {
     sm_not_permitted('That article is not part of ' . $agent['name'] . '.');
 }
 $back = static fn() => sm_redirect('article.php', ['id' => $id]);
+$fromBlog = ($a['origin'] ?? 'agent') === 'blog';
 $version = static fn(array $r): string => sm_version((string)$r['title'], (string)$r['excerpt'], (string)$r['body'], (string)$r['category']);
 // Any change after approval (or after a failed send) needs a fresh approval.
 $unapprove = ['status' => 'draft', 'approved_by' => null, 'approved_at' => null, 'approved_hash' => null];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $do = sm_in('do');
-    $editable = in_array($a['status'], ['draft', 'in_review', 'failed', 'approved'], true) && $a['body'] !== null;
+    $editable = !$fromBlog && in_array($a['status'], ['draft', 'in_review', 'failed', 'approved'], true) && $a['body'] !== null;
 
     if ($do === 'save' && $editable) {
         $new = [
@@ -158,11 +159,13 @@ $checks = json_decode((string)$a['checks'], true) ?: [];
 $cover = $a['cover_media_id'] ? SmMedia::find($aid, (int)$a['cover_media_id']) : null;
 $posts = db()->all("SELECT * FROM sm_posts WHERE article_id = ? AND status <> 'cancelled' ORDER BY FIELD(platform,'linkedin','facebook','instagram','x')", [$id]);
 $writer = $a['written_by'] ? db()->one('SELECT username, full_name FROM admin_users WHERE id = ?', [(int)$a['written_by']]) : null;
-$editable = in_array($a['status'], ['draft', 'in_review', 'failed', 'approved'], true) && $a['body'] !== null && sm_can('editor');
+$editable = !$fromBlog && in_array($a['status'], ['draft', 'in_review', 'failed', 'approved'], true) && $a['body'] !== null && sm_can('editor');
 
 sm_layout_start('Article');
-echo '<div class="card"><p style="margin-top:0">' . sm_pill((string)$a['status']) . ' <span class="muted small">' . e(SmEvent::PILLARS[$a['pillar']][0] ?? '') . ' · asked for by '
-   . e($writer ? (string)($writer['full_name'] ?: $writer['username']) : '—') . ' · ' . e(sm_time($a['created_at'])) . '</span></p>'
+echo '<div class="card"><p style="margin-top:0">' . sm_pill((string)$a['status'])
+   . ($fromBlog ? ' <span class="pill pill-info">Written in the blog</span> <span class="muted small">by the blog\'s own team · picked up ' . e(sm_time($a['created_at'])) . '</span></p>'
+               : ' <span class="muted small">' . e(SmEvent::PILLARS[$a['pillar']][0] ?? '') . ' · asked for by '
+   . e($writer ? (string)($writer['full_name'] ?: $writer['username']) : '—') . ' · ' . e(sm_time($a['created_at'])) . '</span></p>')
    . '<h2 style="margin:.2rem 0">' . e((string)$a['title']) . '</h2>';
 if ($a['status'] === 'writing') {
     echo '<p class="lede">The agent is researching and writing this article. It usually takes one to three minutes. <a href="' . e(sm_url('article.php', ['id' => $id])) . '">Refresh</a> to see it.</p>';
@@ -206,7 +209,10 @@ if (sm_can('approver') && $a['status'] === 'in_review') {
 }
 echo '</div>';
 
-if ($a['body'] !== null) {
+if ($a['body'] !== null && $fromBlog) {
+    echo '<div class="card"><p class="muted">This article was written and approved in the blog itself, so it is shown here read-only. Its social media versions below go through the normal approval.</p>'
+       . '<p class="lede">' . e((string)$a['excerpt']) . '</p><div class="sm-prose">' . $a['body'] . '</div></div>';
+} elseif ($a['body'] !== null) {
     echo '<div class="grid sm-article">';
     // Checks first: they are what the approver needs to see.
     echo '<div class="card"><h2>Checks</h2><ul class="plain">';

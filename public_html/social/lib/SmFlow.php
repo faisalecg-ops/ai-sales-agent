@@ -405,6 +405,147 @@ final class SmFlow
         return $n;
     }
 
+    // -----------------------------------------------------------------
+    // Articles written directly in the blog
+    // -----------------------------------------------------------------
+
+    /**
+     * A published blog article that /social did not write: add it to Blog
+     * articles (marked "Written in the blog") and write a draft post for each
+     * platform. Nothing is posted until a person approves it.
+     * @return int the /social article id, or 0 when it was skipped
+     */
+    public static function importFromBlog(array $agent, array $remote): int
+    {
+        $aid = (int)$agent['id'];
+        $blogId = (int)($remote['id'] ?? 0);
+        if ($blogId <= 0 || ($remote['status'] ?? 'published') !== 'published' || empty($remote['url'])) {
+            return 0;
+        }
+        if (preg_match('/^sm-' . $aid . '-\d+$/', (string)($remote['external_ref'] ?? '')) === 1) {
+            return 0;   // one of ours: applyRemote() handles it
+        }
+        if (!SmEvent::settings($aid)['blog_written_posts']) {
+            return 0;
+        }
+        if (db()->value('SELECT id FROM sm_articles WHERE agent_id = ? AND blog_article_id = ? LIMIT 1', [$aid, $blogId])) {
+            return 0;   // already known
+        }
+        $done = db()->exec('INSERT IGNORE INTO sm_articles (agent_id, origin, pillar, title, excerpt, body, category, tags, status, blog_article_id, blog_status, blog_url, published_at)
+                            VALUES (?, \'blog\', \'insight\', ?, ?, ?, ?, ?, \'published\', ?, \'published\', ?, ?)', [
+            $aid, mb_substr((string)($remote['title'] ?? 'Untitled'), 0, 255), mb_substr(strip_tags((string)($remote['excerpt'] ?? '')), 0, 400),
+            SmHtml::clean((string)($remote['body'] ?? '')), mb_substr((string)($remote['category'] ?? ''), 0, 120),
+            mb_substr(implode(', ', array_map('strval', (array)($remote['tags'] ?? []))), 0, 500), $blogId, mb_substr((string)$remote['url'], 0, 500),
+            gmdate('Y-m-d H:i:s', strtotime((string)($remote['published_at'] ?? 'now')) ?: time()),
+        ]);
+        if ($done !== 1) {
+            return 0;   // already known
+        }
+        $id = (int)db()->value('SELECT id FROM sm_articles WHERE agent_id = ? AND blog_article_id = ?', [$aid, $blogId]);
+        SmActivity::log($aid, 'blog_article_found', (string)($remote['title'] ?? ''), ['id' => 0, 'full_name' => 'Blog', 'username' => 'blog']);
+        // Its cover picture goes into the library and behind the post images.
+        $blog = SmBlog::forAgent($aid);
+        if ($blog && !empty($remote['image_url']) && preg_match('#^https?://#i', (string)$remote['image_url'])) {
+            $bytes = $blog->download((string)$remote['image_url']);
+            if ($bytes !== null) {
+                $st = SmMedia::store($aid, $bytes, 'From the blog: ' . mb_substr((string)$remote['title'], 0, 150), 'upload', null);
+                if (!empty($st['ok'])) {
+                    db()->update('sm_articles', ['cover_media_id' => (int)$st['id']], 'id = ?', [$id]);
+                }
+            }
+        }
+        if (SmAi::blocked($aid, 'text') === null) {
+            self::makeVersions($agent, $id, null);
+        }
+        return $id;
+    }
+
+    /**
+     * Every few minutes (cron): pick up articles published in the blog since
+     * the last look, and refresh the list of articles waiting in the blog.
+     */
+    public static function syncBlog(array $agent): array
+    {
+        $aid = (int)$agent['id'];
+        $blog = SmBlog::forAgent($aid);
+        if (!$blog) {
+            return ['found' => 0, 'pending' => null];
+        }
+        $row = SmEvent::row($aid);
+        $found = 0;
+        $seen = (string)($row['blog_seen_at'] ?? '');
+        if ($seen === '') {
+            self::startBlogCursor($aid, $blog);
+        } else {
+            $r = $blog->published(gmdate('c', strtotime($seen . ' UTC')), (int)($row['blog_seen_id'] ?? 0), 20);
+            if ($r['ok']) {
+                $last = [$seen, (int)($row['blog_seen_id'] ?? 0)];
+                foreach ((array)($r['data']['articles'] ?? []) as $art) {
+                    if (self::importFromBlog($agent, (array)$art) > 0) {
+                        $found++;
+                    }
+                    $t = strtotime((string)($art['published_at'] ?? ''));
+                    if ($t) {
+                        $last = [gmdate('Y-m-d H:i:s', $t), (int)($art['id'] ?? 0)];   // the list is oldest first
+                    }
+                }
+                db()->update('sm_events', ['blog_seen_at' => $last[0], 'blog_seen_id' => $last[1]], 'agent_id = ?', [$aid]);
+            }
+        }
+        return ['found' => $found, 'pending' => self::refreshPending($aid, $blog)];
+    }
+
+    /**
+     * First look at a newly connected blog: remember its newest published article,
+     * so everything it already had is left alone and only later articles are picked up.
+     * Uses the blog's own clock. Nothing is remembered if the blog cannot be reached.
+     */
+    public static function startBlogCursor(int $aid, ?SmBlog $blog = null): bool
+    {
+        $blog ??= SmBlog::forAgent($aid);
+        $r = $blog ? $blog->newestPublished() : ['ok' => false];
+        if (!$r['ok']) {
+            return false;
+        }
+        $top = ((array)($r['data']['articles'] ?? []))[0] ?? null;
+        $t = $top ? strtotime((string)($top['published_at'] ?? '')) : false;
+        db()->update('sm_events', [
+            'blog_seen_at' => $t ? gmdate('Y-m-d H:i:s', $t) : '1970-01-01 00:00:01',
+            'blog_seen_id' => $t ? (int)$top['id'] : 0,
+        ], 'agent_id = ?', [$aid]);
+        return true;
+    }
+
+    /** The blog's own waiting list, kept for the dashboard. */
+    public static function refreshPending(int $aid, ?SmBlog $blog = null): ?int
+    {
+        $blog ??= SmBlog::forAgent($aid);
+        if (!$blog) {
+            return null;
+        }
+        $r = $blog->pending();
+        if (!$r['ok']) {
+            return null;
+        }
+        $list = array_values(array_map(static fn($a) => [
+            'id' => (int)($a['id'] ?? 0), 'title' => (string)($a['title'] ?? ''), 'author' => (string)($a['author'] ?? ''),
+            'from_api' => (bool)($a['from_api'] ?? false), 'updated_at' => (string)($a['updated_at'] ?? ''), 'admin_url' => (string)($a['admin_url'] ?? ''),
+        ], (array)($r['data']['articles'] ?? [])));
+        db()->update('sm_events', ['blog_pending' => json_encode($list, JSON_UNESCAPED_UNICODE), 'blog_pending_at' => gmdate('Y-m-d H:i:s')], 'agent_id = ?', [$aid]);
+        return count($list);
+    }
+
+    /** Run syncBlog() for every exhibition with a connected blog. */
+    public static function syncAllBlogs(): int
+    {
+        $n = 0;
+        foreach (db()->all("SELECT g.* FROM sm_events e JOIN agents g ON g.id = e.agent_id AND g.status <> 'deleted'
+                            WHERE e.blog_url IS NOT NULL AND e.blog_api_key IS NOT NULL") as $agent) {
+            $n += self::syncBlog($agent)['found'];
+        }
+        return $n;
+    }
+
     /** Approved articles that never reached the blog (a timeout, a blog that was down). */
     public static function retryApproved(): int
     {

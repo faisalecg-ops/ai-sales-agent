@@ -19,6 +19,8 @@ $cron = '/usr/local/bin/php ' . SM_ROOT . '/cron.php';
   <li><strong>Each post is checked and approved</strong>, with the <em>Include the blog post link</em> box ticked or not. The link carries a tag, so visits from each post are counted.</li>
   <li><strong>Post now or Schedule.</strong> Until Meta and LinkedIn approve the direct connection, posting is by hand: at the time, the post shows <em>Copy the text</em>, <em>Download the picture</em> and <em>Open the page</em>. Post it, then press <em>Done — I posted it</em>. Scheduled posts remind the people listed in Event settings by email.</li>
 </ol>
+<h2>Articles written directly in the blog</h2>
+<p>When the blog's own team writes and publishes an article in the blog admin, it appears here under Blog articles, marked <em>Written in the blog</em>, and its social media versions are written as drafts for the normal approval. Articles still waiting for an editor in the blog are listed on the dashboard, with a link to approve them there. (This can be switched off in Event settings.)</p>
 <h2>Posts without an article</h2>
 <p>Event reminders, show-day photos and announcements: <a href="<?= e(sm_url('posts.php', ['new' => 1])) ?>">New post without an article</a>. Write the facts in a sentence or two; the agent writes one version per platform.</p>
 <h2>Pictures</h2>

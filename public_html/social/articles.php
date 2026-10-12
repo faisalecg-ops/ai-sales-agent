@@ -31,7 +31,7 @@ if (!$rows) {
     foreach ($rows as $r) {
         echo '<tr><td><a href="' . e(sm_url('article.php', ['id' => $r['id']])) . '"><strong>' . e((string)$r['title']) . '</strong></a>'
            . ($r['blog_url'] ? '<br><a class="small" href="' . e((string)$r['blog_url']) . '" target="_blank" rel="noopener">On the blog ↗</a>' : '') . '</td>'
-           . '<td class="small">' . e(SmEvent::PILLARS[$r['pillar']][0] ?? $r['pillar']) . '</td><td>' . sm_pill((string)$r['status']) . '</td>'
+           . '<td class="small">' . e(($r['origin'] ?? '') === 'blog' ? 'Written in the blog' : (SmEvent::PILLARS[$r['pillar']][0] ?? $r['pillar'])) . '</td><td>' . sm_pill((string)$r['status']) . '</td>'
            . '<td class="small">' . e(sm_time($r['updated_at'])) . '</td></tr>';
     }
     echo '</tbody></table></div>';

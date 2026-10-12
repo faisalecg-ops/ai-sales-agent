@@ -250,7 +250,7 @@ T::equals(['facebook', 'instagram', 'linkedin'], $on, 'LinkedIn, Facebook and In
 $boss->post('/social/settings.php', ['articles_per_week' => 2, 'mix' => ['insight' => 30, 'opportunity' => 30, 'news' => 20, 'spotlight' => 10, 'visitor' => 10, 'curated' => 0, 'voices' => 0],
     'sectors' => 'construction, cement, steel', 'audience' => 'Builders and investors', 'voice' => 'Neutral and helpful', 'avoid' => 'world-class',
     'writing_model' => 'main', 'text_limit' => 50, 'image_limit' => 3, 'ai_images' => 1, 'reminder_emails' => 'team@buildasia.net, not-an-email',
-    'blog_link_default' => 1, 'brand_primary' => '#142A5C', 'brand_secondary' => '#1F4FBF', 'brand_accent' => '#F7B10B'], '/social/settings.php');
+    'blog_link_default' => 1, 'blog_written_posts' => 1, 'brand_primary' => '#142A5C', 'brand_secondary' => '#1F4FBF', 'brand_accent' => '#F7B10B'], '/social/settings.php');
 $s = SmEvent::settings($idA);
 T::ok($s['sectors'] === 'construction, cement, steel' && $s['reminder_emails'] === 'team@buildasia.net' && $s['image_limit'] === 3 && $s['allow_prices'] === false, 'Event settings are saved per exhibition; bad email addresses are dropped');
 
@@ -466,6 +466,60 @@ $soc->post('/social/plan.php', ['do' => 'suggest', 'count' => 4, 'pillar' => '']
 T::equals($before, count(SmTestBus::entries('ai-calls')), 'When the monthly writing limit is reached, the AI is not called');
 $soc->get('/social/plan.php');
 T::ok(str_contains($soc->body, 'limit of'), '…and the editor is told why in plain words');
+
+// =====================================================================
+T::group('Articles written directly in the blog');
+$cli = static fn(string ...$args) => json_decode((string)shell_exec('php ' . escapeshellarg(__DIR__ . '/blog-cli.php') . ' ' . implode(' ', array_map('escapeshellarg', $args))), true);
+$sx = SmEvent::settings($idA);
+$sx['text_limit'] = 500;
+SmEvent::saveSettings($idA, $sx);
+db()->update('sm_events', ['blog_seen_at' => null, 'blog_seen_id' => 0], 'agent_id = ?', [$idA]);   // as if never connected
+$old = $cli('own', 'An older article already on the blog', '60');
+$boss->post('/social/connections.php', ['do' => 'blog', 'blog_url' => $blogInfo['base'], 'blog_api_key' => $blogInfo['publish']], '/social/connections.php');
+SmFlow::syncAllBlogs();
+T::equals(0, (int)db()->value("SELECT COUNT(*) FROM sm_articles WHERE origin = 'blog'"), 'Articles the blog already had before it was connected are not posted again');
+$own = $cli('own', 'New tile plants open in Lahore');
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'New tile plants in Lahore.', 'hashtags' => ''], 'facebook' => ['text' => 'Tiles!', 'hashtags' => ''], 'instagram' => ['text' => 'Tiles.', 'hashtags' => '']], 'image_headline' => 'New tile plants']);
+$note = json_encode(['event' => 'article.published', 'site' => $blogInfo['base'], 'sent_at' => gmdate('c'), 'article' => ['id' => $own['id'], 'external_ref' => null, 'status' => 'published', 'url' => $own['url'], 'title' => 'New tile plants open in Lahore']]);
+T::equals(200, $hook($note, $blogInfo['secret']), 'The blog\'s notice about an article its own team published is accepted');
+$ownRow = db()->one("SELECT * FROM sm_articles WHERE origin = 'blog' AND blog_article_id = ?", [$own['id']]);
+T::ok($ownRow && $ownRow['status'] === 'published' && str_contains((string)$ownRow['body'], 'tile plants') && $ownRow['blog_url'] === $own['url'], 'It appears under Blog articles, marked as written in the blog, with its text and address');
+$ownPosts = db()->all('SELECT * FROM sm_posts WHERE article_id = ?', [(int)$ownRow['id']]);
+T::ok(count($ownPosts) === 3 && !array_diff(array_column($ownPosts, 'status'), ['draft']), 'Its social posts are written as drafts, one per platform — nothing is posted by itself');
+$cover = SmMedia::find($idA, (int)$ownRow['cover_media_id']);
+T::ok($cover && str_starts_with((string)$cover['label'], 'From the blog:'), 'Its cover picture is copied into the library and used behind the post images');
+$hook($note, $blogInfo['secret']);
+SmFlow::syncAllBlogs();
+T::equals(1, (int)db()->value('SELECT COUNT(*) FROM sm_articles WHERE blog_article_id = ? AND agent_id = ?', [$own['id'], $idA]), 'Hearing about it again (notice or check) never adds it twice');
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM sm_posts WHERE article_id = ?', [(int)$ownRow['id']]), '…nor writes its posts twice');
+$own2 = $cli('own', 'Steel prices steady this month');
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'Steel steady.', 'hashtags' => ''], 'facebook' => ['text' => 'Steel.', 'hashtags' => ''], 'instagram' => ['text' => 'Steel.', 'hashtags' => '']], 'image_headline' => 'Steel steady']);
+T::equals(1, SmFlow::syncAllBlogs(), 'Without a notice, the scheduled task finds a newly published blog article itself');
+$sameA = $cli('own', 'Same second A');
+$sameB = $cli('own', 'Same second B');
+$ss = $cli('same-second', (string)$sameA['id'], (string)$sameB['id']);
+db()->update('sm_events', ['blog_seen_at' => $ss['at'], 'blog_seen_id' => $sameA['id']], 'agent_id = ?', [$idA]);
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'B.', 'hashtags' => ''], 'facebook' => ['text' => 'B.', 'hashtags' => ''], 'instagram' => ['text' => 'B.', 'hashtags' => '']], 'image_headline' => 'B']);
+T::equals(1, SmFlow::syncAllBlogs(), 'An article published in the same second as the last one checked is not missed');
+T::equals(1, (int)db()->value('SELECT COUNT(*) FROM sm_articles WHERE agent_id = ? AND blog_article_id = ?', [$idA, $sameB['id']]), '…it is the right one');
+$soc->get('/social/article.php?id=' . $ownRow['id']);
+T::ok(str_contains($soc->body, 'Written in the blog') && !str_contains($soc->body, 'Approve and publish') && !str_contains($soc->body, 'name="body"'), 'Its page is read-only: it was already approved in the blog');
+$soc->get('/social/articles.php');
+T::ok(str_contains($soc->body, 'Written in the blog'), 'The article list shows where it was written');
+$wait = $cli('pending', 'Cement demand in Sindh');
+db()->update('sm_events', ['blog_pending_at' => null], 'agent_id = ?', [$idA]);
+$soc->get('/social/');
+T::ok(str_contains($soc->body, 'Waiting for approval in the blog') && str_contains($soc->body, 'Cement demand in Sindh') && str_contains(html_entity_decode($soc->body), '/admin/?p=article&id=' . $wait['id']), 'The dashboard lists articles waiting in the blog, with a link to approve them there');
+T::ok(str_contains($soc->body, 'Sana Author'), '…and who wrote them');
+$sx = SmEvent::settings($idA);
+$sx['blog_written_posts'] = false;
+SmEvent::saveSettings($idA, $sx);
+$own3 = $cli('own', 'Switched off example');
+SmFlow::syncAllBlogs();
+T::equals(0, (int)db()->value('SELECT COUNT(*) FROM sm_articles WHERE blog_article_id = ? AND agent_id = ?', [$own3['id'], $idA]), 'With the setting off, articles written in the blog are left alone');
+$sx['blog_written_posts'] = true;
+SmEvent::saveSettings($idA, $sx);
+$boss->post('/social/connections.php', ['do' => 'blog', 'blog_url' => $blogInfo['base'], 'blog_api_key' => $blogInfo['drafts']], '/social/connections.php');
 
 // =====================================================================
 T::group('Safety rules from the independent review');

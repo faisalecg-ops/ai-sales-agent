@@ -94,6 +94,30 @@ to *awaiting approval* (or is published, under the same rules as above).
 sent it back — see `review_note`), `pending`, `scheduled`, `published`,
 `archived`.
 
+### `GET /published?since=…&after_id=…&limit=…` (from version 1.2.3, read-only)
+Every **published** article — including those written by people in the blog
+admin — after a position, oldest first (`limit` up to 50, default 20).
+`since` is an ISO date-time; with `after_id`, articles published in exactly
+that second are listed only if their id is higher, so nothing is skipped.
+`GET /published?newest=1` returns just the most recent one (used to start
+reading "from now" by the blog's own clock).
+```json
+{"ok":true,"articles":[{ …same fields as the notice's article…, "body":"<p>…</p>",
+ "from_api":false,"author":"Sana Author"}]}
+```
+`from_api` is `true` when the article was sent through this API.
+
+### `GET /published/{id}` (from 1.2.3)
+One published article, with its text. `404` if it is not published.
+
+### `GET /pending` (from 1.2.3)
+Articles waiting for an editor in the blog admin — titles only, never the text:
+```json
+{"ok":true,"articles":[{"id":51,"title":"…","author":"Sana Author","from_api":false,
+ "updated_at":"2026-10-12T08:00:00+00:00","admin_url":"https://buildasia.net/blog/admin/?p=article&id=51"}]}
+```
+These three views only read; approving still happens in the blog admin.
+
 ## "Article published" notice (webhook)
 
 Set the agent's address in the blog admin → **API keys → "Article published"

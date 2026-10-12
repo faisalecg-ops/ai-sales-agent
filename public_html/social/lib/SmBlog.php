@@ -108,6 +108,37 @@ final class SmBlog
         return $this->call('GET', 'articles/' . $id);
     }
 
+    /** Published articles (also those written in the blog itself), oldest first, after $sinceIso. */
+    /** Published articles after a position (time, then article number), oldest first. */
+    public function published(string $sinceIso, int $afterId = 0, int $limit = 20): array
+    {
+        return $this->call('GET', 'published?since=' . rawurlencode($sinceIso) . '&after_id=' . $afterId . '&limit=' . $limit);
+    }
+
+    /** The blog's most recent published article (an empty list when there is none). */
+    public function newestPublished(): array
+    {
+        return $this->call('GET', 'published?newest=1');
+    }
+
+    public function publishedOne(int $id): array
+    {
+        return $this->call('GET', 'published/' . $id);
+    }
+
+    /** Articles waiting for approval in the blog's own admin. */
+    public function pending(): array
+    {
+        return $this->call('GET', 'pending');
+    }
+
+    /** Download a picture from the blog (its cover image). */
+    public function download(string $url): ?string
+    {
+        $r = Http::request('GET', $url, ['Accept' => 'image/*'], null, 30, defined('SM_TESTING'));
+        return ($r['status'] ?? 0) === 200 && ($r['body'] ?? '') !== '' ? (string)$r['body'] : null;
+    }
+
     public function findByRef(string $ref): array
     {
         return $this->call('GET', 'articles?external_ref=' . rawurlencode($ref));

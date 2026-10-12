@@ -13,7 +13,7 @@ $labels = [
     'article_sent_to_blog' => 'Article sent to the blog', 'article_discarded' => 'Article discarded', 'posts_written' => 'Posts written', 'post_edited' => 'Post edited',
     'post_submitted' => 'Post sent for approval', 'post_approved' => 'Post approved', 'post_sent_back' => 'Post sent back', 'post_now' => 'Post now', 'post_scheduled' => 'Post scheduled',
     'post_unscheduled' => 'Post taken off the schedule', 'post_done' => 'Posted', 'post_cancelled' => 'Post cancelled', 'reminder' => 'Reminder', 'media_uploaded' => 'Files uploaded',
-    'settings_saved' => 'Settings saved', 'blog_connection_saved' => 'Blog connection saved', 'platforms_saved' => 'Platforms saved', 'blog_notice' => 'Notice from the blog',
+    'settings_saved' => 'Settings saved', 'blog_connection_saved' => 'Blog connection saved', 'platforms_saved' => 'Platforms saved', 'blog_notice' => 'Notice from the blog', 'blog_article_found' => 'Article written in the blog picked up',
 ];
 sm_layout_start('Activity log');
 if (!$rows) {

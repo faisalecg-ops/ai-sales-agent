@@ -30,6 +30,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'ai_images'         => isset($_POST['ai_images']),
         'reminder_emails'   => implode(', ', $emails),
         'blog_link_default' => isset($_POST['blog_link_default']),
+        'blog_written_posts'=> isset($_POST['blog_written_posts']),
         'brand_primary'     => $hex(sm_in('brand_primary'), '#142A5C'),
         'brand_secondary'   => $hex(sm_in('brand_secondary'), '#1F4FBF'),
         'brand_accent'      => $hex(sm_in('brand_accent'), '#F7B10B'),
@@ -60,6 +61,7 @@ echo '<section class="set-card" id="voice"><div class="set-head"><h2>Subject and
    . f_area('avoid', 'Words or claims never to use (comma separated)', (string)$s['avoid'], ['rows' => 2])
    . f_check('allow_prices', 'Articles and posts may mention stand and sponsorship prices', (bool)$s['allow_prices'], 'Off: the agent never mentions prices, and the checks flag any that appear.')
    . f_check('blog_link_default', 'Tick "Include the blog post link" by default on new posts', (bool)$s['blog_link_default'])
+   . f_check('blog_written_posts', 'Also write social posts for articles written directly in the blog', (bool)$s['blog_written_posts'], 'When the blog\'s own team publishes an article, its posts are written here as drafts for approval.')
    . '</div></section>';
 
 echo '<section class="set-card" id="ai"><div class="set-head"><h2>AI</h2><p>Which model writes, and the monthly limits that stop overspending. Keys are those saved in the sales agent\'s Settings.</p></div><div class="set-body">'

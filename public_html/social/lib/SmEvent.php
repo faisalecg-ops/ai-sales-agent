@@ -43,6 +43,7 @@ final class SmEvent
             'ai_images'         => true,
             'reminder_emails'   => '',
             'blog_link_default' => true,
+            'blog_written_posts'=> true,
             'lead_minutes'      => 30,
             'brand_primary'     => '#142A5C',
             'brand_secondary'   => '#1F4FBF',

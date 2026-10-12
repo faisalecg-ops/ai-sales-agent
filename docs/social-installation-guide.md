@@ -14,12 +14,26 @@ folder `public_html/social` and its own database tables (all named `sm_…`).
 
 cPanel → **File Manager** → open `public_html`:
 
-1. **Upload** `social-agent-1.0.0.zip`, then right-click it → **Extract**.
+1. **Upload** `social-agent-1.1.0.zip`, then right-click it → **Extract**.
    This creates the folder `public_html/social`.
 2. Delete the zip file afterwards.
 
 Updating later works the same way. Extract the new zip over the old folder;
 pictures in `social/uploads` and all data are kept.
+
+**Updating from 1.0.0 to 1.1.0 (12 Oct 2026):**
+1. First update the event blog to **1.2.3** (`event-blog-1.2.3.zip` over
+   `public_html/blog`) — 1.1.0 reads the blog's new "published" and "waiting"
+   lists.
+2. Then extract `social-agent-1.1.0.zip` over `public_html/social`.
+3. Open `/social` once; its tables update by themselves.
+
+New in 1.1.0: articles the blog's own team publishes in the blog admin are
+picked up (by the blog's notice, or the 5-minute check) and their social posts
+are written as drafts for approval; articles waiting for an editor in the blog
+are listed on the dashboard with an "Approve in the blog" link. Articles the
+blog already had are never posted again. Switch it off in Event settings →
+"Also write social posts for articles written directly in the blog".
 
 ## Step 2 — Open it once (1 minute)
 

@@ -17,6 +17,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             sm_redirect('connections.php');
         }
         SmBlog::saveConnection($aid, $url, sm_in('blog_api_key') ?: null, sm_in('hook_secret') ?: null);
+        // From now on: articles the blog already had are not posted again.
+        if (empty(SmEvent::row($aid)['blog_seen_at'])) {
+            SmFlow::startBlogCursor($aid);
+        }
         $blog = SmBlog::forAgent($aid);
         $msg = 'Saved.';
         $kind = 'ok';

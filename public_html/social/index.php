@@ -98,6 +98,28 @@ if (!$today) {
 }
 echo '</div></div>';
 
+// Articles waiting for approval in the blog's own admin (refreshed every few minutes).
+if (!empty($row['blog_url']) && !empty($row['blog_api_key'])) {
+    if (empty($row['blog_pending_at']) || strtotime($row['blog_pending_at'] . ' UTC') < time() - 300) {
+        SmFlow::refreshPending($aid);
+        $row = SmEvent::row($aid);
+    }
+    $waitingInBlog = json_decode((string)($row['blog_pending'] ?? '[]'), true) ?: [];
+    echo '<div class="card"><h2>Waiting for approval in the blog</h2>';
+    if (!$waitingInBlog) {
+        echo '<p class="muted">Nothing is waiting in the blog\'s own admin.</p>';
+    } else {
+        echo '<p class="muted">Articles written in the blog, waiting for an editor there. Once published, they appear under Blog articles and their social posts are written.</p><ul class="plain">';
+        foreach ($waitingInBlog as $w) {
+            echo '<li><strong>' . e((string)$w['title']) . '</strong>'
+               . ($w['author'] !== '' ? ' <span class="muted small">by ' . e((string)$w['author']) . '</span>' : '')
+               . ' <a class="btn btn-small btn-quiet" href="' . e((string)$w['admin_url']) . '" target="_blank" rel="noopener">Approve in the blog ↗</a></li>';
+        }
+        echo '</ul>';
+    }
+    echo '<p class="small muted">Checked ' . e(sm_time($row['blog_pending_at'])) . '.</p></div>';
+}
+
 echo '<div class="grid grid-2"><div class="card"><h2>' . e($facts['name']) . '</h2><p>' . e($facts['dates'] !== '' ? $facts['dates'] : 'Dates not set') . ($facts['venue'] !== '' ? ' · ' . e($facts['venue']) : '') . '</p>'
    . '<p><strong>Now:</strong> ' . e($phase['label']) . '. Leading content: ' . e(implode(', ', array_map(static fn($k) => SmEvent::PILLARS[$k][0], $phase['lead']))) . '.</p></div>';
 echo '<div class="card"><h2>AI use this month</h2>';

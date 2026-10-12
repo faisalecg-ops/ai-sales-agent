@@ -33,8 +33,28 @@ if ($sent !== false && $sent < time() - 4 * 86400) {
 }
 $remote = is_array($data) ? (array)($data['article'] ?? []) : [];
 $ref = (string)($remote['external_ref'] ?? '');
-if (($data['event'] ?? '') !== 'article.published' || !preg_match('/^sm-' . $aid . '-(\d+)$/', $ref, $m)) {
-    $out(200, ['ok' => true, 'note' => 'not ours']);   // published by a person in the blog: nothing to do
+if (($data['event'] ?? '') !== 'article.published') {
+    $out(200, ['ok' => true, 'note' => 'ignored']);
+}
+if (!preg_match('/^sm-' . $aid . '-(\d+)$/', $ref, $m)) {
+    // Written in the blog itself: read it (with its text) and write draft posts for it.
+    $agent = db()->one('SELECT * FROM agents WHERE id = ?', [$aid]);
+    $blog = SmBlog::forAgent($aid);
+    $blogId = (int)($remote['id'] ?? 0);
+    if (!$agent || !$blog || $blogId <= 0) {
+        $out(200, ['ok' => true, 'note' => 'skipped']);
+    }
+    $finish = function_exists('fastcgi_finish_request') ? 'fastcgi_finish_request' : (function_exists('litespeed_finish_request') ? 'litespeed_finish_request' : null);
+    if ($finish !== null) {
+        http_response_code(200);
+        echo json_encode(['ok' => true]);
+        $finish();
+    }
+    $full = $blog->publishedOne($blogId);
+    if ($full['ok']) {
+        SmFlow::importFromBlog($agent, (array)($full['data']['article'] ?? []));
+    }
+    $out(200, ['ok' => true]);
 }
 $agent = db()->one('SELECT * FROM agents WHERE id = ?', [$aid]);
 $article = db()->one('SELECT id, title FROM sm_articles WHERE id = ? AND agent_id = ?', [(int)$m[1], $aid]);

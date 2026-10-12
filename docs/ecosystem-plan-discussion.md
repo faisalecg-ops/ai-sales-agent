@@ -387,6 +387,12 @@ sectors relevant to each event.
 
 **More owner notes (10 Oct, evening).**
 
+**Added 12 Oct 2026 (owner: "yes add the both") — /social 1.1.0, blog 1.2.3:**
+articles written and published directly in the blog admin are picked up by
+/social and get draft social posts for the normal approval; the /social
+dashboard lists articles waiting for approval in the blog, with a link to
+approve them there. Approval of the article itself stays in the blog.
+
 **1a. Event Blog: an editorial section where industry leaders publish.**
 The working name is "Industry Voices", renamable in the admin.
 

@@ -95,6 +95,9 @@ final class Api
             $method === 'POST' && $r === 'media' => self::uploadMedia(),
             $method === 'POST' && $r === 'articles' => self::createArticle(),
             $method === 'GET' && $r === 'articles' => self::listArticles(),
+            $method === 'GET' && $r === 'published' => self::listPublished(),
+            $method === 'GET' && (bool)preg_match('#^published/(\d+)$#', $r, $m) => self::onePublished((int)$m[1]),
+            $method === 'GET' && $r === 'pending' => self::listPending(),
             $method === 'GET' && (bool)preg_match('#^articles/(\d+)$#', $r, $m) => json_out(['ok' => true, 'article' => self::articleOut(self::ownArticle((int)$m[1]))]),
             in_array($method, ['PATCH', 'PUT', 'POST'], true) && (bool)preg_match('#^articles/(\d+)$#', $r, $m) => self::updateArticle((int)$m[1]),
             default => self::fail('not_found', 'Unknown address or method.', 404),
@@ -288,6 +291,61 @@ final class Api
         }
         $rows = db()->all("SELECT * FROM {p}articles WHERE $where ORDER BY id DESC LIMIT 50", $params);
         json_out(['ok' => true, 'articles' => array_map([self::class, 'articleOut'], $rows)]);
+    }
+
+    /**
+     * Read-only: every published article (also those written in the blog
+     * itself), with its text, so the Social Media Agent can write posts for
+     * it. ?since=<ISO time> returns those published after it, oldest first.
+     */
+    private static function listPublished(): never
+    {
+        if (!empty($_GET['newest'])) {
+            // The most recent one only: lets a reader start "from now" by the blog's own clock.
+            $rows = db()->all("SELECT * FROM {p}articles WHERE status = 'published' AND published_at IS NOT NULL ORDER BY published_at DESC, id DESC LIMIT 1");
+            json_out(['ok' => true, 'articles' => array_map([self::class, 'publishedOut'], $rows)]);
+        }
+        $since = gmdate('Y-m-d H:i:s', strtotime((string)($_GET['since'] ?? '')) ?: 0);
+        $limit = max(1, min(50, (int)($_GET['limit'] ?? 20)));
+        if (isset($_GET['after_id'])) {
+            // Exact position (time, then number), so articles published in the same second are never skipped.
+            $rows = db()->all("SELECT * FROM {p}articles WHERE status = 'published' AND (published_at > ? OR (published_at = ? AND id > ?)) ORDER BY published_at ASC, id ASC LIMIT $limit",
+                [$since, $since, max(0, (int)$_GET['after_id'])]);
+        } else {
+            $rows = db()->all("SELECT * FROM {p}articles WHERE status = 'published' AND published_at > ? ORDER BY published_at ASC, id ASC LIMIT $limit", [$since]);
+        }
+        json_out(['ok' => true, 'articles' => array_map([self::class, 'publishedOut'], $rows)]);
+    }
+
+    private static function onePublished(int $id): never
+    {
+        $a = db()->one("SELECT * FROM {p}articles WHERE id = ? AND status = 'published'", [$id]);
+        if (!$a) {
+            self::fail('not_found', 'No published article with that number.', 404);
+        }
+        json_out(['ok' => true, 'article' => self::publishedOut($a)]);
+    }
+
+    /** Read-only: articles waiting for approval in this blog's admin, with a link to approve them there. */
+    private static function listPending(): never
+    {
+        $rows = db()->all("SELECT a.*, u.name AS author_name FROM {p}articles a LEFT JOIN {p}users u ON u.id = a.author_id
+                           WHERE a.status = 'pending' ORDER BY a.updated_at ASC LIMIT 50");
+        json_out(['ok' => true, 'articles' => array_map(static fn($a) => [
+            'id' => (int)$a['id'], 'title' => (string)$a['title'], 'author' => (string)($a['author_name'] ?? ''),
+            'from_api' => $a['api_key_id'] !== null, 'updated_at' => gmdate('c', strtotime($a['updated_at'] . ' UTC')),
+            'admin_url' => url('admin/') . '?' . http_build_query(['p' => 'article', 'id' => (int)$a['id']]),
+        ], $rows)]);
+    }
+
+    private static function publishedOut(array $a): array
+    {
+        $out = Webhook::articlePayload($a);
+        $out['body'] = (string)$a['body'];
+        $out['from_api'] = $a['api_key_id'] !== null;
+        $author = $a['author_id'] ? db()->value('SELECT name FROM {p}users WHERE id = ?', [(int)$a['author_id']]) : null;
+        $out['author'] = $author !== null ? (string)$author : null;
+        return $out;
     }
 
     public static function articleOut(array $a): array
