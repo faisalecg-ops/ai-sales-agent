@@ -162,6 +162,9 @@ final class Router
             if (!empty($data['a']) && is_int($data['a'])) {
                 Article::countView($data['a']);
             }
+            if (!empty($data['u']) && is_array($data['u'])) {
+                Article::countSource(!empty($data['a']) && is_int($data['a']) ? $data['a'] : 0, $data['u']);
+            }
             if (!empty($data['b']) && is_array($data['b'])) {
                 Banner::countViews(array_filter($data['b'], 'is_int'));
             }

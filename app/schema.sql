@@ -331,6 +331,14 @@ CREATE TABLE IF NOT EXISTS conversations (
   user_agent       VARCHAR(400) NULL,
   origin_domain    VARCHAR(160) NULL,
   page_url         VARCHAR(500) NULL,
+  -- The link that brought the visitor (utm_* tags kept by the widget for 30 days)
+  utm_source       VARCHAR(100) NULL,
+  utm_medium       VARCHAR(100) NULL,
+  utm_campaign     VARCHAR(150) NULL,
+  utm_content      VARCHAR(150) NULL,
+  landing_url      VARCHAR(500) NULL,
+  referrer_host    VARCHAR(190) NULL,
+  arrived_at       DATETIME NULL,
   readiness_signals TEXT NULL,                -- JSON object of computed signals
   requested_sqm     DECIMAL(10,2) NULL,       -- size the visitor asked about, for rate-based quoting
   lead_state       MEDIUMTEXT NULL,           -- JSON of structured lead fields carried in the conversation
@@ -350,6 +358,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   KEY idx_conv_lead (lead_id),
   KEY idx_conv_visitor (agent_id, visitor_id),
   KEY idx_conv_started (created_at),
+  KEY idx_conv_campaign (agent_id, utm_campaign, utm_content),
   CONSTRAINT fk_conv_agent FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE,
   CONSTRAINT fk_conv_lead FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -46,12 +46,18 @@ $cron = '/usr/local/bin/php ' . SM_ROOT . '/cron.php';
 <tr><td><strong>Viewer</strong></td><td>Reads everything; changes nothing.</td></tr>
 </tbody></table>
 <p class="muted small">People and their exhibitions are managed in the AI Sales Agent → Set-up → Users.</p>
-<h2>Monthly report</h2>
-<p>The monthly management report goes to the email addresses in <a href="<?= e(sm_url('settings.php')) ?>#report">Event settings → Monthly report</a> (usually the exhibition's admins). The report itself arrives with Stage 4.</p>
+<h2>Results and the monthly report</h2>
+<p><a href="<?= e(sm_url('results.php')) ?>">Results</a> shows, for each month, what social media brought: posts published, likes, comments, shares and views, <strong>visits to the blog</strong>, <strong>chats with the assistant</strong> and the <strong>leads</strong> they became (exhibiting or sponsoring, visiting, not yet known), the best posts, the most-read articles, exhibitor kits, AI use and the cost of X.</p>
+<ul>
+<li><strong>Likes and comments</strong> of automatic posts are read by themselves 1, 7 and 28 days after posting. X charges about $0.005 for each read, so there is a monthly limit (Blog and platforms → X). For posts made by hand, open the post about a week later and type in the numbers.</li>
+<li><strong>Visits</strong> come from the blog: every link in a post carries a tag naming the post.</li>
+<li><strong>Chats and leads</strong> come from the AI Sales Agent, which remembers which post brought each visitor.</li>
+</ul>
+<p>Early each month the report for the month before is emailed to the addresses in <a href="<?= e(sm_url('settings.php')) ?>#report">Event settings → Monthly report</a>, from the exhibition's own email address. An admin can also email it any time, and anyone can print it or save it as a PDF.</p>
 <h2 id="cron">The scheduled task (for whoever looks after the server)</h2>
 <p>In cPanel → Cron Jobs, run this every 5 minutes (<code>*/5 * * * *</code>):</p>
 <p><code class="sm-code"><?= e($cron) ?></code></p>
-<p>It turns scheduled posts into "due" posts and sends the reminders, checks articles the blog is still holding, and finishes articles left half-written.</p>
+<p>It turns scheduled posts into "due" posts and sends the reminders, checks articles the blog is still holding, finishes articles left half-written, reads the figures of posts and blog visits, and emails the monthly report.</p>
 </div>
 <?php
 sm_layout_end();

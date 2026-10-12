@@ -519,6 +519,24 @@ $pend = json_decode(http('GET', '/api/v1/pending', $auth($drafts))['body'], true
 $w = array_values(array_filter($pend['articles'] ?? [], static fn($x) => $x['id'] === $waitId));
 T::ok($w && str_contains($w[0]['admin_url'], '/admin/?p=article&id=' . $waitId) && !isset($w[0]['body']), 'The list of articles waiting for approval gives titles and a link to approve them in the blog admin, not their text');
 T::eq(http('POST', '/api/v1/pending', $auth($publish))['status'], 404, 'These views are read-only');
+// Stage 4: visits that came through a tagged link (social posts, exhibitor kits), and GET /stats.
+$aid = (int)$own['id'];
+http('POST', '/go/beacon', ['raw' => json_encode(['a' => $aid, 'u' => ['s' => 'facebook', 'm' => 'social', 'c' => 'buildasia', 't' => 'post-42']])]);
+http('POST', '/go/beacon', ['raw' => json_encode(['a' => $aid, 'u' => ['s' => 'Facebook', 'm' => 'social', 'c' => 'buildasia', 't' => 'post-42']])]);
+http('POST', '/go/beacon', ['raw' => json_encode(['a' => $aid, 'u' => ['s' => 'x', 'm' => 'social', 'c' => 'buildasia', 't' => 'post-43']]), 'ua' => 'Googlebot/2.1']);
+http('POST', '/go/beacon', ['raw' => json_encode(['u' => ['s' => '<b>bad</b>', 'm' => 'social']])]);
+http('POST', '/go/beacon', ['raw' => json_encode(['u' => ['s' => 'linkedin', 'm' => 'exhibitor-share', 'c' => 'pharmaasia', 't' => 'exhibitor-3']])]);
+T::eq((int)db()->value("SELECT SUM(visits) FROM {p}visit_sources WHERE article_id = ? AND source = 'facebook' AND content = 'post-42'", [$aid]), 2, 'Visits from a social post are counted per article and post (robots are not)');
+T::eq((int)db()->value("SELECT COUNT(*) FROM {p}visit_sources WHERE source LIKE '%<%'"), 0, 'Odd tags are never stored');
+$st = json_decode(http('GET', '/api/v1/stats?from=' . gmdate('Y-m-d', time() - 86400) . '&to=' . gmdate('Y-m-d') . '&campaign=buildasia', $auth($drafts))['body'], true);
+$fb = array_values(array_filter($st['sources'] ?? [], static fn($x) => $x['content'] === 'post-42'));
+T::ok(($st['ok'] ?? false) && $fb && $fb[0]['visits'] === 2 && $fb[0]['article_id'] === $aid, 'GET /stats gives the tagged visits for one campaign');
+T::ok(!in_array('pharmaasia', array_column($st['sources'] ?? [], 'campaign'), true), '…and only for that campaign');
+T::ok(in_array($aid, array_column($st['articles'] ?? [], 'id'), true) && $st['views_total'] >= 2, '…with article views for the period');
+T::eq(http('POST', '/api/v1/stats', $auth($drafts))['status'], 404, 'The figures are read-only');
+T::eq(http('GET', '/api/v1/stats')['status'], 401, 'And need an API key');
+$js = (string)file_get_contents(dirname(__DIR__) . '/assets/js/blog.js');
+T::ok(str_contains($js, "localStorage.setItem('aisa_arrival'") && str_contains($js, 'data.u = arrival'), 'Article pages keep the tags for the sales agent chat and send them with the view');
 $own2 = publish_article('Same second as the last one', $machCat, ['body' => '<p>' . str_repeat('Excavators on site. ', 12) . '</p>']);
 $at = (string)db()->value('SELECT published_at FROM {p}articles WHERE id = ?', [(int)$own['id']]);
 db()->update('articles', ['published_at' => $at], 'id = ?', [(int)$own2['id']]);

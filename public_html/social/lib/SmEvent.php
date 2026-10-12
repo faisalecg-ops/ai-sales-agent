@@ -46,6 +46,7 @@ final class SmEvent
             'blog_written_posts'=> true,
             'report_emails'     => '',   // who receives the monthly management report (Stage 4)
             'x_auto_limit'      => 50,   // automatic X posts a month (X charges per post)
+            'x_read_limit'      => 300,  // X post figures read a month (X charges per read, about $0.005)
             'exhibitor_source'  => 'typed',   // website | typed | upload
             'exhibitor_page_url'=> '',
             'radar_enabled'     => true,

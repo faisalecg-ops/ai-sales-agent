@@ -17,6 +17,7 @@ $labels = [
     'post_auto' => 'Posted automatically', 'post_failed' => 'Automatic posting failed', 'post_by_hand' => 'Switched to posting by hand', 'connected' => 'Page connected',
     'disconnected' => 'Page disconnected', 'connection_failed' => 'Connecting failed', 'apps_saved' => 'Platform apps saved', 'radar' => 'Industry radar', 'curated_shared' => 'Curated news written',
     'exhibitors_found' => 'Exhibitors found on the website', 'exhibitors_uploaded' => 'Exhibitor list uploaded', 'kits_made' => 'Exhibitor kits written', 'kits_approved' => 'Exhibitor kits approved', 'kits_sent' => 'Exhibitor kits emailed',
+    'report_sent' => 'Monthly report emailed', 'stats_checked' => 'Post figures checked', 'stats_typed' => 'Post figures typed in',
 ];
 sm_layout_start('Activity log');
 if (!$rows) {

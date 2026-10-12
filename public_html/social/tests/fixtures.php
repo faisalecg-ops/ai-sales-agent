@@ -124,8 +124,8 @@ function sm_install_fakes(): void
         return (string)ob_get_clean();
     };
     SmNet::$hook = static fn(string $m, string $u, array $h, ?string $b): array => sm_fake_net($m, $u, $h, $b);
-    Mailer::$testTransport = static function ($profile, $to, $subject, $body) {
-        SmTestBus::log('mail', ['from' => $profile['from_email'] ?? '', 'to' => $to, 'subject' => $subject, 'body' => $body]);
+    Mailer::$testTransport = static function ($profile, $to, $subject, $body, $html = null) {
+        SmTestBus::log('mail', ['from' => $profile['from_email'] ?? '', 'to' => $to, 'subject' => $subject, 'body' => $body, 'html' => $html]);
         return ['ok' => true];
     };
 }
@@ -166,6 +166,13 @@ function sm_fake_net(string $method, string $url, array $headers, ?string $body)
                 ['id' => '333', 'name' => 'Another page', 'access_token' => 'pagetok333'],
             ]]);
         }
+        // Stage 4: figures of a post.
+        if (str_contains($url, '/111_555?') && str_contains($url, 'fields=shares')) {
+            return $j(['id' => '111_555', 'shares' => ['count' => 4], 'reactions' => ['summary' => ['total_count' => 31]], 'comments' => ['summary' => ['total_count' => 6]]]);
+        }
+        if (str_contains($url, '/igmedia1?') && str_contains($url, 'like_count')) {
+            return $j(['id' => 'igmedia1', 'like_count' => 52, 'comments_count' => 3]);
+        }
         if (preg_match('#/111/(photos|feed|videos)$#', $url)) {
             return $j(['id' => '555', 'post_id' => '111_555']);
         }
@@ -198,6 +205,10 @@ function sm_fake_net(string $method, string $url, array $headers, ?string $body)
     if (str_contains($url, 'linkedin.com/dms-uploads/')) {
         return ['status' => 201, 'body' => '', 'headers' => []];
     }
+    if (str_contains($url, 'api.linkedin.com/rest/organizationalEntityShareStatistics')) {
+        return $j(['elements' => [['organizationalEntity' => 'urn:li:organization:777', 'share' => 'urn:li:share:999',
+            'totalShareStatistics' => ['impressionCount' => 1200, 'clickCount' => 40, 'likeCount' => 25, 'commentCount' => 2, 'shareCount' => 3, 'engagement' => 0.05]]]]);
+    }
     if (str_contains($url, 'api.linkedin.com/rest/posts')) {
         return ['status' => 201, 'body' => '', 'headers' => ['x-restli-id' => 'urn:li:share:999']];
     }
@@ -210,6 +221,11 @@ function sm_fake_net(string $method, string $url, array $headers, ?string $body)
     }
     if (str_contains($url, 'api.x.com/2/media/upload')) {
         return $j(['data' => ['id' => 'm1', 'media_key' => '3_m1']]);
+    }
+    if ($method === 'GET' && str_contains($url, 'api.x.com/2/tweets?')) {
+        parse_str((string)parse_url($url, PHP_URL_QUERY), $q);
+        return $j(['data' => array_map(static fn($id) => ['id' => $id, 'text' => 'x', 'public_metrics' => ['retweet_count' => 2, 'reply_count' => 1, 'like_count' => 9, 'quote_count' => 1, 'impression_count' => 800]],
+            explode(',', (string)($q['ids'] ?? '')))]);
     }
     if (str_contains($url, 'api.x.com/2/tweets')) {
         return $j(['data' => ['id' => 't1', 'text' => 'ok']], 201);

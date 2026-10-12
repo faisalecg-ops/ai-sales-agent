@@ -723,6 +723,27 @@ final class Migrations
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
                 ],
             ],
+
+            // Where a chat's visitor came from (approved by the owner, 12
+            // October 2026): the utm_* tags of the link that brought them,
+            // so the Social Media Agent can count chats and leads per post.
+            // See docs/handover/2026-10-12-social-attribution.md.
+            [
+                'key'   => '2026_10_conversation_arrival',
+                'label' => 'Remember which link (social post, exhibitor kit, email) brought each chat visitor',
+                'check' => static fn(): bool => self::columnExists('conversations', 'utm_source'),
+                'sql'   => [
+                    "ALTER TABLE conversations
+                        ADD COLUMN utm_source VARCHAR(100) NULL,
+                        ADD COLUMN utm_medium VARCHAR(100) NULL,
+                        ADD COLUMN utm_campaign VARCHAR(150) NULL,
+                        ADD COLUMN utm_content VARCHAR(150) NULL,
+                        ADD COLUMN landing_url VARCHAR(500) NULL,
+                        ADD COLUMN referrer_host VARCHAR(190) NULL,
+                        ADD COLUMN arrived_at DATETIME NULL,
+                        ADD KEY idx_conv_campaign (agent_id, utm_campaign, utm_content)",
+                ],
+            ],
         ];
     }
 

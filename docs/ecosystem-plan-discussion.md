@@ -542,6 +542,24 @@ The plan was approved by the owner (Kaleem) on 10 Oct 2026, with these choices:
 
 **Install guide:** `docs/social-installation-guide.md`.
 
+## 6f. Stages 2–4 built (12 October 2026)
+
+- Stage 2 (Industry Voices, sponsored articles) and Stage 3 (automatic
+  posting, exhibitor kits, radar, curated news) are installed live.
+- **Stage 4 (results)** is built: per-post likes/comments/shares/views (read
+  automatically 1, 7 and 28 days after posting; typed in for posts made by
+  hand), visits to the blog from each post (blog 1.4.0), chats and leads from
+  each post (a small sales agent upgrade the owner approved: the chat widget
+  remembers which post brought the visitor — handover in
+  `docs/handover/2026-10-12-social-attribution.md`), and the monthly management
+  report on /social → Results, emailed early each month to Event settings →
+  Monthly report. The owner approved paying for X figure reads (monthly limit,
+  default 300 ≈ $1.50).
+- **Future plan — Pharma Asia** (owner, 12 Oct 2026): not now. Its website is
+  not ready and the event is close. When the renovated pharmaasia.com.pk
+  exists: install the blog there, connect it in /social, fill Pharma Asia's
+  Event settings and platforms, and give its staff access.
+
 ## 6b. Still open
 
 - (Social agent, later) Same logins as the sales agent or separate? → answered

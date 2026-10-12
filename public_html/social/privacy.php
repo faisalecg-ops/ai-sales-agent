@@ -31,11 +31,12 @@ h1{font-size:1.8rem;margin:0 0 4px}h2{font-size:1.2rem;margin-top:2rem}p,li{colo
   <li>When an organiser connects a page, the platform gives us a permission (an access token) to publish on that page, together with the page's name and number. The token is stored encrypted on our own server.</li>
   <li>The names of the pages the organiser manages, so the organiser can choose the event's page. Pages that are not chosen are not kept.</li>
   <li>The identifiers and addresses of the posts we publish, so the team can open them.</li>
+  <li>The total numbers of likes, comments, shares, views and clicks on the posts we published (counts only, never who liked or commented), for the organiser's monthly report.</li>
 </ul>
 <p>We do not read or keep anyone's messages, friends, followers or personal profile, and we never see or store a password.</p>
 
 <h2>How it is used</h2>
-<p>Only to publish posts that a member of the organiser's team has approved, at the time they chose, on the page they connected — and to show them that the post went out. Nothing is sold, shared with advertisers or used for any other purpose.</p>
+<p>Only to publish posts that a member of the organiser's team has approved, at the time they chose, on the page they connected — and to show them that the post went out and how many people reacted to it. Nothing is sold, shared with advertisers or used for any other purpose.</p>
 
 <h2>Who can see it</h2>
 <p>Only the organiser's signed-in staff for that exhibition. Tokens are never shown on screen.</p>

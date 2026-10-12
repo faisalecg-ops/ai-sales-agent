@@ -18,6 +18,7 @@ $started = ConversationStore::start($agent, [
     'visitor_id' => $input['visitor_id'] ?? null,
     'origin'     => $ctx['origin'],
     'page_url'   => $input['page_url'] ?? null,
+    'arrival'    => $input['arrival'] ?? null,   // the link that brought the visitor (12 Oct 2026)
 ]);
 
 $conversation = $started['conversation'];

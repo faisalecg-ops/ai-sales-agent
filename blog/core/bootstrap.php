@@ -13,7 +13,7 @@ if (defined('BLOG_BOOTSTRAPPED')) {
     return;
 }
 define('BLOG_BOOTSTRAPPED', true);
-define('BLOG_VERSION', '1.3.0');
+define('BLOG_VERSION', '1.4.0');
 define('BLOG_ROOT', dirname(__DIR__));
 define('BLOG_CORE', BLOG_ROOT . '/core');
 define('BLOG_CONFIG_FILE', BLOG_ROOT . '/config/config.php');

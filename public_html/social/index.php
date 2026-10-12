@@ -126,6 +126,15 @@ if (!empty($row['blog_url']) && !empty($row['blog_api_key'])) {
     echo '<p class="small muted">Checked ' . e(sm_time($row['blog_pending_at'])) . '.</p></div>';
 }
 
+// Stage 4: what social media brought this month so far.
+$so = SmStats::month($agent, gmdate('Y-m'));
+echo '<div class="card"><h2>This month so far</h2><div class="sm-figures">'
+   . '<div><span>Posts published</span><strong>' . number_format($so['totals']['posts']) . '</strong></div>'
+   . '<div><span>Visits from social media</span><strong>' . number_format($so['visits_social']) . '</strong></div>'
+   . '<div><span>Chats from social media</span><strong>' . (SmStats::chatsReady() ? number_format($so['chats_social']) : '—') . '</strong></div>'
+   . '<div><span>Leads</span><strong>' . (SmStats::chatsReady() ? number_format($so['leads']) : '—') . '</strong></div></div>'
+   . '<p class="small" style="margin-bottom:0"><a href="' . e(sm_url('results.php')) . '">See the full results and the monthly report →</a></p></div>';
+
 echo '<div class="grid grid-2"><div class="card"><h2>' . e($facts['name']) . '</h2><p>' . e($facts['dates'] !== '' ? $facts['dates'] : 'Dates not set') . ($facts['venue'] !== '' ? ' · ' . e($facts['venue']) : '') . '</p>'
    . '<p><strong>Now:</strong> ' . e($phase['label']) . '. Leading content: ' . e(implode(', ', array_map(static fn($k) => SmEvent::PILLARS[$k][0], $phase['lead']))) . '.</p></div>';
 echo '<div class="card"><h2>AI use this month</h2>';

@@ -7,7 +7,11 @@ pages = [('dashboard','/social/'),('plan','/social/plan.php'),('articles','/soci
          ('posts','/social/posts.php'),('post-ig','/social/post.php?id='+ig),('post-fb-due','/social/post.php?id='+fb),('calendar','/social/calendar.php?month='+month),
          ('media','/social/media.php'),('settings','/social/settings.php'),('connections','/social/connections.php'),('activity','/social/activity.php'),('guide','/social/guide.php'),
          ('newpost','/social/posts.php?new=1'),('exhibitors','/social/exhibitors.php'),('kit-admin','/social/exhibitors.php?kit='+(sys.argv[6] if len(sys.argv)>6 else '1')),
-         ('post-failed','/social/post.php?id='+(sys.argv[7] if len(sys.argv)>7 else '1')),('kit-public','/social/kit.php?k='+(sys.argv[8] if len(sys.argv)>8 else 'x'))]
+         ('post-failed','/social/post.php?id='+(sys.argv[7] if len(sys.argv)>7 else '1')),('kit-public','/social/kit.php?k='+(sys.argv[8] if len(sys.argv)>8 else 'x')),
+         ('results','/social/results.php'),('post-results','/social/post.php?id='+(sys.argv[9] if len(sys.argv)>9 else '1'))]
+only = [x for x in (__import__('os').environ.get('SM_SHOTS_ONLY', '').split(',')) if x]
+if only:
+    pages = [x for x in pages if x[0] in only]
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
@@ -35,6 +39,8 @@ import re, pathlib
 cfg = pathlib.Path(__file__).resolve().parents[3] / 'config' / 'config.php'
 orig = cfg.read_text()
 cfg.write_text(re.sub(r"'base_url'\s*=>\s*'[^']*'", "'base_url' => '" + base + "'", orig, count=1))
+import time
+time.sleep(3)   # the test server's opcache re-reads changed files only every 2 seconds
 try:
     asyncio.run(main())
 finally:

@@ -91,6 +91,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $xLimit = max(0, min(1000, (int)($_POST['x_auto_limit'] ?? SmEvent::settings($aid)['x_auto_limit'])));
         $st = SmEvent::settings($aid);
         $st['x_auto_limit'] = $xLimit;
+        $st['x_read_limit'] = max(0, min(5000, (int)($_POST['x_read_limit'] ?? $st['x_read_limit'])));
         SmEvent::saveSettings($aid, $st);
         foreach (array_keys(SmEvent::PLATFORMS) as $p) {
             $in = (array)($_POST['p'][$p] ?? []);
@@ -191,7 +192,9 @@ foreach ($platforms as $p => $r) {
            : '<p class="small muted">Not connected' . (SmApps::ready($app) ? '.' : ': the ' . e(SmApps::LABELS[$app]) . ' app is not set up yet (super admin, "Platform apps" below).') . '</p>')
        . '</div>'
        . ($p === 'x' ? '<div class="field"><label for="xl">Automatic X posts a month, at most</label><input type="number" min="0" max="1000" id="xl" name="x_auto_limit" value="' . (int)SmEvent::settings($aid)['x_auto_limit'] . '">'
-           . '<p class="hint">X charges for every post made by software (about US$0.015 a post, US$0.20 with a link, Oct 2026), from credit bought in X\'s developer console. When the limit is reached, X posts go back to "by hand" for the month.</p></div>' : '')
+           . '<p class="hint">X charges for every post made by software (about US$0.015 a post, US$0.20 with a link, Oct 2026), from credit bought in X\'s developer console. When the limit is reached, X posts go back to "by hand" for the month.</p></div>' 
+           . '<div class="field"><label for="xr">X post figures read a month, at most</label><input type="number" min="0" max="5000" id="xr" name="x_read_limit" value="' . (int)SmEvent::settings($aid)['x_read_limit'] . '">'
+           . '<p class="hint">For Results, the likes, replies, reposts and views of each automatic X post are read 1, 7 and 28 days after posting. X charges about US$0.005 for each post read (' . SmStats::xReadsUsed($aid) . ' used this month). 0 switches it off.</p></div>' : '')
        . '</fieldset>';
 }
 echo '</div></section><div class="save-bar"><button class="btn" type="submit">Save platform settings</button></div></form>';

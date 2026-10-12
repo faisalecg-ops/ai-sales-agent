@@ -11,7 +11,7 @@ defined('SM_BOOT') || exit;
  */
 final class SmSchema
 {
-    public const VERSION = 4;
+    public const VERSION = 5;
 
     public static function ensure(): void
     {
@@ -73,7 +73,7 @@ final class SmSchema
     public static function tables(): array
     {
         return ['sm_meta', 'sm_events', 'sm_platforms', 'sm_topics', 'sm_articles', 'sm_posts', 'sm_media', 'sm_activity', 'sm_ai_usage',
-            'sm_connections', 'sm_exhibitors', 'sm_kit_clicks'];
+            'sm_connections', 'sm_exhibitors', 'sm_kit_clicks', 'sm_post_stats', 'sm_stat_reads', 'sm_blog_stats', 'sm_reports'];
     }
 
     /** @return list<string> */
@@ -254,6 +254,54 @@ final class SmSchema
                day DATE NOT NULL,
                clicks INT UNSIGNED NOT NULL DEFAULT 0,
                PRIMARY KEY (exhibitor_id, day))$t",
+
+            // Stage 4: likes, comments, shares and views of each post (read automatically, or typed in).
+            "CREATE TABLE IF NOT EXISTS sm_post_stats (
+               post_id INT UNSIGNED NOT NULL,
+               agent_id INT UNSIGNED NOT NULL,
+               likes INT UNSIGNED NULL,
+               comments INT UNSIGNED NULL,
+               shares INT UNSIGNED NULL,
+               views INT UNSIGNED NULL,
+               clicks INT UNSIGNED NULL,
+               source ENUM('auto','typed') NOT NULL DEFAULT 'auto',
+               checks TINYINT UNSIGNED NOT NULL DEFAULT 0,
+               checked_at DATETIME NULL,
+               next_check_at DATETIME NULL,
+               last_error VARCHAR(300) NULL,
+               typed_by INT UNSIGNED NULL,
+               updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+               PRIMARY KEY (post_id), KEY idx_sm_ps_due (next_check_at), KEY idx_sm_ps_agent (agent_id))$t",
+
+            // Paid reads of figures (X charges per post read), counted against the monthly limit.
+            "CREATE TABLE IF NOT EXISTS sm_stat_reads (
+               id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+               agent_id INT UNSIGNED NOT NULL,
+               platform VARCHAR(16) NOT NULL,
+               items INT UNSIGNED NOT NULL DEFAULT 0,
+               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               PRIMARY KEY (id), KEY idx_sm_sr (agent_id, platform, created_at))$t",
+
+            // The blog's reading figures for a month (from its GET /stats), kept so pages open fast.
+            "CREATE TABLE IF NOT EXISTS sm_blog_stats (
+               agent_id INT UNSIGNED NOT NULL,
+               month CHAR(7) NOT NULL,
+               data MEDIUMTEXT NULL,
+               fetched_at DATETIME NULL,
+               error VARCHAR(300) NULL,
+               PRIMARY KEY (agent_id, month))$t",
+
+            // Monthly management reports sent.
+            "CREATE TABLE IF NOT EXISTS sm_reports (
+               id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+               agent_id INT UNSIGNED NOT NULL,
+               month CHAR(7) NOT NULL,
+               sent_at DATETIME NULL,
+               sent_to TEXT NULL,
+               sent_by INT UNSIGNED NULL,
+               error VARCHAR(500) NULL,
+               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               PRIMARY KEY (id), UNIQUE KEY uq_sm_report (agent_id, month))$t",
 
             "CREATE TABLE IF NOT EXISTS sm_ai_usage (
                id INT UNSIGNED NOT NULL AUTO_INCREMENT,

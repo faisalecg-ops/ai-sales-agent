@@ -8,7 +8,7 @@ declare(strict_types=1);
 final class Schema
 {
     /** Increase when a new step is added to upgrades(). */
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     public static function install(): void
     {
@@ -95,6 +95,9 @@ final class Schema
                     }
                 }
                 Settings::set('home_sections', $out);
+            },
+            // 1.4.0: visits from tagged links ({p}visit_sources, created by schema.sql above).
+            3 => static function (): void {
             },
         ];
     }

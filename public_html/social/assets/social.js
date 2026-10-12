@@ -92,4 +92,9 @@
       box.innerHTML = doc.body.innerHTML;
     });
   });
+
+  // Print or save as PDF (Results).
+  document.querySelectorAll('[data-print]').forEach(function (b) {
+    b.addEventListener('click', function () { window.print(); });
+  });
 })();

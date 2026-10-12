@@ -374,6 +374,7 @@ function sm_layout_start(string $title, array $actions = []): void
             'posts.php'    => ['Social posts', 0, 'viewer'],
             'calendar.php' => ['Calendar', 0, 'viewer'],
             'exhibitors.php' => ['Exhibitors and kits', 0, 'viewer'],
+            'results.php'  => ['Results', 0, 'viewer'],
         ],
         'Library' => [
             'media.php' => ['Pictures and videos', 0, 'viewer'],

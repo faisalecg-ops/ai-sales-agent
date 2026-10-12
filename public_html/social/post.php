@@ -179,6 +179,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         sm_flash('Marked as posted. Thank you.');
         $back();
     }
+    // Stage 4: results of a posted post.
+    if ($do === 'stats_check' && sm_can('editor') && $p['status'] === 'posted' && (string)$p['remote_id'] !== '') {
+        $r = SmStats::collect($agent, (string)$p['platform'], [$p], false);
+        if ($r['ok']) {
+            SmActivity::log($aid, 'stats_checked', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
+        }
+        sm_flash($r['message'], $r['ok'] ? 'ok' : 'error');
+        $back();
+    }
+    if ($do === 'stats_typed' && sm_can('editor') && $p['status'] === 'posted' && (string)$p['remote_id'] === '') {
+        SmStats::typed($p, $_POST, $uid);
+        SmActivity::log($aid, 'stats_typed', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
+        sm_flash('Figures saved.');
+        $back();
+    }
     if ($do === 'cancel' && $open) {
         db()->update('sm_posts', ['status' => 'cancelled', 'scheduled_at' => null], 'id = ?', [$id]);
         SmActivity::log($aid, 'post_cancelled', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
@@ -295,6 +310,51 @@ if (sm_can('approver') && $p['status'] === 'in_review') {
        . f_area('note', 'What should change', '', ['rows' => 3]) . '<button class="btn btn-small" type="submit">Send back</button></form></details>';
 }
 echo '</div>';
+
+// Stage 4: what the post brought.
+if ($p['status'] === 'posted') {
+    $res = SmStats::postResults($agent, $p);
+    $st = $res['stats'];
+    $num = static fn($v) => $v === null ? '—' : number_format((int)$v);
+    $isAuto = (string)$p['remote_id'] !== '';
+    echo '<div class="card"><h2>Results</h2><div class="sm-figures">';
+    foreach (['likes' => 'Likes', 'comments' => 'Comments', 'shares' => 'Shares', 'views' => 'Views'] as $k => $label) {
+        echo '<div><span>' . e($label) . '</span><strong>' . e($num($st[$k] ?? null)) . '</strong></div>';
+    }
+    echo '<div><span>Visits to the blog</span><strong>' . number_format($res['visits']) . '</strong></div>'
+       . '<div><span>Chats</span><strong>' . ($res['chats_ready'] ? number_format($res['chats']) : '—') . '</strong></div>'
+       . '<div><span>Leads</span><strong>' . ($res['chats_ready'] ? number_format($res['leads']) : '—') . '</strong></div></div>';
+    if ($res['leads'] > 0) {
+        $parts = [];
+        foreach (SmStats::LEAD_KINDS as $k => $label) {
+            if (!empty($res['lead_kinds'][$k])) {
+                $parts[] = $label . ': ' . (int)$res['lead_kinds'][$k];
+            }
+        }
+        echo '<p class="small muted">' . e(implode(' · ', $parts)) . '</p>';
+    }
+    if ($isAuto) {
+        echo '<p class="small muted">' . ($st && $st['checked_at'] ? 'Read from ' . e($pname) . ' ' . e(sm_time($st['checked_at'])) . '. ' : '')
+           . ($st && $st['next_check_at'] ? 'Next check ' . e(sm_time($st['next_check_at'], 'j M')) . '. ' : (!$st ? 'Figures are read 1, 7 and 28 days after posting. ' : ''))
+           . ($p['platform'] === 'x' ? 'X charges about $0.005 for each read (' . SmStats::xReadsUsed($aid) . ' of ' . (int)SmEvent::settings($aid)['x_read_limit'] . ' used this month). ' : '')
+           . ($st && $st['last_error'] ? '<br><span class="sm-warn">' . e((string)$st['last_error']) . '</span>' : '') . '</p>';
+        if (sm_can('editor')) {
+            echo sm_button('post.php', ['do' => 'stats_check', 'id' => $id], 'Check the figures now', 'btn btn-small btn-quiet');
+        }
+    } elseif (sm_can('editor')) {
+        echo '<details' . ($st ? '' : ' open') . '><summary class="small">' . ($st ? 'Update the figures' : 'Posted by hand: type in the figures from ' . e($pname)) . '</summary>'
+           . '<form method="post" class="sm-figure-form">' . sm_csrf() . '<input type="hidden" name="do" value="stats_typed"><input type="hidden" name="id" value="' . $id . '">';
+        foreach (['likes' => 'Likes', 'comments' => 'Comments', 'shares' => 'Shares', 'views' => 'Views (if shown)'] as $k => $label) {
+            echo f_text($k, $label, $st && $st[$k] !== null ? (string)$st[$k] : '', ['type' => 'number', 'min' => '0']);
+        }
+        echo '<button class="btn btn-small" type="submit">Save the figures</button></form>'
+           . '<p class="small muted">Look at the post on ' . e($pname) . ' about a week after posting and copy the numbers here. Visits, chats and leads are counted by themselves.</p></details>';
+    }
+    if (!$res['chats_ready']) {
+        echo '<p class="small muted">Chats and leads will show once the sales agent upgrade "which link brought each chat" is installed.</p>';
+    }
+    echo '</div>';
+}
 
 echo '<div class="grid grid-2">';
 // Preview as it will look

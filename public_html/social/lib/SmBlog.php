@@ -126,6 +126,12 @@ final class SmBlog
         return $this->call('GET', 'published/' . $id);
     }
 
+    /** Reading figures for a period (blog 1.4.0+): article views and visits from tagged links. */
+    public function stats(string $from, string $to, string $campaign): array
+    {
+        return $this->call('GET', 'stats?' . http_build_query(['from' => $from, 'to' => $to, 'campaign' => $campaign]));
+    }
+
     /** Articles waiting for approval in the blog's own admin. */
     public function pending(): array
     {

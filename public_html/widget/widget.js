@@ -106,6 +106,60 @@
     return id;
   }
 
+  /**
+   * Where this visitor came from (added 12 Oct 2026 for the Social Media
+   * Agent's results — see docs/handover/2026-10-12-social-attribution.md).
+   *
+   * Links shared on social media, in exhibitor kits and in emails carry
+   * utm_* tags. Those tags are only on the first page the visitor lands on;
+   * by the time they open the chat they may be on another page. So when a
+   * page is opened with tags, they are kept in the site's own localStorage
+   * for 30 days and sent when a chat starts. A newer tagged visit replaces an
+   * older one. Nothing is kept for visits without tags (except an outside
+   * referrer, kept the same way, which shows "came from facebook.com" etc.).
+   * The Event Blog writes the same key in the same shape.
+   */
+  var STORAGE_ARRIVAL = 'aisa_arrival';
+  var ARRIVAL_DAYS = 30;
+
+  function rememberArrival() {
+    var tags = {};
+    var found = false;
+    try {
+      var q = new URLSearchParams(location.search);
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].forEach(function (k) {
+        var v = q.get(k);
+        if (v) { tags[k] = String(v).slice(0, 150); found = true; }
+      });
+    } catch (e) { return; }
+    var refHost = '';
+    try {
+      if (document.referrer) {
+        var r = new URL(document.referrer);
+        if (r.host && r.host !== location.host) { refHost = r.host.slice(0, 190); }
+      }
+    } catch (e2) { /* no referrer */ }
+    if (!found && !refHost) { return; }
+    // An outside referrer alone never replaces tags we already hold.
+    if (!found && readArrival() && readArrival().utm_source) { return; }
+    tags.landing_url = (location.origin + location.pathname).slice(0, 500);
+    tags.referrer_host = refHost;
+    tags.at = Math.floor(Date.now() / 1000);
+    storageSet(STORAGE_ARRIVAL, JSON.stringify(tags));
+  }
+
+  function readArrival() {
+    var raw = storageGet(STORAGE_ARRIVAL);
+    if (!raw) { return null; }
+    try {
+      var a = JSON.parse(raw);
+      if (!a || typeof a !== 'object' || !a.at || (Date.now() / 1000 - a.at) > ARRIVAL_DAYS * 86400) { return null; }
+      return a;
+    } catch (e) { return null; }
+  }
+
+  rememberArrival();
+
   function el(tag, className, text) {
     var node = document.createElement(tag);
     if (className) { node.className = className; }
@@ -1040,7 +1094,8 @@
 
     return post('session.php', {
       visitor_id: visitorId(),
-      page_url: location.href.slice(0, 500)
+      page_url: location.href.slice(0, 500),
+      arrival: readArrival()
     }).then(function (res) {
       if (!res || !res.ok) {
         headStatus.textContent = 'Unavailable';

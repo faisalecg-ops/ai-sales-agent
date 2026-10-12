@@ -98,6 +98,7 @@ final class Api
             $method === 'GET' && $r === 'published' => self::listPublished(),
             $method === 'GET' && (bool)preg_match('#^published/(\d+)$#', $r, $m) => self::onePublished((int)$m[1]),
             $method === 'GET' && $r === 'pending' => self::listPending(),
+            $method === 'GET' && $r === 'stats' => self::stats(),
             $method === 'GET' && (bool)preg_match('#^articles/(\d+)$#', $r, $m) => json_out(['ok' => true, 'article' => self::articleOut(self::ownArticle((int)$m[1]))]),
             in_array($method, ['PATCH', 'PUT', 'POST'], true) && (bool)preg_match('#^articles/(\d+)$#', $r, $m) => self::updateArticle((int)$m[1]),
             default => self::fail('not_found', 'Unknown address or method.', 404),
@@ -324,6 +325,42 @@ final class Api
             self::fail('not_found', 'No published article with that number.', 404);
         }
         json_out(['ok' => true, 'article' => self::publishedOut($a)]);
+    }
+
+    /**
+     * Read-only: reading figures for a period (default: last month), for the
+     * Social Media Agent's results and monthly report.
+     * ?from=YYYY-MM-DD&to=YYYY-MM-DD (inclusive, at most 400 days back)
+     * &campaign=<slug> limits the tagged visits to one campaign.
+     */
+    private static function stats(): never
+    {
+        $day = static fn(string $k, string $def): string => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_GET[$k] ?? '')) ? (string)$_GET[$k] : $def;
+        $from = $day('from', gmdate('Y-m-01', strtotime('first day of last month')));
+        $to = $day('to', gmdate('Y-m-t', strtotime('first day of last month')));
+        if ($from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+        if (strtotime($from . ' UTC') < time() - 400 * 86400) {
+            $from = gmdate('Y-m-d', time() - 400 * 86400);
+        }
+        $views = db()->all('SELECT v.article_id, SUM(v.views) AS views, a.title, a.slug, a.category_id FROM {p}article_views v JOIN {p}articles a ON a.id = v.article_id
+                            WHERE v.day BETWEEN ? AND ? GROUP BY v.article_id ORDER BY views DESC LIMIT 200', [$from, $to]);
+        $total = (int)db()->value('SELECT COALESCE(SUM(views), 0) FROM {p}article_views WHERE day BETWEEN ? AND ?', [$from, $to]);
+        $where = 'day BETWEEN ? AND ?';
+        $params = [$from, $to];
+        if (isset($_GET['campaign']) && preg_match('/^[a-z0-9._~:+-]{1,100}$/', strtolower((string)$_GET['campaign']))) {
+            $where .= ' AND campaign = ?';
+            $params[] = strtolower((string)$_GET['campaign']);
+        }
+        $sources = db()->all("SELECT article_id, source, medium, campaign, content, SUM(visits) AS visits FROM {p}visit_sources WHERE $where
+                              GROUP BY article_id, source, medium, campaign, content ORDER BY visits DESC LIMIT 2000", $params);
+        json_out(['ok' => true, 'from' => $from, 'to' => $to, 'views_total' => $total,
+            'articles' => array_map(static fn($r) => ['id' => (int)$r['article_id'], 'title' => (string)$r['title'],
+                'url' => Article::urlFor($r), 'views' => (int)$r['views']], $views),
+            'sources' => array_map(static fn($r) => ['article_id' => (int)$r['article_id'], 'source' => (string)$r['source'], 'medium' => (string)$r['medium'],
+                'campaign' => (string)$r['campaign'], 'content' => (string)$r['content'], 'visits' => (int)$r['visits']], $sources),
+        ]);
     }
 
     /** Read-only: articles waiting for approval in this blog's admin, with a link to approve them there. */

@@ -8,11 +8,11 @@ Read this before any task on this project.
   research, prospecting, analytics, reorganised admin). 1,201 acceptance
   tests pass. Delivered as an upgrade package and a fresh-install package.
 - **Event Blog (Phase 1) is built** (approved 9 Oct 2026; plan: Claude doc
-  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.3.0: Industry Voices + sponsored articles (Stage 2), Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
+  "Event Blog — Phase 1 Plan"). Code in `blog/` (v1.4.0: tagged-visit counting + `GET /stats` (Stage 4); 1.3.0: Industry Voices + sponsored articles (Stage 2), Build Asia look, complete looks, motion levels, Build Asia starter content in `blog/content-packs/`: 11 categories, 46 sourced articles) — a standalone PHP 8.1+ /
   MySQLi script installed per event website at `/blog` on cPanel **shared**
   hosting, table prefix `blog_`. Every reader option (comments, newsletter,
   sponsor reports, branding, language) is a setting in the blog admin.
-  327 tests (run from the repo root): `php blog/tests/acceptance.php` (database `blogtest`, prefix
+  335 tests (run from the repo root): `php blog/tests/acceptance.php` (database `blogtest`, prefix
   `bt_`). Guides: `docs/blog-installation-guide.md`, `docs/blog-user-manual.html`,
   `docs/blog-api.md`. The sales agent gained `public_html/api/event.php` and
   a **Dates & venue** card (`docs/upgrade-2026-10-event-facts.md`) — the
@@ -24,9 +24,16 @@ Read this before any task on this project.
   switcher. Read `docs/sales-agent-status-2026-10-10.md`. The contract for
   /social is the "Done — what /social can rely on" section at the end of
   `docs/handover/2026-10-10-shared-login-and-event-access.md`. Sales agent
-  tests now: `php tests/acceptance.php` (1,201) and `php tests/access-http.php`
+  tests now: `php tests/acceptance.php` (1,207) and `php tests/access-http.php`
   (82, end-to-end staff isolation). New admin pages must use
   `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
+  **Approved sales agent change (12 Oct 2026) — built, owner to install:**
+  "which link brought each chat" (widget keeps utm_* tags 30 days in
+  localStorage `aisa_arrival`; 7 new `conversations` columns; "Came from" row).
+  **The AI Sales Agent chat must read `docs/handover/2026-10-12-social-attribution.md`
+  carefully** (files, reasons, purpose, what /social reads) and
+  `docs/sales-agent-status-2026-10-12.md`. Package
+  `salesagent-upgrade-2026-10-arrival.zip`, step `2026_10_conversation_arrival`.
 - **Social Media Agent at `/social` — plan APPROVED by the owner (Kaleem,
   10 Oct 2026):** Claude doc "AI Social Media Expert Agent — Plan"
   (https://claude.ai/code/artifact/f54d7319-1688-4ef4-8d69-67690608eebf).
@@ -46,8 +53,8 @@ Read this before any task on this project.
       report) and /social 1.2.0 (credits from the blog payload `voice`/`sponsor`
       in `sm_articles.voice/sponsor`; sponsored posts must carry
       "Sponsored · [sponsor]"; tag reminders; Event settings `report_emails`).
-    - Code: `public_html/social/`, version 1.3.0, package
-      `social-agent-1.3.0.zip`, guide `docs/social-installation-guide.md`.
+    - Code: `public_html/social/`, version 1.4.0, package
+      `social-agent-1.4.0.zip`, guide `docs/social-installation-guide.md`.
     - Pages are plain .php. Private code is in `lib/` (blocked from the web).
       Its own tables are named `sm_` (`lib/SmSchema.php`, created on first
       visit).
@@ -57,7 +64,7 @@ Read this before any task on this project.
     - It writes into the event blogs only through their API (`lib/SmBlog.php`).
       It receives the blog's signed notice at `hook.php`. Its cron job is
       `cron.php`.
-    - Tests: `php public_html/social/tests/acceptance.php` (218; set `SM_SHOTS=1` for screenshots). They use real
+    - Tests: `php public_html/social/tests/acceptance.php` (250; set `SM_SHOTS=1` for screenshots). They use real
       sign-ins, a real test blog (database `smblog`) and stand-in AI and
       research. An independent review was done and every finding was fixed.
   - **Stage 3 BUILT and INSTALLED live 12 Oct 2026 (/social 1.3.0, owner); the owner has
@@ -81,15 +88,25 @@ Read this before any task on this project.
     needs the Community Management API (business review, no fixed time);
     Meta needs app review (screencast, test account) and usually Business
     verification.
-  - **Next: Stage 4 (results)** — review with the owner at the start of the next
-    session: tracking post → visit → chat → lead, engagement figures, the monthly
-    management report (to `report_emails`), Pharma Asia as the second event.
-    Found 12 Oct: chats store only `conversations.page_url` (location.href where
-    the chat began), so reliable "chats/leads from social" needs a small sales
-    agent widget change (remember the first visit's utm_* for the session) —
-    needs the owner's explicit approval. Engagement counts need no new platform
-    permissions (FB pages_read_engagement, IG instagram_basic, LinkedIn
-    r_organization_social); X charges per read (about $0.005).
+  - **Stage 4 BUILT 12 Oct 2026 (/social 1.4.0 + blog 1.4.0 + sales agent
+    arrival upgrade); owner to install the three packages (order: blog, sales
+    agent, social).** Owner's approvals (12 Oct): the sales agent change above;
+    X paid reads ("yes, I X provide the monetization"). Code: `lib/SmStats.php`
+    (figures read 1/7/28 days after automatic posts — FB reactions/comments/
+    shares, IG like/comments_count, LinkedIn organizationalEntityShareStatistics
+    with rw_organization_admin, X `GET /2/tweets?ids=…&tweet.fields=public_metrics`
+    counted in `sm_stat_reads` against `x_read_limit` (default 300, ~$0.005/read);
+    typed figures for hand posts; blog `GET /stats` cached in `sm_blog_stats`;
+    chats/leads read from `conversations.utm_*` + `leads.exhibitor_intent`;
+    month report emailed via the exhibition's mail profile, `sm_reports`),
+    `results.php` (printable), Results card on post.php, dashboard "This month so
+    far", cron (collectDue, refreshAllBlogs, sendDue: last month's report from
+    the 1st, 8 am event time, until the 10th, retry every 6 h).
+  - **Future plan (owner, 12 Oct 2026): Pharma Asia** as the second event — its
+    website is not ready (the event is too close); add it when the renovated
+    site exists (install the blog, connect /social, fill its Event settings).
+  - **After Stage 4:** all four stages are built. Remaining: owner installs
+    Stage 4; Meta/LinkedIn/X approvals in progress (then Connect pages).
   - **Choices made with the approval:**
     - Stage 3 waits for free direct approval from Meta and LinkedIn; no paid
       posting service.

@@ -89,7 +89,7 @@ echo '<section class="set-card" id="radar"><div class="set-head"><h2>Industry ra
    . '</div></section>';
 
 echo '<section class="set-card" id="report"><div class="set-head"><h2>Monthly management report</h2><p>Who receives this exhibition\'s one-page report each month: posts and articles published, the best ones, visits to the website, chats and leads from social media, and AI cost. Usually the exhibition\'s admins.</p></div><div class="set-body">'
-   . f_area('report_emails', 'Send the report to (comma separated)', (string)$s['report_emails'], ['rows' => 2, 'hint' => 'Up to 10 addresses. Sent from the exhibition\'s own email profile. The report itself is part of Stage 4; until then nothing is sent.'])
+   . f_area('report_emails', 'Send the report to (comma separated)', (string)$s['report_emails'], ['rows' => 2, 'hint' => 'Up to 10 addresses. Sent from the exhibition\'s own email profile, early each month, for the month before. You can see it any time under Results.'])
    . '</div></section>';
 
 echo '<section class="set-card" id="brand"><div class="set-head"><h2>Branding on built images</h2><p>Colours used by the image builder. The logo is chosen in "Pictures and videos" (Use as logo).</p></div><div class="set-body"><div class="form-grid">'

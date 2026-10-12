@@ -123,6 +123,23 @@ Articles waiting for an editor in the blog admin — titles only, never the text
 ```
 These three views only read; approving still happens in the blog admin.
 
+### `GET /stats?from=YYYY-MM-DD&to=YYYY-MM-DD&campaign=…` (from 1.4.0, read-only)
+Reading figures for a period (default: last month; at most 400 days back), for
+the Social Media Agent's Results and monthly report. `campaign` (the
+exhibition's slug) limits the tagged visits to one campaign.
+```json
+{"ok":true,"from":"2026-10-01","to":"2026-10-31","views_total":5120,
+ "articles":[{"id":12,"title":"…","url":"https://buildasia.net/blog/market-insights/…","views":830}],
+ "sources":[{"article_id":12,"source":"linkedin","medium":"social","campaign":"buildasia","content":"post-27","visits":41}]}
+```
+`sources` are visits that arrived through a link with `utm_*` tags (social
+posts: `medium=social`, `content=post-<id>`; readers' share buttons:
+`medium=share`). They are counted by the article page's own script (robots are
+not counted) in the table `{p}visit_sources`, kept 400 days. The same script
+also stores the tags in the website's localStorage under `aisa_arrival` (30
+days), so the AI Sales Agent's chat knows which post brought a visitor — see
+`docs/handover/2026-10-12-social-attribution.md`.
+
 ## "Article published" notice (webhook)
 
 Set the agent's address in the blog admin → **API keys → "Article published"

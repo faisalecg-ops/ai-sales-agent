@@ -330,6 +330,20 @@ CREATE TABLE IF NOT EXISTS {p}article_views (
   PRIMARY KEY (article_id, day)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Visits that arrived through a tagged link (utm_*), per day — social posts,
+-- exhibitor kits, share buttons. Read by the Social Media Agent through GET /stats.
+CREATE TABLE IF NOT EXISTS {p}visit_sources (
+  day        DATE NOT NULL,
+  article_id INT UNSIGNED NOT NULL DEFAULT 0,
+  source     VARCHAR(60) NOT NULL DEFAULT '',
+  medium     VARCHAR(60) NOT NULL DEFAULT '',
+  campaign   VARCHAR(100) NOT NULL DEFAULT '',
+  content    VARCHAR(100) NOT NULL DEFAULT '',
+  visits     INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, article_id, source, medium, campaign, content),
+  KEY idx_vs_campaign (campaign, day)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Industry Voices: outside experts who write for the blog (no login needed).
 CREATE TABLE IF NOT EXISTS {p}contributors (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,

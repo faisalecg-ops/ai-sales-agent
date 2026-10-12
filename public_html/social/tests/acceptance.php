@@ -857,6 +857,91 @@ T::ok($isMorning ? $ran === 1 : $ran === 0, 'The scheduled task runs the radar o
 T::equals(0, SmRadar::runDue(), '…and only once a week');
 
 // =====================================================================
+T::group('Stage 4: results — figures, visits, chats, leads and the monthly report');
+$twoDaysAgo = gmdate('Y-m-d H:i:s', time() - 2 * 86400);
+db()->exec("UPDATE sm_posts SET posted_at = ? WHERE id IN ($fbLater, $igPost, $liPost, $xPost)", [$twoDaysAgo]);
+db()->exec('DELETE FROM sm_post_stats');
+$n4 = SmStats::collectDue();
+$psIg = SmStats::forPost($igPost);
+$psLi = SmStats::forPost($liPost);
+$psX = SmStats::forPost($xPost);
+$psFb = SmStats::forPost($fbLater);
+T::ok($n4 >= 3 && (int)$psIg['likes'] === 52 && (int)$psIg['comments'] === 3, 'Instagram likes and comments are read a day after posting');
+T::ok((int)$psLi['likes'] === 25 && (int)$psLi['views'] === 1200 && (int)$psLi['clicks'] === 40 && (int)$psLi['shares'] === 3, 'LinkedIn: likes, comments, shares, views and clicks from the page statistics');
+T::ok((int)$psX['likes'] === 9 && (int)$psX['shares'] === 3 && (int)$psX['comments'] === 1 && (int)$psX['views'] === 800, 'X: likes, replies, reposts and views');
+T::ok(abs(strtotime($psLi['next_check_at'] . ' UTC') - (strtotime($twoDaysAgo . ' UTC') + 7 * 86400)) < 5, 'The next check is a week after posting (then four weeks)');
+T::ok($psFb && str_contains((string)$psFb['last_error'], 'Not connected') && $psFb['likes'] === null, 'A page that is no longer connected is noted, and tried again the next day');
+T::equals(1, SmStats::xReadsUsed($idA), 'Each X post read is counted (X charges for it)');
+$stA = SmEvent::settings($idA);
+SmEvent::saveSettings($idA, ['x_read_limit' => 1] + $stA);
+db()->update('sm_post_stats', ['next_check_at' => gmdate('Y-m-d H:i:s', time() - 60)], 'post_id = ?', [$xPost]);
+SmStats::collectDue();
+T::ok(SmStats::xReadsUsed($idA) === 1 && str_contains((string)SmStats::forPost($xPost)['last_error'], 'limit of X figure reads'), 'At the monthly limit, X figures are not read (no extra cost)');
+SmEvent::saveSettings($idA, $stA);
+$fbHand = (int)db()->insert('sm_posts', ['agent_id' => $idA, 'platform' => 'facebook', 'body' => 'Posted by hand.', 'status' => 'posted', 'posted_at' => $twoDaysAgo, 'written_by' => $edId]);
+$soc->post('/social/post.php', ['do' => 'stats_check', 'id' => $fbHand], '/social/post.php?id=' . $fbHand);
+T::ok(SmStats::forPost($fbHand) === null, 'A post made by hand has nothing to read automatically');
+$soc->get('/social/post.php?id=' . $fbHand);
+T::ok(str_contains($soc->body, 'type in the figures from Facebook'), '…so its page asks for the figures to be typed in');
+$soc->post('/social/post.php', ['do' => 'stats_typed', 'id' => $fbHand, 'likes' => '1,240', 'comments' => '17', 'shares' => '', 'views' => ''], '/social/post.php?id=' . $fbHand);
+$psH = SmStats::forPost($fbHand);
+T::ok($psH['source'] === 'typed' && (int)$psH['likes'] === 1240 && (int)$psH['comments'] === 17 && $psH['shares'] === null, 'Typed figures are saved (an empty box stays empty)');
+$vi->post('/social/post.php', ['do' => 'stats_typed', 'id' => $fbHand, 'likes' => '5'], '/social/post.php?id=' . $fbHand);
+T::equals(1240, (int)SmStats::forPost($fbHand)['likes'], 'A viewer cannot change them');
+
+// Visits: a reader arrives at the blog article from the LinkedIn post (the blog counts the tagged visit).
+$blogArticle = (int)db()->value('SELECT blog_article_id FROM sm_articles WHERE id = ?', [(int)$art['id']]);
+for ($i = 0; $i < 3; $i++) {
+    $bc = curl_init('http://127.0.0.1:8097/blog/go/beacon');
+    curl_setopt_array($bc, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0',
+        CURLOPT_POSTFIELDS => json_encode(['a' => $blogArticle, 'u' => ['s' => 'linkedin', 'm' => 'social', 'c' => 'buildasia', 't' => 'post-' . $liPost]])]);
+    curl_exec($bc);
+}
+$rb = SmStats::refreshBlog($agentA, gmdate('Y-m'));
+T::ok($rb['ok'], 'This month\'s figures are read from the blog', $rb['message']);
+
+// Chats and leads: the sales agent records which link brought each chat (read only here).
+$leadEx = (int)db()->insert('leads', ['agent_id' => $idA, 'reference' => 'L-T4-1', 'exhibitor_intent' => 'exhibitor', 'status' => 'qualified']);
+$conv = static fn(array $x) => db()->insert('conversations', $x + ['agent_id' => $idA, 'session_id' => bin2hex(random_bytes(24)), 'session_secret_hash' => str_repeat('a', 64)]);
+$conv(['utm_source' => 'linkedin', 'utm_medium' => 'social', 'utm_campaign' => 'buildasia', 'utm_content' => 'post-' . $liPost, 'lead_id' => $leadEx]);
+$conv(['utm_source' => 'linkedin', 'utm_medium' => 'social', 'utm_campaign' => 'buildasia', 'utm_content' => 'post-' . $liPost]);
+$conv(['utm_source' => 'whatsapp', 'utm_medium' => 'exhibitor-share', 'utm_campaign' => 'buildasia', 'utm_content' => 'exhibitor-1']);
+$conv(['utm_source' => 'linkedin', 'utm_medium' => 'social', 'utm_campaign' => 'pharmaasia', 'utm_content' => 'post-' . $liPost, 'agent_id' => $idB]);
+$conv([]);
+$m4 = SmStats::month($agentA, gmdate('Y-m'));
+T::ok($m4['platforms']['linkedin']['visits'] === 3 && $m4['visits_social'] === 3, 'Visits are credited to the post and its platform');
+T::ok($m4['chats_social'] === 2 && $m4['platforms']['linkedin']['chats'] === 2 && $m4['kits']['chats'] === 1, 'Chats from social posts and from exhibitor kits are counted (another exhibition\'s are not)');
+T::ok($m4['leads'] === 1 && $m4['lead_kinds']['exhibit'] === 1 && $m4['platforms']['linkedin']['leads'] === 1, '…and the leads they became, split by exhibiting and visiting');
+T::equals($liPost, (int)$m4['top_posts'][0]['id'], 'The post that brought the lead is first among the best posts');
+T::ok($m4['totals']['likes'] >= 52 + 25 + 9 && $m4['x']['reads'] === 1 && $m4['x']['cost'] > 0, 'Totals and the X cost estimate are worked out');
+$pr = SmStats::postResults($agentA, db()->one('SELECT * FROM sm_posts WHERE id = ?', [$liPost]));
+T::ok($pr['visits'] === 3 && $pr['chats'] === 2 && $pr['leads'] === 1, 'A post\'s own page shows its visits, chats and leads');
+$boss->get('/social/post.php?id=' . $liPost);
+T::ok(str_contains($boss->body, '<h2>Results</h2>') && str_contains($boss->body, '1,200') && str_contains($boss->body, 'Exhibiting or sponsoring: 1'), '…with its figures');
+
+SmEvent::saveSettings($idA, ['report_emails' => ''] + SmEvent::settings($idA));
+$vi->get('/social/results.php');
+T::ok($vi->status === 200 && str_contains($vi->body, 'By platform') && str_contains($vi->body, 'Best posts') && !str_contains($vi->body, 'Email this report now'), 'Everyone can see the Results page; only an admin can email it');
+T::ok(str_contains($vi->body, 'No one receives the monthly report yet'), 'It says when no one receives the report');
+$boss->get('/social/');
+T::ok(str_contains($boss->body, 'This month so far'), 'The dashboard shows this month so far');
+SmEvent::saveSettings($idA, ['report_emails' => 'kaleem@buildasia.net, ops@buildasia.net'] + SmEvent::settings($idA));
+$mailBefore = count(SmTestBus::entries('mail'));
+$boss->post('/social/results.php', ['do' => 'send', 'm' => gmdate('Y-m')], '/social/results.php');
+$mail4 = array_slice(SmTestBus::entries('mail'), $mailBefore);
+T::ok(count($mail4) === 2 && $mail4[0]['to'] === 'kaleem@buildasia.net' && $mail4[0]['from'] === 'info@buildasia.net' && str_contains((string)$mail4[0]['subject'], 'social media report'),
+    'The report is emailed to the chosen addresses from the exhibition\'s own email address');
+T::ok(str_contains((string)$mail4[0]['html'], 'By platform') && str_contains((string)$mail4[0]['body'], 'Leads: 1'), '…as a formatted report, with a plain-text version');
+T::ok(db()->value('SELECT sent_at FROM sm_reports WHERE agent_id = ? AND month = ?', [$idA, gmdate('Y-m')]) !== null, 'Sending is recorded');
+$soc->post('/social/results.php', ['do' => 'send', 'm' => gmdate('Y-m')], '/social/results.php');
+T::equals($mailBefore + 2, count(SmTestBus::entries('mail')), 'An editor cannot send it');
+db()->exec('INSERT INTO sm_reports (agent_id, month, sent_at, sent_to) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE sent_at = VALUES(sent_at)', [$idA, SmStats::lastMonth(), gmdate('Y-m-d H:i:s'), 'x']);
+T::equals(0, SmStats::sendDue(), 'The automatic monthly report is never sent twice for the same month');
+$ph->get('/social/results.php');
+T::ok(!str_contains($ph->body, 'Best posts') || !str_contains($ph->body, 'Build Asia — social media report'), 'Pharma Asia staff see only their own results');
+
+// =====================================================================
 T::group('Safety rules from the independent review');
 // A form from a tab that belongs to another exhibition.
 $boss->get('/social/?agent=' . $idA);
@@ -925,7 +1010,7 @@ T::ok(!str_contains($ph->body, $photo['file']), 'Each exhibition sees only its o
 
 // =====================================================================
 T::group('Pages open without errors');
-foreach (['', 'plan.php', 'articles.php', 'posts.php', 'calendar.php', 'media.php', 'settings.php', 'connections.php', 'activity.php', 'guide.php', 'article.php?id=' . $art['id'], 'post.php?id=' . $igId, 'exhibitors.php', 'exhibitors.php?kit=' . $lucky['id'], 'exhibitors.php?edit=' . $lucky['id'], 'privacy.php', 'post.php?id=' . $liLater] as $pg) {
+foreach (['', 'plan.php', 'articles.php', 'posts.php', 'calendar.php', 'media.php', 'settings.php', 'connections.php', 'activity.php', 'guide.php', 'article.php?id=' . $art['id'], 'post.php?id=' . $igId, 'exhibitors.php', 'exhibitors.php?kit=' . $lucky['id'], 'exhibitors.php?edit=' . $lucky['id'], 'privacy.php', 'post.php?id=' . $liLater, 'results.php', 'results.php?m=2026-09', 'results.php?m=nonsense', 'post.php?id=' . $xPost] as $pg) {
     $boss->get('/social/' . $pg);
     T::ok($boss->status === 200 && !str_contains($boss->body, 'Something went wrong') && !str_contains($boss->body, 'Fatal error') && !str_contains($boss->body, 'Warning:'), 'Opens: /social/' . ($pg ?: '(dashboard)'));
 }
@@ -937,6 +1022,7 @@ $boss->get('/social/activity.php');
 T::ok(str_contains($boss->body, 'Article approved') && str_contains($boss->body, 'Posted'), 'The activity log records approvals and postings');
 
 if (getenv('SM_SHOTS')) {
-    passthru('python3 ' . escapeshellarg(__DIR__ . '/shots.py') . ' ' . escapeshellarg($base) . ' ' . (int)$art['id'] . ' ' . $igId . ' ' . $fbId . ' ' . escapeshellarg(substr($local, 0, 7)) . ' ' . (int)$lucky['id'] . ' ' . (int)$liLater . ' ' . escapeshellarg((string)$lucky['kit_token']));
+    db()->exec('DELETE FROM login_attempts');   // the tests' own failed sign-ins must not slow the screenshot sign-in
+    passthru('python3 ' . escapeshellarg(__DIR__ . '/shots.py') . ' ' . escapeshellarg($base) . ' ' . (int)$art['id'] . ' ' . $igId . ' ' . $fbId . ' ' . escapeshellarg(substr($local, 0, 7)) . ' ' . (int)$lucky['id'] . ' ' . (int)$liLater . ' ' . escapeshellarg((string)$lucky['kit_token']) . ' ' . (int)$liPost);
 }
 exit(T::summary());

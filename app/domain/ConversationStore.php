@@ -73,7 +73,7 @@ final class ConversationStore
             }
         }
 
-        $conversationId = db()->insert('conversations', [
+        $conversationId = db()->insert('conversations', self::arrivalFields($input['arrival'] ?? null) + [
             'agent_id'   => $agentId,
             'channel'    => in_array(($input['channel'] ?? 'web'), ['web', 'whatsapp'], true)
                 ? (string)($input['channel'] ?? 'web') : 'web',
@@ -112,6 +112,49 @@ final class ConversationStore
             $returning ? 'Returning visitor, linked to existing lead' : 'New visitor');
 
         return ['conversation' => $conversation, 'session_secret' => $secret];
+    }
+
+    /**
+     * The link that brought the visitor, as kept by the widget (utm_* tags,
+     * landing page, outside referrer, when). Only plain, short values are
+     * kept; anything else is dropped. Added 12 Oct 2026 for the Social Media
+     * Agent's results — see docs/handover/2026-10-12-social-attribution.md.
+     * Columns are only written when the upgrade step has run.
+     */
+    public static function arrivalFields(mixed $a): array
+    {
+        if (!is_array($a) || !Migrations::columnExists('conversations', 'utm_source')) {
+            return [];
+        }
+        $tag = static function (mixed $v, int $max): ?string {
+            $v = is_scalar($v) ? trim((string)$v) : '';
+            return ($v !== '' && preg_match('/^[\p{L}\p{N} ._~:\/+-]+$/u', $v)) ? mb_substr($v, 0, $max) : null;
+        };
+        $out = [
+            'utm_source'   => $tag($a['utm_source'] ?? null, 100),
+            'utm_medium'   => $tag($a['utm_medium'] ?? null, 100),
+            'utm_campaign' => $tag($a['utm_campaign'] ?? null, 150),
+            'utm_content'  => $tag($a['utm_content'] ?? null, 150),
+            'landing_url'  => null,
+            'referrer_host' => null,
+            'arrived_at'   => null,
+        ];
+        $landing = is_string($a['landing_url'] ?? null) ? (string)$a['landing_url'] : '';
+        if (preg_match('#^https?://#i', $landing)) {
+            $out['landing_url'] = Validator::text($landing, 500);
+        }
+        $host = strtolower(is_string($a['referrer_host'] ?? null) ? (string)$a['referrer_host'] : '');
+        if (preg_match('/^[a-z0-9.-]{1,190}(:\d{1,5})?$/', $host)) {
+            $out['referrer_host'] = $host;
+        }
+        $at = is_numeric($a['at'] ?? null) ? (int)$a['at'] : 0;
+        if ($at > time() - 31 * 86400 && $at <= time() + 300) {
+            $out['arrived_at'] = gmdate('Y-m-d H:i:s', $at);
+        }
+        if ($out['utm_source'] === null && $out['referrer_host'] === null) {
+            return [];
+        }
+        return $out;
     }
 
     /**

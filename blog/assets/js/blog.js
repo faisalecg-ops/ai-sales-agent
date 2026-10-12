@@ -110,12 +110,31 @@
     seen.push(parseInt(items[pick].getAttribute('data-banner'), 10));
   });
 
-  // One small message to count the article view and banner views.
+  // A visit through a tagged link (a social post, an exhibitor's share link):
+  // counted with the view, and kept for the sales agent's chat in the same
+  // shape the chat script uses (localStorage "aisa_arrival", 30 days), so a
+  // chat opened later on another page still knows which post brought them.
+  var arrival = null;
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('utm_source')) {
+      arrival = { s: q.get('utm_source'), m: q.get('utm_medium') || '', c: q.get('utm_campaign') || '', t: q.get('utm_content') || '' };
+      var ref = '';
+      try { if (document.referrer) { var rh = new URL(document.referrer).host; if (rh !== location.host) ref = rh; } } catch (e1) {}
+      localStorage.setItem('aisa_arrival', JSON.stringify({
+        utm_source: arrival.s.slice(0, 150), utm_medium: arrival.m.slice(0, 150), utm_campaign: arrival.c.slice(0, 150), utm_content: arrival.t.slice(0, 150),
+        landing_url: (location.origin + location.pathname).slice(0, 500), referrer_host: ref.slice(0, 190), at: Math.floor(Date.now() / 1000)
+      }));
+    }
+  } catch (e) { /* storage blocked: the view is still counted */ }
+
+  // One small message to count the article view, banner views and the tagged visit.
   var send = function () {
     var data = {};
     if (cfg.article) data.a = cfg.article;
     if (seen.length) data.b = seen;
-    if (!cfg.beacon || (!data.a && !data.b)) return;
+    if (arrival) data.u = arrival;
+    if (!cfg.beacon || (!data.a && !data.b && !data.u)) return;
     var body = JSON.stringify(data);
     if (navigator.sendBeacon) {
       navigator.sendBeacon(cfg.beacon, new Blob([body], { type: 'application/json' }));

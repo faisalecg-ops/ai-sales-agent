@@ -51,6 +51,14 @@ echo '<div class="card"><h2>About this conversation</h2><table class="table"><tb
    . ($conversation['disclosed_company_country'] ? '<tr><td>Company based in</td><td>' . e((string)$conversation['disclosed_company_country']) . '</td></tr>' : '')
    . ($conversation['requested_sqm'] ? '<tr><td>Size asked about</td><td>' . e(rtrim(rtrim(number_format((float)$conversation['requested_sqm'], 2), '0'), '.')) . ' sqm</td></tr>' : '')
    . '<tr><td>Page</td><td class="small">' . e((string)$conversation['page_url']) . '</td></tr>'
+   // The link that brought them (12 Oct 2026, docs/handover/2026-10-12-social-attribution.md).
+   . (!empty($conversation['utm_source']) || !empty($conversation['referrer_host'])
+        ? '<tr><td>Came from</td><td class="small">' . e(implode(' · ', array_filter([
+            (string)($conversation['utm_source'] ?? ''), (string)($conversation['utm_medium'] ?? ''),
+            (string)($conversation['utm_content'] ?? ''),
+            !empty($conversation['referrer_host']) ? 'via ' . $conversation['referrer_host'] : '',
+          ]))) . '</td></tr>'
+        : '')
    . '</tbody></table></div>';
 
 echo '<div>';

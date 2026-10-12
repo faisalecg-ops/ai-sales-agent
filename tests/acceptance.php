@@ -4888,6 +4888,30 @@ foreach (db()->all('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE
 }
 T::ok(true, 'The sales agent creates no sm_ tables');
 
+// -- Where a chat visitor came from (approved 12 Oct 2026, docs/handover/2026-10-12-social-attribution.md)
+T::ok(Migrations::columnExists('conversations', 'utm_content') && Migrations::columnExists('conversations', 'referrer_host'),
+    'Chats can remember the link that brought the visitor');
+$arrAgent = db()->one("SELECT * FROM agents WHERE status <> 'deleted' ORDER BY id LIMIT 1");
+$arr = ConversationStore::start($arrAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(12)), 'origin' => 'www.buildasia.net',
+    'page_url' => 'https://www.buildasia.net/blog/some-article/',
+    'arrival' => ['utm_source' => 'facebook', 'utm_medium' => 'social', 'utm_campaign' => 'buildasia', 'utm_content' => 'post-42',
+                  'landing_url' => 'https://www.buildasia.net/blog/some-article/', 'referrer_host' => 'l.facebook.com', 'at' => time() - 3600]])['conversation'];
+T::equals(['facebook', 'social', 'buildasia', 'post-42', 'l.facebook.com'],
+    [$arr['utm_source'], $arr['utm_medium'], $arr['utm_campaign'], $arr['utm_content'], $arr['referrer_host']],
+    'A chat started after a social post keeps the post\'s tags');
+T::ok(abs(strtotime($arr['arrived_at'] . ' UTC') - (time() - 3600)) < 5, 'And when the visitor arrived');
+$arrBad = ConversationStore::start($arrAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null,
+    'arrival' => ['utm_source' => '<script>', 'utm_content' => str_repeat('a', 400), 'landing_url' => 'javascript:alert(1)',
+                  'referrer_host' => 'evil host/<x>', 'at' => time() - 90 * 86400]])['conversation'];
+T::ok($arrBad['utm_source'] === null && $arrBad['landing_url'] === null && $arrBad['arrived_at'] === null,
+    'Odd or old values are dropped, never stored');
+$arrNone = ConversationStore::start($arrAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null, 'arrival' => 'nonsense'])['conversation'];
+T::ok($arrNone['utm_source'] === null && $arrNone['referrer_host'] === null, 'A chat without tags stores nothing extra');
+$wjs = (string)file_get_contents(APP_ROOT . '/public_html/widget/widget.js');
+T::ok(str_contains($wjs, "STORAGE_ARRIVAL = 'aisa_arrival'") && str_contains($wjs, 'arrival: readArrival()'),
+    'The widget keeps the arrival tags and sends them when a chat starts');
+db()->exec('DELETE FROM conversations WHERE id IN (' . (int)$arr['id'] . ',' . (int)$arrBad['id'] . ',' . (int)$arrNone['id'] . ')');
+
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');
 db()->exec('DELETE FROM agents WHERE slug LIKE \'acc-%\'');

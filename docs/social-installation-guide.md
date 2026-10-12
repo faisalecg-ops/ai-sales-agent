@@ -14,12 +14,31 @@ folder `public_html/social` and its own database tables (all named `sm_…`).
 
 cPanel → **File Manager** → open `public_html`:
 
-1. **Upload** `social-agent-1.3.0.zip`, then right-click it → **Extract**.
+1. **Upload** `social-agent-1.4.0.zip`, then right-click it → **Extract**.
    This creates the folder `public_html/social`.
 2. Delete the zip file afterwards.
 
 Updating later works the same way. Extract the new zip over the old folder;
 pictures in `social/uploads` and all data are kept.
+
+**Updating from 1.3.0 to 1.4.0 (12 Oct 2026, Stage 4 — results):** install
+three packages, in this order:
+1. Every event blog: `event-blog-1.4.0.zip` over `public_html/blog`, then open
+   the blog admin once. (It counts visits that come from social posts and gives
+   /social the reading figures.)
+2. The AI Sales Agent: `salesagent-upgrade-2026-10-arrival.zip` (see
+   `docs/upgrade-2026-10-arrival.md`), then Set-up → Database upgrade → run the
+   new step. (It remembers which post brought each chat visitor.)
+3. `social-agent-1.4.0.zip` over `public_html/social`, then open `/social` once.
+
+New: **Results** in the menu — posts, likes, comments, shares, views, visits to
+the blog, chats and leads per platform and per post, best posts, most-read
+articles, exhibitor kits, AI use and the X cost — printable, and emailed by
+itself early each month (for the month before) to Event settings → Monthly
+report. Each posted post shows its own results; for posts made by hand you
+type in the likes and comments. Figures of automatic posts are read 1, 7 and 28
+days after posting; X charges about $0.005 per read, so Blog and platforms → X
+has a monthly limit (default 300). The existing 5-minute cron job does it all.
 
 **Updating from 1.2.0 to 1.3.0 (12 Oct 2026, Stage 3):** extract
 `social-agent-1.3.0.zip` over `public_html/social` and open `/social` once (the

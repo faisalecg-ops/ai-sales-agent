@@ -395,6 +395,33 @@ final class Article
         db()->exec('INSERT INTO {p}article_views (article_id, day, views) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE views = views + 1', [$id, gmdate('Y-m-d')]);
     }
 
+    /**
+     * Count a visit that arrived through a tagged link (utm_source etc.), for
+     * the Social Media Agent's results. Same bot rule as countView().
+     * @param array<string,mixed> $u keys s (source), m (medium), c (campaign), t (content)
+     */
+    public static function countSource(int $articleId, array $u): void
+    {
+        $ua = strtolower((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+        if ($ua === '' || preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|linkedin|monitor|curl|wget|python|headless/', $ua)) {
+            return;
+        }
+        $tag = static function (mixed $v, int $max): string {
+            $v = is_string($v) ? strtolower(trim($v)) : '';
+            return preg_match('/^[a-z0-9._~:+-]{1,' . $max . '}$/', $v) ? $v : '';
+        };
+        $source = $tag($u['s'] ?? null, 60);
+        if ($source === '') {
+            return;
+        }
+        if ($articleId > 0 && !db()->value("SELECT 1 FROM {p}articles WHERE id = ? AND status = 'published'", [$articleId])) {
+            $articleId = 0;
+        }
+        db()->exec('INSERT INTO {p}visit_sources (day, article_id, source, medium, campaign, content, visits) VALUES (?, ?, ?, ?, ?, ?, 1)
+                    ON DUPLICATE KEY UPDATE visits = visits + 1',
+            [gmdate('Y-m-d'), $articleId, $source, $tag($u['m'] ?? null, 60), $tag($u['c'] ?? null, 100), $tag($u['t'] ?? null, 100)]);
+    }
+
     /** Refresh the "most read in the last 30 days" figures (cron, daily). */
     public static function refreshMostRead(): void
     {
@@ -402,6 +429,7 @@ final class Article
         db()->exec('UPDATE {p}articles SET views_30d = 0');
         db()->exec('UPDATE {p}articles a JOIN (SELECT article_id, SUM(views) v FROM {p}article_views WHERE day >= ? GROUP BY article_id) s ON s.article_id = a.id SET a.views_30d = s.v', [$since]);
         db()->delete('article_views', 'day < ?', [gmdate('Y-m-d', time() - 400 * 86400)]);
+        db()->delete('visit_sources', 'day < ?', [gmdate('Y-m-d', time() - 400 * 86400)]);
     }
 
     /** The summary shown on cards and in search results. */
