@@ -6,7 +6,8 @@ OUT = '/tmp/claude-0/-home-claude-ai-sales-agent/40b5576f-35bf-5c09-a10b-a0b4d48
 pages = [('dashboard','/social/'),('plan','/social/plan.php'),('articles','/social/articles.php'),('article','/social/article.php?id='+art),
          ('posts','/social/posts.php'),('post-ig','/social/post.php?id='+ig),('post-fb-due','/social/post.php?id='+fb),('calendar','/social/calendar.php?month='+month),
          ('media','/social/media.php'),('settings','/social/settings.php'),('connections','/social/connections.php'),('activity','/social/activity.php'),('guide','/social/guide.php'),
-         ('newpost','/social/posts.php?new=1')]
+         ('newpost','/social/posts.php?new=1'),('exhibitors','/social/exhibitors.php'),('kit-admin','/social/exhibitors.php?kit='+(sys.argv[6] if len(sys.argv)>6 else '1')),
+         ('post-failed','/social/post.php?id='+(sys.argv[7] if len(sys.argv)>7 else '1')),('kit-public','/social/kit.php?k='+(sys.argv[8] if len(sys.argv)>8 else 'x'))]
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()

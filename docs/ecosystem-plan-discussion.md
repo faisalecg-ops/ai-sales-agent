@@ -394,6 +394,13 @@ articles written and published directly in the blog admin are picked up by
 dashboard lists articles waiting for approval in the blog, with a link to
 approve them there. Approval of the article itself stays in the blog.
 
+**Stage 3 built 12 Oct 2026 (owner: "make all 1-5 so after testing we immediately apply
+for approval") — /social 1.3.0:** automatic posting (Meta, LinkedIn, X; X by hand or
+pay-per-use with a monthly cap), exhibitor share kits (list from the website, typed
+in or uploaded; admin chooses), weekly industry radar and curated news, public
+privacy page. Next: the owner applies to Meta and LinkedIn using the Claude doc
+"Stage 3 — Applying to Meta, LinkedIn and X".
+
 **Stage 2 built 12 Oct 2026 (owner: "I am ready for Stage 2") — blog 1.3.0,
 /social 1.2.0:** 1a and 1b below, as specified. Choices taken: the paid period's
 end date has a per-article choice (keep, still labelled, or archive); during the

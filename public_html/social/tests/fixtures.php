@@ -123,8 +123,96 @@ function sm_install_fakes(): void
         imagepng($im);
         return (string)ob_get_clean();
     };
+    SmNet::$hook = static fn(string $m, string $u, array $h, ?string $b): array => sm_fake_net($m, $u, $h, $b);
     Mailer::$testTransport = static function ($profile, $to, $subject, $body) {
         SmTestBus::log('mail', ['from' => $profile['from_email'] ?? '', 'to' => $to, 'subject' => $subject, 'body' => $body]);
         return ['ok' => true];
     };
+}
+
+/**
+ * Stand-in for Meta, LinkedIn and X (and outside web pages): answers like the
+ * real services, records every call. Tests can make an address fail with
+ * SmTestBus::write('net-fail', ['part of the address' => status]).
+ */
+function sm_fake_net(string $method, string $url, array $headers, ?string $body): array
+{
+    SmTestBus::log('net', ['method' => $method, 'url' => $url, 'headers' => $headers, 'body' => $body !== null && strlen($body) > 4000 ? '[' . strlen($body) . ' bytes]' : $body]);
+    foreach (SmTestBus::read('net-fail') as $part => $status) {
+        if (str_contains($url, (string)$part)) {
+            return ['status' => (int)$status, 'body' => json_encode(['error' => ['message' => 'Simulated failure ' . $status]]), 'headers' => []];
+        }
+    }
+    $j = static fn(array $d, int $st = 200, array $h = []) => ['status' => $st, 'body' => json_encode($d), 'headers' => $h];
+    $pages = SmTestBus::read('net-pages');
+    if (isset($pages[$url])) {
+        return ['status' => 200, 'body' => (string)$pages[$url], 'headers' => ['content-type' => 'text/html']];
+    }
+    if (str_contains($url, 'logos.example.com')) {
+        $im = imagecreatetruecolor(300, 120);
+        imagefill($im, 0, 0, imagecolorallocate($im, 200, 30, 30));
+        ob_start();
+        imagepng($im);
+        return ['status' => 200, 'body' => (string)ob_get_clean(), 'headers' => ['content-type' => 'image/png']];
+    }
+    // Meta
+    if (str_contains($url, 'graph.facebook.com')) {
+        if (str_contains($url, '/oauth/access_token')) {
+            return $j(['access_token' => str_contains($url, 'fb_exchange_token') ? 'fblong' : 'fbshort', 'token_type' => 'bearer']);
+        }
+        if (str_contains($url, '/me/accounts')) {
+            return $j(['data' => [
+                ['id' => '111', 'name' => 'Build Asia', 'link' => 'https://www.facebook.com/buildasia', 'access_token' => 'pagetok111', 'instagram_business_account' => ['id' => 'ig222', 'username' => 'buildasia']],
+                ['id' => '333', 'name' => 'Another page', 'access_token' => 'pagetok333'],
+            ]]);
+        }
+        if (preg_match('#/111/(photos|feed|videos)$#', $url)) {
+            return $j(['id' => '555', 'post_id' => '111_555']);
+        }
+        if (str_ends_with($url, '/ig222/media')) {
+            return $j(['id' => 'container1']);
+        }
+        if (str_contains($url, '/container1?')) {
+            return $j(['status_code' => 'FINISHED', 'id' => 'container1']);
+        }
+        if (str_ends_with($url, '/ig222/media_publish')) {
+            return $j(['id' => 'igmedia1']);
+        }
+        if (str_contains($url, '/igmedia1?')) {
+            return $j(['permalink' => 'https://www.instagram.com/p/abc123/', 'id' => 'igmedia1']);
+        }
+    }
+    // LinkedIn
+    if (str_contains($url, 'linkedin.com/oauth/v2/accessToken')) {
+        return $j(['access_token' => 'litok', 'expires_in' => 5184000]);
+    }
+    if (str_contains($url, 'api.linkedin.com/rest/organizationAcls')) {
+        return $j(['elements' => [['organization' => 'urn:li:organization:777', 'role' => 'ADMINISTRATOR', 'state' => 'APPROVED']]]);
+    }
+    if (str_contains($url, 'api.linkedin.com/rest/organizations/777')) {
+        return $j(['id' => 777, 'localizedName' => 'Build Asia', 'vanityName' => 'buildasia']);
+    }
+    if (str_contains($url, 'api.linkedin.com/rest/images?action=initializeUpload')) {
+        return $j(['value' => ['uploadUrl' => 'https://www.linkedin.com/dms-uploads/up1', 'image' => 'urn:li:image:img1', 'uploadUrlExpiresAt' => 0]]);
+    }
+    if (str_contains($url, 'linkedin.com/dms-uploads/')) {
+        return ['status' => 201, 'body' => '', 'headers' => []];
+    }
+    if (str_contains($url, 'api.linkedin.com/rest/posts')) {
+        return ['status' => 201, 'body' => '', 'headers' => ['x-restli-id' => 'urn:li:share:999']];
+    }
+    // X
+    if (str_contains($url, 'api.x.com/2/oauth2/token')) {
+        return $j(['access_token' => 'xtok', 'refresh_token' => 'xref', 'expires_in' => 7200, 'token_type' => 'bearer']);
+    }
+    if (str_contains($url, 'api.x.com/2/users/me')) {
+        return $j(['data' => ['id' => '55', 'username' => 'BuildAsiaExpo', 'name' => 'Build Asia']]);
+    }
+    if (str_contains($url, 'api.x.com/2/media/upload')) {
+        return $j(['data' => ['id' => 'm1', 'media_key' => '3_m1']]);
+    }
+    if (str_contains($url, 'api.x.com/2/tweets')) {
+        return $j(['data' => ['id' => 't1', 'text' => 'ok']], 201);
+    }
+    return ['status' => 404, 'body' => '{}', 'headers' => []];
 }

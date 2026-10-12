@@ -14,6 +14,9 @@ $labels = [
     'post_submitted' => 'Post sent for approval', 'post_approved' => 'Post approved', 'post_sent_back' => 'Post sent back', 'post_now' => 'Post now', 'post_scheduled' => 'Post scheduled',
     'post_unscheduled' => 'Post taken off the schedule', 'post_done' => 'Posted', 'post_cancelled' => 'Post cancelled', 'reminder' => 'Reminder', 'media_uploaded' => 'Files uploaded',
     'settings_saved' => 'Settings saved', 'blog_connection_saved' => 'Blog connection saved', 'platforms_saved' => 'Platforms saved', 'blog_notice' => 'Notice from the blog', 'blog_article_found' => 'Article written in the blog picked up',
+    'post_auto' => 'Posted automatically', 'post_failed' => 'Automatic posting failed', 'post_by_hand' => 'Switched to posting by hand', 'connected' => 'Page connected',
+    'disconnected' => 'Page disconnected', 'connection_failed' => 'Connecting failed', 'apps_saved' => 'Platform apps saved', 'radar' => 'Industry radar', 'curated_shared' => 'Curated news written',
+    'exhibitors_found' => 'Exhibitors found on the website', 'exhibitors_uploaded' => 'Exhibitor list uploaded', 'kits_made' => 'Exhibitor kits written', 'kits_approved' => 'Exhibitor kits approved', 'kits_sent' => 'Exhibitor kits emailed',
 ];
 sm_layout_start('Activity log');
 if (!$rows) {

@@ -269,7 +269,7 @@ function sm_pill(string $status): string
 function f_text(string $name, string $label, ?string $value, array $opts = []): string
 {
     $type = (string)($opts['type'] ?? 'text');
-    $extra = !empty($opts['required']) ? ' required' : '';
+    $extra = (!empty($opts['required']) ? ' required' : '') . (!empty($opts['readonly']) ? ' readonly' : '');
     foreach (['placeholder', 'min', 'max', 'step', 'maxlength'] as $a) {
         if (isset($opts[$a])) {
             $extra .= ' ' . $a . '="' . e((string)$opts[$a]) . '"';
@@ -373,6 +373,7 @@ function sm_layout_start(string $title, array $actions = []): void
             'articles.php' => ['Blog articles', $waiting, 'viewer'],
             'posts.php'    => ['Social posts', 0, 'viewer'],
             'calendar.php' => ['Calendar', 0, 'viewer'],
+            'exhibitors.php' => ['Exhibitors and kits', 0, 'viewer'],
         ],
         'Library' => [
             'media.php' => ['Pictures and videos', 0, 'viewer'],

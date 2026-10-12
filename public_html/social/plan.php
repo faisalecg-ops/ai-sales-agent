@@ -41,6 +41,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
         sm_redirect('plan.php');
     }
+    if ($do === 'radar' && sm_can('editor')) {
+        session_write_close();
+        $res = SmRadar::run($agent);
+        @session_start();
+        sm_flash($res['ok'] ? ($res['made'] ? $res['made'] . ' new item(s) from the industry radar.' : 'The radar found nothing new this time.') : (string)$res['error'], $res['ok'] ? 'ok' : 'error');
+        sm_redirect('plan.php', ['tab' => 'radar']);
+    }
     if ($do === 'add') {
         $title = mb_substr(sm_in('title'), 0, 255);
         $pillar = sm_in('pillar');
@@ -61,6 +68,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $topic = db()->one("SELECT * FROM sm_topics WHERE id = ? AND agent_id = ? AND status IN ('suggested','picked')", [$tid, $aid]);
     if (!$topic) {
         sm_redirect('plan.php');
+    }
+    if ($do === 'share' && sm_can('editor') && $topic['origin'] === 'radar') {
+        if (($why = SmAi::blocked($aid, 'text')) !== null) {
+            sm_flash($why, 'error');
+            sm_redirect('plan.php', ['tab' => 'radar']);
+        }
+        $res = SmRadar::share($agent, $topic, $uid);
+        sm_flash($res['message'], $res['ok'] ? 'ok' : 'error');
+        sm_redirect($res['ok'] ? 'posts.php' : 'plan.php', $res['ok'] ? [] : ['tab' => 'radar']);
     }
     if ($do === 'dismiss') {
         db()->update('sm_topics', ['status' => 'dismissed'], 'id = ?', [$tid]);
@@ -107,7 +123,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
 $settings = SmEvent::settings($aid);
 $phase = SmEvent::phase($agent);
-$topics = db()->all("SELECT * FROM sm_topics WHERE agent_id = ? AND status IN ('suggested','picked') ORDER BY status = 'picked' DESC, id DESC LIMIT 60", [$aid]);
+$topics = db()->all("SELECT * FROM sm_topics WHERE agent_id = ? AND status IN ('suggested','picked') AND origin <> 'radar' ORDER BY status = 'picked' DESC, id DESC LIMIT 60", [$aid]);
+$radar = db()->all("SELECT * FROM sm_topics WHERE agent_id = ? AND status IN ('suggested','picked') AND origin = 'radar' ORDER BY id DESC LIMIT 40", [$aid]);
+$evRow = SmEvent::row($aid);
 $pillars = array_map(static fn($p) => $p[0], SmEvent::PILLARS);
 
 sm_layout_start('Content plan');
@@ -120,6 +138,33 @@ if (sm_can('editor')) {
        . f_select('pillar', 'Content type', ['' => 'Follow the mix and the phase'] + $pillars, '')
        . f_select('count', 'How many', ['4' => '4', '6' => '6', '8' => '8', '10' => '10'], '6')
        . '<button class="btn" type="submit" data-busy="Thinking of topics…">Suggest topics</button></form>';
+}
+echo '</div>';
+
+// The weekly industry radar.
+$days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+echo '<div class="card" id="radar"><h2>Industry radar</h2><p class="muted small">'
+   . ($settings['radar_enabled'] ? 'Every ' . e($days[(int)$settings['radar_weekday']] ?? 'Monday') . ' the agent searches for new reports, big projects, growing sectors and news in the event\'s sectors.' : 'The weekly radar is switched off (Event settings).')
+   . ($evRow['radar_ran_at'] ? ' Last run ' . e(sm_time($evRow['radar_ran_at'])) . '.' : '')
+   . ' Web searches this month: ' . SmRadar::researchUsed($aid) . ' of ' . (int)$settings['research_limit'] . '.</p>';
+if (sm_can('editor')) {
+    echo sm_button('plan.php', ['do' => 'radar'], 'Run the radar now', 'btn btn-small btn-quiet');
+}
+if ($radar) {
+    echo '<table class="table"><tbody>';
+    foreach ($radar as $t) {
+        $src = trim(explode("\n", (string)$t['source_urls'])[0] ?? '');
+        echo '<tr><td><span class="pill pill-info">' . e(SmRadar::KINDS[$t['radar_kind'] ?? 'news'] ?? 'News') . '</span> <strong>' . e((string)$t['title']) . '</strong>'
+           . '<br><span class="muted small">' . e((string)$t['angle']) . '</span>'
+           . ($src !== '' ? '<br><a class="small" href="' . e($src) . '" target="_blank" rel="noopener">' . e((string)($t['source_name'] ?: parse_url($src, PHP_URL_HOST))) . ' ↗</a>' : '') . '</td><td style="white-space:nowrap">';
+        if (sm_can('editor')) {
+            echo sm_button('plan.php', ['do' => 'write', 'id' => $t['id']], 'Write an article', 'btn btn-small')
+               . ' ' . sm_button('plan.php', ['do' => 'share', 'id' => $t['id']], 'Share as curated news', 'btn btn-small btn-quiet')
+               . ' ' . sm_button('plan.php', ['do' => 'dismiss', 'id' => $t['id']], 'Dismiss', 'btn btn-small btn-quiet');
+        }
+        echo '</td></tr>';
+    }
+    echo '</tbody></table><p class="hint">"Share as curated news" writes a post for each platform in our own words, crediting the source and linking to the original; it waits for approval like any post.</p>';
 }
 echo '</div>';
 

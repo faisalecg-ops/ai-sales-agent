@@ -45,6 +45,13 @@ final class SmEvent
             'blog_link_default' => true,
             'blog_written_posts'=> true,
             'report_emails'     => '',   // who receives the monthly management report (Stage 4)
+            'x_auto_limit'      => 50,   // automatic X posts a month (X charges per post)
+            'exhibitor_source'  => 'typed',   // website | typed | upload
+            'exhibitor_page_url'=> '',
+            'radar_enabled'     => true,
+            'radar_weekday'     => 1,    // 1 = Monday … 7 = Sunday
+            'radar_count'       => 6,
+            'research_limit'    => 60,   // web searches a month
             'lead_minutes'      => 30,
             'brand_primary'     => '#142A5C',
             'brand_secondary'   => '#1F4FBF',

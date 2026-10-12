@@ -127,6 +127,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             sm_flash('Not yet: ' . $why, 'error');
             $back();
         }
+        if (SmPublish::automatic($aid, (string)$p['platform'])) {
+            SmActivity::log($aid, 'post_now', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
+            $res = SmPublish::run($agent, $id);
+            sm_flash($res['ok'] ? $res['message'] : 'Not posted: ' . $res['message'] . ($res['retry'] ?? false ? ' It will be tried again automatically in a few minutes.' : ''), $res['ok'] ? 'ok' : 'error');
+            $back();
+        }
         db()->update('sm_posts', ['status' => 'due', 'scheduled_at' => gmdate('Y-m-d H:i:s'), 'reminder_sent_at' => gmdate('Y-m-d H:i:s')], 'id = ?', [$id]);
         SmActivity::log($aid, 'post_now', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
         $back();
@@ -144,6 +150,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         db()->update('sm_posts', ['status' => 'scheduled', 'scheduled_at' => $utc, 'reminder_sent_at' => null], 'id = ?', [$id]);
         SmActivity::log($aid, 'post_scheduled', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id . ' for ' . sm_time($utc));
         sm_flash('Scheduled for ' . sm_time($utc) . ' (' . $tz->getName() . ').');
+        $back();
+    }
+    if ($do === 'retry' && sm_can('approver') && $p['status'] === 'failed') {
+        $res = SmPublish::run($agent, $id);
+        sm_flash($res['ok'] ? $res['message'] : 'Still not posted: ' . $res['message'], $res['ok'] ? 'ok' : 'error');
+        $back();
+    }
+    if ($do === 'by_hand' && sm_can('approver') && in_array($p['status'], ['failed', 'scheduled', 'approved'], true)) {
+        db()->update('sm_posts', ['status' => 'due', 'scheduled_at' => gmdate('Y-m-d H:i:s'), 'reminder_sent_at' => gmdate('Y-m-d H:i:s'), 'next_try_at' => null], 'id = ?', [$id]);
+        SmActivity::log($aid, 'post_by_hand', SmEvent::PLATFORMS[$p['platform']] . ' post #' . $id);
+        sm_flash('Post it by hand: copy the text and picture below, then press "Done — I posted it".');
         $back();
     }
     if ($do === 'unschedule' && sm_can('approver') && in_array($p['status'], ['scheduled', 'due'], true)) {
@@ -219,8 +236,23 @@ if ($p['review_note']) {
     echo '<div class="alert alert-warn"><p style="margin:0"><strong>Note from the approver:</strong> ' . e((string)$p['review_note']) . '</p></div>';
 }
 
+$auto = SmPublish::automatic($aid, (string)$p['platform']);
+$conn = $auto ? SmConnect::find($aid, (string)$p['platform']) : null;
+if ($p['status'] === 'failed') {
+    echo '<div class="alert alert-error"><p style="margin:0"><strong>Not posted.</strong> ' . e((string)$p['fail_reason'])
+       . ($p['next_try_at'] ? ' It will be tried again automatically at ' . e(sm_time($p['next_try_at'], 'H:i')) . '.' : '') . '</p></div>';
+    if (sm_can('approver')) {
+        echo '<div class="btn-row">' . sm_button('post.php', ['do' => 'retry', 'id' => $id], 'Try again', 'btn btn-ok')
+           . ' ' . sm_button('post.php', ['do' => 'by_hand', 'id' => $id], 'Post it by hand instead', 'btn btn-quiet') . '</div>';
+    }
+}
+if ($auto && in_array($p['status'], ['approved', 'scheduled'], true)) {
+    echo '<div class="alert alert-info"><p style="margin:0"><strong>Automatic posting:</strong> ' . ($p['status'] === 'scheduled'
+        ? 'it will be posted on ' . e((string)($conn['account_name'] ?? $pname)) . ' at ' . e(sm_time($p['scheduled_at'])) . ' by itself.'
+        : 'press <em>Post now</em> to post it on ' . e((string)($conn['account_name'] ?? $pname)) . ' straight away, or schedule it.') . '</p></div>';
+}
 // Posting panel: shown when it is time to post (manual mode).
-if (in_array($p['status'], ['due', 'approved', 'scheduled'], true) && sm_can('editor')) {
+if ((!$auto && in_array($p['status'], ['due', 'approved', 'scheduled'], true) || $p['status'] === 'due') && sm_can('editor')) {
     $isDue = $p['status'] === 'due';
     echo '<div class="sm-postit' . ($isDue ? ' is-due' : '') . '"><h2 style="margin-top:0">' . ($isDue ? 'Post it now on ' . e($pname) : 'When it is time to post') . '</h2>'
        . '<ol class="sm-steps"><li><button class="btn btn-small" type="button" data-copy="#sm-full">Copy the text</button></li>'

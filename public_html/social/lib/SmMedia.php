@@ -169,20 +169,23 @@ final class SmMedia
      * Build a branded image: the photo (if any) behind, the event's colours,
      * its name and dates, the headline and the slanted band of the website.
      */
-    public static function build(array $agent, string $headline, string $shape, ?int $photoId, ?int $userId): array
+    /**
+     * @param array{logo_id?:int, subline?:string} $extra exhibitor kits: their logo on a white tile, and "Stand 12 · Hall B"
+     */
+    public static function build(array $agent, string $headline, string $shape, ?int $photoId, ?int $userId, array $extra = []): array
     {
         if (!self::canBuild()) {
             return ['ok' => false, 'error' => 'Branded images need PHP\'s GD extension with FreeType on this server.'];
         }
         try {
-            return self::draw($agent, $headline, $shape, $photoId, $userId);
+            return self::draw($agent, $headline, $shape, $photoId, $userId, $extra);
         } catch (Throwable $e) {
             app_log('social', 'image build failed', ['error' => $e->getMessage()]);
             return ['ok' => false, 'error' => 'The image could not be built. Try another photo.'];
         }
     }
 
-    private static function draw(array $agent, string $headline, string $shape, ?int $photoId, ?int $userId): array
+    private static function draw(array $agent, string $headline, string $shape, ?int $photoId, ?int $userId, array $extra = []): array
     {
         $aid = (int)$agent['id'];
         [$W, $H] = self::SHAPES[$shape] ?? self::SHAPES['square'];
@@ -235,6 +238,22 @@ final class SmMedia
         $label = mb_strtoupper($f['name'] . ($f['dates'] !== '' ? '  ·  ' . $f['dates'] : ''));
         imagettftext($im, (int)(26 * $unit), 0, $pad, $pad + (int)(30 * $unit), $amberC, $bold, $label);
 
+        // Exhibitor kits: where their logo tile goes, so the headline stays below it.
+        $exLogo = !empty($extra['logo_id']) ? self::find($aid, (int)$extra['logo_id']) : null;
+        $xi = $exLogo && $exLogo['kind'] === 'image' ? self::open($exLogo) : null;
+        $topLimit = 0;
+        if ($xi !== null) {
+            $boxW = (int)($W * 0.42);
+            $boxH = (int)(($shape === 'landscape' ? 95 : 150) * $unit);
+            $sc = min($boxW / max(1, imagesx($xi)), $boxH / max(1, imagesy($xi)));
+            $xlw = max(1, (int)(imagesx($xi) * $sc));
+            $xlh = max(1, (int)(imagesy($xi) * $sc));
+            $tp = (int)(14 * $unit);
+            $ty = $pad + (int)(55 * $unit);
+            $topLimit = $ty + $xlh + 2 * $tp + (int)(30 * $unit);
+        }
+        $subReserve = trim((string)($extra['subline'] ?? '')) !== '' ? (int)(40 * $unit * 1.9) : 0;
+
         // Headline, as large as fits.
         $headline = trim($headline) !== '' ? trim($headline) : $f['name'];
         $maxW = $W - 2 * $pad;
@@ -243,16 +262,30 @@ final class SmMedia
         while ($size > 24) {
             $lines = self::wrap($headline, $black, $size, $maxW);
             $blockH = count($lines) * $size * 1.22;
-            if ($blockH <= $H * ($shape === 'landscape' ? 0.52 : 0.5) && count($lines) <= 5) {
+            $fitsUnderLogo = $topLimit === 0 || ($H - $H * 0.13 - $subReserve - $blockH) >= $topLimit;
+            if ($blockH <= $H * ($shape === 'landscape' ? 0.52 : 0.5) && count($lines) <= 5 && $fitsUnderLogo) {
                 break;
             }
             $size -= 4;
         }
         $lineH = (int)($size * 1.22);
-        $y = (int)($H - $H * 0.13 - count($lines) * $lineH);
+        $sub = trim((string)($extra['subline'] ?? ''));
+        $subSize = (int)(40 * $unit);
+        $y = (int)($H - $H * 0.13 - count($lines) * $lineH - ($sub !== '' ? (int)($subSize * 1.9) : 0));
         foreach ($lines as $ln) {
             $y += $lineH;
             imagettftext($im, $size, 0, $pad, $y, $white, $black, $ln);
+        }
+
+        if ($sub !== '') {
+            imagettftext($im, $subSize, 0, $pad, $y + (int)($subSize * 1.7), $amberC, $black, $sub);
+        }
+
+        // Exhibitor kits: the exhibitor's own logo on a white tile, under the event name.
+        if ($xi !== null) {
+            imagefilledrectangle($im, $pad, $ty, $pad + $xlw + 2 * $tp, $ty + $xlh + 2 * $tp, imagecolorallocate($im, 255, 255, 255));
+            imagecopyresampled($im, $xi, $pad + $tp, $ty + $tp, 0, 0, $xlw, $xlh, imagesx($xi), imagesy($xi));
+            imagedestroy($xi);
         }
 
         // Slanted band along the foot, as on the website.

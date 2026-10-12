@@ -14,12 +14,22 @@ folder `public_html/social` and its own database tables (all named `sm_…`).
 
 cPanel → **File Manager** → open `public_html`:
 
-1. **Upload** `social-agent-1.2.0.zip`, then right-click it → **Extract**.
+1. **Upload** `social-agent-1.3.0.zip`, then right-click it → **Extract**.
    This creates the folder `public_html/social`.
 2. Delete the zip file afterwards.
 
 Updating later works the same way. Extract the new zip over the old folder;
 pictures in `social/uploads` and all data are kept.
+
+**Updating from 1.2.0 to 1.3.0 (12 Oct 2026, Stage 3):** extract
+`social-agent-1.3.0.zip` over `public_html/social` and open `/social` once (the
+blog does not change). New: automatic posting to Facebook, Instagram, LinkedIn
+and X once the platform apps are approved (Blog and platforms → Platform apps
+and Connect; see the Claude doc "Stage 3 — Applying to Meta, LinkedIn and X");
+Exhibitors and kits (list from the website, typed in or uploaded); the weekly
+industry radar and curated news (Content plan); a public privacy page at
+`/social/privacy.php` for the platforms' reviews. The existing 5-minute cron
+job does all the scheduled work; nothing new to add in cPanel.
 
 **Updating from 1.1.0 to 1.2.0 (12 Oct 2026):** first update every event blog
 to **1.3.0**, then extract `social-agent-1.2.0.zip` over `public_html/social` and

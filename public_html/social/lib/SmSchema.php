@@ -11,7 +11,7 @@ defined('SM_BOOT') || exit;
  */
 final class SmSchema
 {
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     public static function ensure(): void
     {
@@ -40,6 +40,17 @@ final class SmSchema
         // Version 3 (12 Oct 2026): who wrote it (Industry Voices) and who paid for it (sponsored), from the blog.
         self::addColumn('sm_articles', 'voice', 'TEXT NULL');
         self::addColumn('sm_articles', 'sponsor', 'TEXT NULL');
+        // Version 4 (12 Oct 2026, Stage 3): automatic posting, exhibitor kits, radar and curated news.
+        self::addColumn('sm_posts', 'link_url', 'VARCHAR(500) NULL');
+        self::addColumn('sm_posts', 'remote_id', 'VARCHAR(190) NULL');
+        self::addColumn('sm_posts', 'attempts', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+        self::addColumn('sm_posts', 'next_try_at', 'DATETIME NULL');
+        self::addColumn('sm_posts', 'posting_since', 'DATETIME NULL');
+        self::addColumn('sm_posts', 'posted_auto', 'TINYINT(1) NOT NULL DEFAULT 0');
+        self::addColumn('sm_topics', 'radar_kind', 'VARCHAR(16) NULL');
+        self::addColumn('sm_topics', 'source_name', 'VARCHAR(160) NULL');
+        self::addColumn('sm_events', 'radar_ran_at', 'DATETIME NULL');
+        self::addColumn('sm_events', 'exhibitors_checked_at', 'DATETIME NULL');
         if (!db()->value("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'sm_articles' AND index_name = 'uq_sm_blog_article'")) {
             try {
                 db()->raw()->query('ALTER TABLE sm_articles ADD UNIQUE KEY uq_sm_blog_article (agent_id, blog_article_id)');
@@ -61,7 +72,8 @@ final class SmSchema
     /** @return list<string> */
     public static function tables(): array
     {
-        return ['sm_meta', 'sm_events', 'sm_platforms', 'sm_topics', 'sm_articles', 'sm_posts', 'sm_media', 'sm_activity', 'sm_ai_usage'];
+        return ['sm_meta', 'sm_events', 'sm_platforms', 'sm_topics', 'sm_articles', 'sm_posts', 'sm_media', 'sm_activity', 'sm_ai_usage',
+            'sm_connections', 'sm_exhibitors', 'sm_kit_clicks'];
     }
 
     /** @return list<string> */
@@ -191,6 +203,57 @@ final class SmSchema
                subject VARCHAR(255) NULL,
                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                PRIMARY KEY (id), KEY idx_sm_activity (agent_id, created_at))$t",
+
+            // A connected social account for automatic posting (tokens encrypted).
+            "CREATE TABLE IF NOT EXISTS sm_connections (
+               id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+               agent_id INT UNSIGNED NOT NULL,
+               platform ENUM('linkedin','facebook','instagram','x') NOT NULL,
+               account_id VARCHAR(190) NOT NULL,
+               account_name VARCHAR(255) NULL,
+               account_url VARCHAR(500) NULL,
+               token TEXT NOT NULL,
+               refresh_token TEXT NULL,
+               expires_at DATETIME NULL,
+               extra TEXT NULL,
+               status ENUM('ok','expired','error') NOT NULL DEFAULT 'ok',
+               last_error VARCHAR(500) NULL,
+               connected_by INT UNSIGNED NULL,
+               connected_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+               PRIMARY KEY (id), UNIQUE KEY uq_sm_conn (agent_id, platform))$t",
+
+            // Exhibitors of an event and their share kits.
+            "CREATE TABLE IF NOT EXISTS sm_exhibitors (
+               id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+               agent_id INT UNSIGNED NOT NULL,
+               company VARCHAR(200) NOT NULL,
+               company_key VARCHAR(200) NOT NULL,
+               stand VARCHAR(60) NULL,
+               hall VARCHAR(60) NULL,
+               website VARCHAR(500) NULL,
+               email VARCHAR(190) NULL,
+               contact_name VARCHAR(160) NULL,
+               logo_media_id INT UNSIGNED NULL,
+               source ENUM('website','typed','upload') NOT NULL DEFAULT 'typed',
+               kit_token CHAR(40) NULL,
+               kit_status ENUM('none','ready','approved','sent') NOT NULL DEFAULT 'none',
+               kit_texts MEDIUMTEXT NULL,
+               kit_media_wide INT UNSIGNED NULL,
+               kit_media_square INT UNSIGNED NULL,
+               kit_approved_by INT UNSIGNED NULL,
+               kit_sent_at DATETIME NULL,
+               kit_opened_at DATETIME NULL,
+               last_error VARCHAR(500) NULL,
+               created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+               updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+               PRIMARY KEY (id), UNIQUE KEY uq_sm_exh (agent_id, company_key), UNIQUE KEY uq_sm_exh_token (kit_token))$t",
+
+            "CREATE TABLE IF NOT EXISTS sm_kit_clicks (
+               exhibitor_id INT UNSIGNED NOT NULL,
+               day DATE NOT NULL,
+               clicks INT UNSIGNED NOT NULL DEFAULT 0,
+               PRIMARY KEY (exhibitor_id, day))$t",
 
             "CREATE TABLE IF NOT EXISTS sm_ai_usage (
                id INT UNSIGNED NOT NULL AUTO_INCREMENT,

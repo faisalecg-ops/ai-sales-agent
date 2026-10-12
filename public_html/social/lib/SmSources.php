@@ -61,6 +61,10 @@ final class SmSources
         if (!$provider->isConfigured()) {
             return ['ok' => false, 'error' => 'Web research is not set up (no Tavily key in the sales agent\'s Settings).', 'pages' => []];
         }
+        $limit = (int)SmEvent::settings($agentId)['research_limit'];
+        if (SmRadar::researchUsed($agentId) >= $limit) {
+            return ['ok' => false, 'error' => 'This month\'s limit of ' . $limit . ' web searches is reached. An admin can raise it under Event settings.', 'pages' => []];
+        }
         $res = $provider->search($query, ['max_results' => 8, 'deep' => true]);
         db()->insert('sm_ai_usage', ['agent_id' => $agentId, 'kind' => 'research', 'purpose' => 'search', 'model' => $provider->name(), 'ok' => $res['ok'] ? 1 : 0]);
         if (!$res['ok']) {

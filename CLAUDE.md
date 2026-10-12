@@ -46,8 +46,8 @@ Read this before any task on this project.
       report) and /social 1.2.0 (credits from the blog payload `voice`/`sponsor`
       in `sm_articles.voice/sponsor`; sponsored posts must carry
       "Sponsored · [sponsor]"; tag reminders; Event settings `report_emails`).
-    - Code: `public_html/social/`, version 1.2.0, package
-      `social-agent-1.2.0.zip`, guide `docs/social-installation-guide.md`.
+    - Code: `public_html/social/`, version 1.3.0, package
+      `social-agent-1.3.0.zip`, guide `docs/social-installation-guide.md`.
     - Pages are plain .php. Private code is in `lib/` (blocked from the web).
       Its own tables are named `sm_` (`lib/SmSchema.php`, created on first
       visit).
@@ -57,12 +57,24 @@ Read this before any task on this project.
     - It writes into the event blogs only through their API (`lib/SmBlog.php`).
       It receives the blog's signed notice at `hook.php`. Its cron job is
       `cron.php`.
-    - Tests: `php public_html/social/tests/acceptance.php` (140). They use real
+    - Tests: `php public_html/social/tests/acceptance.php` (218; set `SM_SHOTS=1` for screenshots). They use real
       sign-ins, a real test blog (database `smblog`) and stand-in AI and
       research. An independent review was done and every finding was fixed.
-  - **Next: Stage 3 (reach)**, to be reviewed with the owner at the start of the
-    next session: direct Meta/LinkedIn posting (needs their app approvals),
-    X, exhibitor share kit, curated news, weekly industry radar. Facts checked
+  - **Stage 3 BUILT 12 Oct 2026 (/social 1.3.0), not yet installed.** Owner's
+    choices (12 Oct): X both ways (by hand free, or automatic pay-per-use with a
+    monthly cap `x_auto_limit`); exhibitor list all three ways (website page read
+    by AI with on-page checks + weekly refresh, typed, CSV/XLSX upload), admin
+    chooses (`exhibitor_source`); build all five parts, then apply for approvals.
+    Code: `lib/SmApps.php` (platform apps in sm_meta, encrypted; Graph v26.0,
+    LinkedIn 202609, optional Meta config_id), `SmConnect.php` (OAuth, PKCE for X,
+    encrypted tokens in `sm_connections`, refresh), `SmPublish.php` (FB/IG/LI/X,
+    claim lock, 3 tries, failure email), `SmNet.php` (test hook, publicUrl SSRF
+    guard), `SmExhibitors.php` + `exhibitors.php`, public `kit.php`, `r.php`
+    (counted link → register_url with UTM), `SmRadar.php` (weekly, research limit
+    `research_limit`, curated posts with `sm_posts.link_url`), `oauth.php`,
+    public `privacy.php`. Approval guide: Claude doc "Stage 3 — Applying to Meta,
+    LinkedIn and X" (https://claude.ai/code/artifact/c647753a-0b73-4ef4-afbf-2cd18471edb7).
+    Facts checked
     12 Oct 2026: X has no free API tier since Feb 2026 (pay per use, about
     $0.015 a post, $0.20 a post with a link); LinkedIn company-page posting
     needs the Community Management API (business review, no fixed time);

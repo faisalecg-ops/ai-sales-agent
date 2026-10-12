@@ -319,7 +319,13 @@ final class SmFlow
         return self::savePosts($agent, $out, $platforms, null, $userId, (int)$photoId);
     }
 
-    private static function savePosts(array $agent, array $out, array $platforms, ?int $articleId, ?int $userId, int $photoId): array
+    /** Posts from an AI answer with no blog article behind them (curated news). */
+    public static function makeFromOutput(array $agent, array $out, array $platforms, int $userId, ?string $linkUrl = null): array
+    {
+        return self::savePosts($agent, $out, $platforms, null, $userId, 0, $linkUrl);
+    }
+
+    private static function savePosts(array $agent, array $out, array $platforms, ?int $articleId, ?int $userId, int $photoId, ?string $linkUrl = null): array
     {
         $aid = (int)$agent['id'];
         $headline = (string)($out['image_headline'] ?? '');
@@ -350,7 +356,8 @@ final class SmFlow
             db()->insert('sm_posts', [
                 'agent_id' => $aid, 'article_id' => $articleId, 'platform' => $p, 'body' => $text,
                 'hashtags' => mb_substr(trim((string)($post['hashtags'] ?? '')), 0, 500),
-                'include_link' => $articleId && $default ? 1 : 0,
+                'include_link' => ($articleId && $default) || $linkUrl !== null ? 1 : 0,
+                'link_url' => $linkUrl,
                 'media_id' => $images[$shape] ?? ($photo ? (int)$photo['id'] : null),
                 'status' => 'draft', 'written_by' => $userId,
             ]);
@@ -363,7 +370,14 @@ final class SmFlow
     /** The tracked link a post carries, or null. */
     public static function link(array $agent, array $post): ?string
     {
-        if ((int)$post['include_link'] !== 1 || empty($post['article_id'])) {
+        if ((int)$post['include_link'] !== 1) {
+            return null;
+        }
+        // Curated news links to the original article, credited, without our tracking tags.
+        if (!empty($post['link_url'])) {
+            return (string)$post['link_url'];
+        }
+        if (empty($post['article_id'])) {
             return null;
         }
         $url = (string)db()->value('SELECT blog_url FROM sm_articles WHERE id = ?', [(int)$post['article_id']]);
@@ -388,14 +402,31 @@ final class SmFlow
         return null;
     }
 
-    /** Scheduled posts whose time has come become "due"; the team is reminded. */
+    /**
+     * Scheduled posts whose time has come: platforms set to automatic are posted
+     * now (with up to three tries for passing problems); the others become "due"
+     * and the team is reminded to post them by hand.
+     */
     public static function dueNow(?int $now = null): int
     {
         $now ??= time();
+        $at = gmdate('Y-m-d H:i:s', $now);
         $rows = db()->all("SELECT p.* FROM sm_posts p JOIN agents g ON g.id = p.agent_id AND g.status <> 'deleted'
-                           WHERE p.status = 'scheduled' AND p.scheduled_at <= ?", [gmdate('Y-m-d H:i:s', $now)]);
+                           WHERE (p.status = 'scheduled' AND p.scheduled_at <= ? AND (p.next_try_at IS NULL OR p.next_try_at <= ?))
+                              OR (p.status = 'failed' AND p.next_try_at IS NOT NULL AND p.next_try_at <= ?)", [$at, $at, $at]);
         $n = 0;
         foreach ($rows as $p) {
+            if (SmPublish::automatic((int)$p['agent_id'], (string)$p['platform'])) {
+                $agent = db()->one('SELECT * FROM agents WHERE id = ?', [(int)$p['agent_id']]);
+                if ($agent) {
+                    SmPublish::run($agent, (int)$p['id']);
+                    $n++;
+                }
+                continue;
+            }
+            if ($p['status'] !== 'scheduled') {
+                continue;
+            }
             if (db()->update('sm_posts', ['status' => 'due'], 'id = ? AND status = ?', [(int)$p['id'], 'scheduled']) === 1) {
                 self::remind($p);
                 $n++;

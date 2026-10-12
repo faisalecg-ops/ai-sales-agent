@@ -33,11 +33,24 @@
 
   // Buttons that start slow work say so, and cannot be pressed twice.
   document.querySelectorAll('form').forEach(function (f) {
-    f.addEventListener('submit', function () {
-      var b = f.querySelector('button[data-busy]');
+    f.addEventListener('submit', function (ev) {
+      var b = ev.submitter ? (ev.submitter.hasAttribute('data-busy') ? ev.submitter : null) : f.querySelector('button[data-busy]');
       if (b) {
         setTimeout(function () { b.disabled = true; b.textContent = b.getAttribute('data-busy'); }, 0);
       }
+    });
+  });
+  // Buttons that need a second thought.
+  document.querySelectorAll('button[data-confirm]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      if (!window.confirm(b.getAttribute('data-confirm'))) { ev.preventDefault(); }
+    });
+  });
+  // Tick or untick every row.
+  document.querySelectorAll('input[data-check-all]').forEach(function (all) {
+    all.addEventListener('change', function () {
+      var form = all.closest('form') || document;
+      form.querySelectorAll('input[type="checkbox"][name="ids[]"]').forEach(function (c) { c.checked = all.checked; });
     });
   });
   // "Write the article" takes a minute or two.

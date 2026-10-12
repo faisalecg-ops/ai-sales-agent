@@ -574,6 +574,289 @@ T::equals('kaleem@buildasia.net, admin@buildasia.net', (string)SmEvent::settings
 $boss->post('/social/connections.php', ['do' => 'blog', 'blog_url' => $blogInfo['base'], 'blog_api_key' => $blogInfo['drafts']], '/social/connections.php');
 
 // =====================================================================
+T::group('Stage 3: platform apps and connecting pages');
+$ph->get('/social/connections.php');
+T::ok($ph->status === 200 && !str_contains($ph->body, 'name="app[meta][id]"'), 'Only super admins see the platform apps (set once for everyone)');
+$boss->get('/social/connections.php');
+T::ok(str_contains($boss->body, 'Platform apps') && str_contains($boss->body, e(url('social/oauth.php'))), 'A super admin sees them, with the callback address to give Meta, LinkedIn and X');
+$boss->post('/social/connections.php', ['do' => 'apps', 'app' => ['meta' => ['id' => '1234567890', 'secret' => 'meta-secret'], 'linkedin' => ['id' => 'li-client', 'secret' => 'li-secret'],
+    'x' => ['id' => 'x-client', 'secret' => 'x-secret']], 'graph_version' => 'v26.0', 'linkedin_version' => '202609', 'company_name' => 'Ecommerce Gateway Pakistan (Pvt) Ltd', 'contact_email' => 'privacy@ecgateway.net'], '/social/connections.php');
+T::ok(SmApps::ready('meta') && SmApps::get('x')['secret'] === 'x-secret' && !str_contains((string)db()->value("SELECT v FROM sm_meta WHERE k = 'app_meta'"), 'meta-secret'), 'App keys are saved, the secrets encrypted');
+$anonP = (new B($base))->get('/social/privacy.php');
+T::ok($anonP->status === 200 && str_contains($anonP->body, 'Ecommerce Gateway Pakistan (Pvt) Ltd') && str_contains($anonP->body, 'id="deletion"') && str_contains($anonP->body, 'privacy@ecgateway.net'),
+    'The privacy policy and data deletion page Meta asks for opens without signing in');
+$boss->post('/social/oauth.php', ['app' => 'meta'], '/social/connections.php');
+T::ok(preg_match('#url=(https://www\.facebook\.com/v26\.0/dialog/oauth\?[^"]+)"#', $boss->body, $m) === 1, '"Connect" sends the admin to Facebook\'s own sign-in page');
+$fbUrl = html_entity_decode($m[1] ?? '');
+parse_str((string)parse_url($fbUrl, PHP_URL_QUERY), $q);
+T::ok(($q['client_id'] ?? '') === '1234567890' && ($q['redirect_uri'] ?? '') === url('social/oauth.php') && str_contains((string)($q['scope'] ?? ''), 'pages_manage_posts') && str_contains((string)($q['scope'] ?? ''), 'instagram_content_publish'),
+    '…asking only for permission to publish on the pages');
+SmApps::saveSetting('meta_config_id', '987654321');
+$boss->post('/social/oauth.php', ['app' => 'meta'], '/social/connections.php');
+T::ok(str_contains($boss->body, 'config_id=987654321') && !str_contains($boss->body, 'scope='), 'With a "Facebook Login for Business" configuration ID, that is sent instead of the permission list');
+SmApps::saveSetting('meta_config_id', '');
+$boss->get('/social/oauth.php?code=abc&state=forged');
+T::ok(str_contains($boss->goesTo(), 'connections.php') && !SmConnect::find($idA, 'facebook'), 'A reply with an unknown "state" is refused');
+$boss->get('/social/oauth.php?code=abc&state=' . rawurlencode((string)$q['state']));
+T::ok(str_contains($boss->goesTo(), 'choose=1'), 'Back from Facebook, the admin chooses the event\'s page');
+$boss->get('/social/connections.php?choose=1');
+T::ok(str_contains($boss->body, 'Connect Build Asia') && str_contains($boss->body, 'Connect Another page') && str_contains($boss->body, 'with Instagram @buildasia'), '…from the pages they manage, seeing which has Instagram');
+$boss->post('/social/connections.php', ['do' => 'choose', 'pick' => 0], '/social/connections.php?choose=1');
+$fbC = SmConnect::find($idA, 'facebook');
+$igC = SmConnect::find($idA, 'instagram');
+T::ok($fbC && $fbC['account_id'] === '111' && $igC && $igC['account_id'] === 'ig222', 'Facebook and its Instagram business account are connected together');
+T::ok($fbC['token'] !== 'pagetok111' && Crypto::decrypt((string)$fbC['token']) === 'pagetok111', 'The permission is stored encrypted');
+$boss->get('/social/oauth.php?code=abc&state=' . rawurlencode((string)$q['state']));
+T::ok(str_contains($boss->goesTo(), 'connections.php') && !str_contains($boss->goesTo(), 'choose'), 'The same reply cannot be used twice');
+$boss->post('/social/oauth.php', ['app' => 'linkedin'], '/social/connections.php');
+preg_match('#url=(https://www\.linkedin\.com/oauth/v2/authorization\?[^"]+)"#', $boss->body, $m);
+parse_str((string)parse_url(html_entity_decode($m[1] ?? ''), PHP_URL_QUERY), $q);
+$boss->get('/social/oauth.php?code=li&state=' . rawurlencode((string)($q['state'] ?? '')));
+$boss->post('/social/connections.php', ['do' => 'choose', 'pick' => 0], '/social/connections.php?choose=1');
+$liC = SmConnect::find($idA, 'linkedin');
+T::ok($liC && $liC['account_id'] === '777' && $liC['account_name'] === 'Build Asia' && $liC['expires_at'] !== null, 'The LinkedIn company page is connected (LinkedIn asks again every 60 days)');
+$boss->post('/social/oauth.php', ['app' => 'x'], '/social/connections.php');
+preg_match('#url=(https://x\.com/i/oauth2/authorize\?[^"]+)"#', $boss->body, $m);
+parse_str((string)parse_url(html_entity_decode($m[1] ?? ''), PHP_URL_QUERY), $q);
+T::ok(($q['code_challenge_method'] ?? '') === 'S256' && str_contains((string)($q['scope'] ?? ''), 'tweet.write'), 'X uses its secure sign-in (with a one-time code check)');
+$boss->get('/social/oauth.php?code=xc&state=' . rawurlencode((string)($q['state'] ?? '')));
+$xC = SmConnect::find($idA, 'x');
+T::ok($xC && $xC['account_name'] === '@BuildAsiaExpo' && $xC['refresh_token'] !== null, 'X connects straight away');
+$xTok = array_values(array_filter(SmTestBus::entries('net'), static fn($n) => str_contains($n['url'], '2/oauth2/token')));
+T::ok($xTok && str_contains((string)$xTok[0]['body'], 'code_verifier=') && str_starts_with((string)($xTok[0]['headers']['Authorization'] ?? ''), 'Basic '), '…sending the one-time code check and the app\'s own key');
+
+// Modes: by hand or automatic.
+$plat = static fn(array $over) => array_replace_recursive(['linkedin' => ['enabled' => 1, 'mode' => 'manual', 'page_url' => 'https://www.linkedin.com/company/buildasia', 'posts_per_week' => 3, 'default_time' => '11:00', 'hashtags' => ''],
+    'facebook' => ['enabled' => 1, 'mode' => 'manual', 'page_url' => '', 'posts_per_week' => 3, 'default_time' => '13:00', 'hashtags' => ''],
+    'instagram' => ['enabled' => 1, 'mode' => 'manual', 'page_url' => '', 'posts_per_week' => 3, 'default_time' => '18:00', 'hashtags' => ''],
+    'x' => ['enabled' => 1, 'mode' => 'manual', 'page_url' => '', 'posts_per_week' => 3, 'default_time' => '12:00', 'hashtags' => '']], $over);
+$boss->post('/social/connections.php', ['do' => 'platforms', 'x_auto_limit' => 1, 'p' => $plat(['linkedin' => ['mode' => 'direct'], 'facebook' => ['mode' => 'direct'], 'instagram' => ['mode' => 'direct'], 'x' => ['mode' => 'direct']])], '/social/connections.php');
+T::ok(SmPublish::automatic($idA, 'facebook') && SmPublish::automatic($idA, 'linkedin') && SmPublish::automatic($idA, 'x'), 'Connected platforms can be switched to automatic');
+$idBconn = (int)$idB;
+T::ok(!SmPublish::automatic($idBconn, 'facebook'), 'Another exhibition is not affected');
+
+// =====================================================================
+T::group('Stage 3: automatic posting');
+$pic = SmMedia::build($agentA, 'Automatic posting test', 'square', null, $edId);
+$mk = static function (string $platform, array $extra = []) use ($idA, $edId, $apId, $pic): int {
+    return (int)db()->insert('sm_posts', array_replace(['agent_id' => $idA, 'platform' => $platform, 'body' => 'Build Asia 2027 opens in March with 350 exhibitors.', 'hashtags' => '#BuildAsia2027 #Construction',
+        'include_link' => 0, 'media_id' => (int)$pic['id'], 'status' => 'approved', 'written_by' => $edId, 'approved_by' => $apId], $extra));
+};
+SmTestBus::write('net-fail', []);
+$fbPost = $mk('facebook');
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $fbPost], '/social/post.php?id=' . $fbPost);
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$fbPost]);
+T::ok($row['status'] === 'posted' && (int)$row['posted_auto'] === 1 && $row['posted_url'] === 'https://www.facebook.com/111_555', '"Post now" on an automatic platform posts it on Facebook at once, and keeps the link');
+$call = array_values(array_filter(SmTestBus::entries('net'), static fn($n) => str_ends_with($n['url'], '/111/photos')));
+parse_str((string)($call[0]['body'] ?? ''), $fbBody);
+T::ok(($fbBody['access_token'] ?? '') === 'pagetok111' && str_contains((string)($fbBody['url'] ?? ''), '/social/uploads/') && str_contains((string)($fbBody['message'] ?? ''), '#BuildAsia2027'),
+    '…with the picture from the library, the text and hashtags, using the page\'s own permission');
+$igPost = $mk('instagram');
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $igPost], '/social/post.php?id=' . $igPost);
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$igPost]);
+T::ok($row['status'] === 'posted' && $row['posted_url'] === 'https://www.instagram.com/p/abc123/', 'Instagram: the picture is prepared, then published, and its address kept');
+$liPost = $mk('linkedin', ['article_id' => (int)$art['id'], 'include_link' => 1, 'media_id' => null, 'body' => 'Cement exports rose (again) in FY26. What it means for suppliers_and partners.']);
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $liPost], '/social/post.php?id=' . $liPost);
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$liPost]);
+$liCall = array_values(array_filter(SmTestBus::entries('net'), static fn($n) => str_contains($n['url'], 'rest/posts')));
+$liBody = json_decode((string)(end($liCall)['body'] ?? '{}'), true);
+T::ok($row['status'] === 'posted' && $row['posted_url'] === 'https://www.linkedin.com/feed/update/urn:li:share:999/', 'LinkedIn: posted on the company page');
+T::ok(($liBody['author'] ?? '') === 'urn:li:organization:777' && str_starts_with((string)($liBody['content']['article']['source'] ?? ''), (string)$art['blog_url']) && str_contains((string)$liBody['content']['article']['source'], 'utm_source=linkedin'),
+    '…as the company, with the blog article as a link card carrying its tracking tags');
+T::ok(str_contains((string)$liBody['commentary'], 'rose \\(again\\)') && str_contains((string)$liBody['commentary'], '{hashtag|\\#|BuildAsia2027}'), '…and LinkedIn\'s special characters and hashtags written the way LinkedIn needs');
+T::equals('202609', (string)(end($liCall)['headers']['LinkedIn-Version'] ?? ''), 'The LinkedIn API version set by the super admin is used');
+$xPost = $mk('x', ['body' => 'Build Asia 2027: 350 exhibitors in March.', 'hashtags' => '#BuildAsia2027']);
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $xPost], '/social/post.php?id=' . $xPost);
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$xPost]);
+T::ok($row['status'] === 'posted' && $row['posted_url'] === 'https://x.com/BuildAsiaExpo/status/t1', 'X: the picture is uploaded and the post published');
+$xPost2 = $mk('x', ['body' => 'A second X post.', 'hashtags' => '']);
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $xPost2], '/social/post.php?id=' . $xPost2);
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$xPost2]);
+T::ok($row['status'] === 'failed' && str_contains((string)$row['fail_reason'], 'limit of automatic X posts (1)'), 'The monthly limit of automatic X posts is kept (X charges per post)');
+$ap->get('/social/post.php?id=' . $xPost2);
+T::ok(str_contains($ap->body, 'Try again') && str_contains($ap->body, 'Post it by hand instead'), 'A failed post offers "Try again" and "Post it by hand instead"');
+$ap->post('/social/post.php', ['do' => 'by_hand', 'id' => $xPost2], '/social/post.php?id=' . $xPost2);
+$ap->get('/social/post.php?id=' . $xPost2);
+T::ok(db()->value('SELECT status FROM sm_posts WHERE id = ?', [$xPost2]) === 'due' && str_contains($ap->body, 'Copy the text'), '"By hand" brings back Copy, Download and Done');
+
+// Scheduled automatic posts, and failures.
+$mailBefore = count(SmTestBus::entries('mail'));
+$fbLater = $mk('facebook', ['status' => 'scheduled', 'scheduled_at' => gmdate('Y-m-d H:i:s', time() - 60)]);
+SmFlow::dueNow();
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$fbLater]);
+T::ok($row['status'] === 'posted' && (int)$row['posted_auto'] === 1, 'At its time, a scheduled post on an automatic platform goes out by itself');
+T::equals($mailBefore, count(SmTestBus::entries('mail')), '…with no "time to post" reminder');
+SmTestBus::write('net-fail', ['rest/posts' => 503]);
+$liLater = $mk('linkedin', ['status' => 'scheduled', 'scheduled_at' => gmdate('Y-m-d H:i:s', time() - 60), 'media_id' => null]);
+SmFlow::dueNow();
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$liLater]);
+T::ok($row['status'] === 'scheduled' && (int)$row['attempts'] === 1 && $row['next_try_at'] !== null, 'If LinkedIn is busy, it is tried again a few minutes later');
+db()->update('sm_posts', ['next_try_at' => gmdate('Y-m-d H:i:s', time() - 1)], 'id = ?', [$liLater]);
+SmFlow::dueNow();
+db()->update('sm_posts', ['next_try_at' => gmdate('Y-m-d H:i:s', time() - 1)], 'id = ?', [$liLater]);
+SmFlow::dueNow();
+$row = db()->one('SELECT * FROM sm_posts WHERE id = ?', [$liLater]);
+$mail = SmTestBus::entries('mail');
+T::ok($row['status'] === 'failed' && (int)$row['attempts'] === 3 && str_contains((string)$row['fail_reason'], '503'), 'After three tries it is marked failed, with the reason');
+T::ok(str_contains((string)end($mail)['subject'], 'automatic posting on LinkedIn failed') && end($mail)['to'] === 'team@buildasia.net', '…and the team is emailed from the exhibition\'s address');
+SmTestBus::write('net-fail', ['/111/feed' => 401, '/111/photos' => 401]);
+$fbBad = $mk('facebook');
+$ap->post('/social/post.php', ['do' => 'post_now', 'id' => $fbBad], '/social/post.php?id=' . $fbBad);
+T::ok(SmConnect::find($idA, 'facebook')['status'] === 'error', 'When Facebook refuses the permission, the connection is marked as needing attention');
+$ap->get('/social/');
+T::ok(str_contains($ap->body, 'Facebook: Facebook did not accept the post'), '…and the dashboard says so');
+SmTestBus::write('net-fail', []);
+$boss->post('/social/connections.php', ['do' => 'disconnect', 'platform' => 'facebook'], '/social/connections.php');
+T::ok(!SmConnect::find($idA, 'facebook') && !SmPublish::automatic($idA, 'facebook'), 'Disconnecting removes the permission; Facebook goes back to by hand');
+
+// =====================================================================
+T::group('Stage 3: exhibitor list (three ways) and share kits');
+$soc->get('/social/exhibitors.php');
+T::ok($soc->status === 200 && str_contains($soc->body, 'Add an exhibitor'), 'The exhibitors page opens; by default the list is typed in');
+$logoFile = sys_get_temp_dir() . '/sm-logo.png';
+$im = imagecreatetruecolor(400, 160);
+imagefill($im, 0, 0, imagecolorallocate($im, 20, 120, 60));
+imagepng($im, $logoFile);
+$soc->post('/social/exhibitors.php', ['do' => 'save', 'company' => 'Lucky Cement', 'stand' => 'A-12', 'hall' => '1', 'email' => 'marketing@luckycement.pk', 'website' => 'luckycement.com'], '/social/exhibitors.php', ['logo' => [$logoFile, 'image/png', 'lucky.png']]);
+$lucky = db()->one("SELECT * FROM sm_exhibitors WHERE agent_id = ? AND company = 'Lucky Cement'", [$idA]);
+T::ok($lucky && $lucky['stand'] === 'A-12' && $lucky['website'] === 'https://luckycement.com' && (int)$lucky['logo_media_id'] > 0, 'Typed in: an exhibitor with stand, website and logo');
+$soc->post('/social/exhibitors.php', ['do' => 'save', 'company' => 'Lucky Cement Ltd.', 'contact_name' => 'Sara Khan'], '/social/exhibitors.php');
+T::ok((int)db()->value('SELECT COUNT(*) FROM sm_exhibitors WHERE agent_id = ?', [$idA]) === 1 && db()->value('SELECT contact_name FROM sm_exhibitors WHERE id = ?', [$lucky['id']]) === 'Sara Khan', 'The same company typed again ("Ltd.") is not added twice; its details are filled in');
+$boss->post('/social/exhibitors.php', ['do' => 'source', 'exhibitor_source' => 'upload', 'exhibitor_page_url' => ''], '/social/exhibitors.php');
+$csv = sys_get_temp_dir() . '/sm-exhibitors.csv';
+file_put_contents($csv, "\xEF\xBB\xBFCompany,Stand No,Hall,E-mail,Website\nFauji Cement,B-4,2,info@fauji.example.com,fauji.example.com\nAmreli Steels,C-9,3,,\n,,,,\n");
+$soc->post('/social/exhibitors.php', ['do' => 'upload'], '/social/exhibitors.php', ['file' => [$csv, 'text/csv', 'exhibitors.csv']]);
+T::ok(db()->value("SELECT stand FROM sm_exhibitors WHERE agent_id = ? AND company = 'Fauji Cement'", [$idA]) === 'B-4' && db()->value("SELECT COUNT(*) FROM sm_exhibitors WHERE agent_id = ?", [$idA]) == 3,
+    'Uploaded (CSV): companies with their columns recognised by name; empty rows skipped');
+$xlsx = sys_get_temp_dir() . '/sm-exhibitors.xlsx';
+@unlink($xlsx);
+$z = new ZipArchive();
+$z->open($xlsx, ZipArchive::CREATE);
+$z->addFromString('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>');
+$z->addFromString('xl/sharedStrings.xml', '<?xml version="1.0"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>Exhibitor</t></si><si><t>Booth</t></si><si><t>Dewan Tiles</t></si><si><t>D-1</t></si></sst>');
+$z->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row><row r="2"><c r="A2" t="s"><v>2</v></c><c r="B2" t="s"><v>3</v></c></row></sheetData></worksheet>');
+$z->close();
+$soc->post('/social/exhibitors.php', ['do' => 'upload'], '/social/exhibitors.php', ['file' => [$xlsx, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'list.xlsx']]);
+T::equals('D-1', (string)db()->value("SELECT stand FROM sm_exhibitors WHERE agent_id = ? AND company = 'Dewan Tiles'", [$idA]), 'Uploaded (Excel .xlsx): read without any extra software');
+$boss->post('/social/exhibitors.php', ['do' => 'source', 'exhibitor_source' => 'website', 'exhibitor_page_url' => 'https://buildasia.net/exhibitors'], '/social/exhibitors.php');
+SmTestBus::write('net-pages', ['https://buildasia.net/exhibitors' => '<html><body><h1>Exhibitors 2027</h1><ul><li><img src="https://logos.example.com/maple.png" alt="Maple Leaf Cement"> Maple Leaf Cement — Stand E-7, Hall 2</li><li>Fauji Cement — Stand B-5</li></ul></body></html>']);
+SmTestBus::pushAi(['exhibitors' => [
+    ['company' => 'Maple Leaf Cement', 'stand' => 'E-7', 'hall' => '2', 'website' => '', 'email' => 'invented@maple.example.com', 'logo_url' => 'https://logos.example.com/maple.png'],
+    ['company' => 'Fauji Cement', 'stand' => 'B-5', 'hall' => '', 'website' => '', 'email' => '', 'logo_url' => ''],
+    ['company' => 'Invented Steel Co', 'stand' => 'Z-1', 'hall' => '', 'website' => '', 'email' => '', 'logo_url' => 'https://evil.example.com/x.png'],
+]]);
+$soc->post('/social/exhibitors.php', ['do' => 'read_website'], '/social/exhibitors.php');
+$maple = db()->one("SELECT * FROM sm_exhibitors WHERE agent_id = ? AND company = 'Maple Leaf Cement'", [$idA]);
+T::ok($maple && $maple['stand'] === 'E-7' && $maple['source'] === 'website' && (int)$maple['logo_media_id'] > 0, 'From the website: exhibitors read from the page, with the logo copied');
+T::ok(!db()->value("SELECT id FROM sm_exhibitors WHERE company = 'Invented Steel Co'") && $maple['email'] === null, 'Nothing is added that is not on the page (no invented company or email)');
+T::equals('B-5', (string)db()->value("SELECT stand FROM sm_exhibitors WHERE agent_id = ? AND company = 'Fauji Cement'", [$idA]), 'A stand moved on the website is updated');
+$sx = SmEvent::settings($idA);
+$sx['text_limit'] = 500;
+SmEvent::saveSettings($idA, $sx);
+$ids = array_map('intval', array_column(db()->all("SELECT id FROM sm_exhibitors WHERE agent_id = ? AND company IN ('Lucky Cement', 'Maple Leaf Cement') ORDER BY company", [$idA]), 'id'));
+SmTestBus::pushAi(['kits' => [
+    ['n' => 0, 'linkedin' => 'We are exhibiting at Build Asia 2027, Stand A-12, Hall 1. Come and meet our team.', 'facebook' => 'See us at Build Asia 2027, Stand A-12!'],
+    ['n' => 1, 'linkedin' => 'Maple Leaf Cement is at Build Asia 2027, Stand E-7, Hall 2.', 'facebook' => 'Visit Maple Leaf Cement at Stand E-7.'],
+]]);
+$soc->post('/social/exhibitors.php', ['do' => 'make', 'ids' => $ids], '/social/exhibitors.php');
+$lucky = SmExhibitors::find($idA, (int)$lucky['id']);
+T::ok($lucky['kit_status'] === 'ready' && (int)$lucky['kit_media_wide'] > 0 && (int)$lucky['kit_media_square'] > 0 && strlen((string)$lucky['kit_token']) === 40, 'Kits are written: a post and a branded picture in two sizes for each exhibitor');
+$wide = SmMedia::find($idA, (int)$lucky['kit_media_wide']);
+T::ok($wide && (int)$wide['width'] === 1200, '…the picture showing their logo and "Stand A-12 · Hall 1"');
+$kitCall = SmTestBus::entries('ai-calls');
+T::ok(str_contains((string)end($kitCall)['user'], 'Lucky Cement — Stand A-12 · Hall 1'), '…written from the stand and hall as given');
+$pub = new B($base);
+$pub->get('/social/kit.php?k=' . $lucky['kit_token']);
+T::equals(404, $pub->status, 'A kit is not visible to anyone until it is approved');
+$soc->post('/social/exhibitors.php', ['do' => 'approve', 'ids' => $ids], '/social/exhibitors.php');
+T::equals('ready', (string)db()->value('SELECT kit_status FROM sm_exhibitors WHERE id = ?', [$lucky['id']]), 'An editor cannot approve kits');
+$ap->post('/social/exhibitors.php', ['do' => 'approve', 'ids' => $ids], '/social/exhibitors.php');
+$pub->get('/social/kit.php?k=' . $lucky['kit_token']);
+T::ok($pub->status === 200 && str_contains($pub->body, 'Your share kit, Lucky Cement') && str_contains($pub->body, e(url('social/r.php?k=' . $lucky['kit_token'] . '&c=linkedin'))), 'Approved, the exhibitor\'s kit page opens with the post and its counted registration link');
+T::ok(str_contains($pub->body, 'noindex'), '…kept out of search engines');
+$mailBefore = count(SmTestBus::entries('mail'));
+$ap->post('/social/exhibitors.php', ['do' => 'send', 'ids' => $ids], '/social/exhibitors.php');
+$mail = array_slice(SmTestBus::entries('mail'), $mailBefore);
+T::ok(count($mail) === 1 && $mail[0]['to'] === 'marketing@luckycement.pk' && $mail[0]['from'] === 'info@buildasia.net' && str_contains($mail[0]['body'], '/social/kit.php?k=' . $lucky['kit_token']) && str_contains($mail[0]['body'], 'Dear Sara Khan'),
+    'Kits are emailed from the exhibition\'s own address to exhibitors with an email; the others are left for a person');
+T::equals('sent', (string)db()->value('SELECT kit_status FROM sm_exhibitors WHERE id = ?', [$lucky['id']]), '…and marked as emailed');
+$clickCh = curl_init($base . '/social/r.php?k=' . $lucky['kit_token'] . '&c=linkedin');
+curl_setopt_array($clickCh, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0']);
+$clickRaw = (string)curl_exec($clickCh);
+$click = (object)['status' => (int)curl_getinfo($clickCh, CURLINFO_RESPONSE_CODE), 'location' => preg_match('/^Location:\s*(\S+)/mi', $clickRaw, $lm) ? $lm[1] : ''];
+curl_close($clickCh);
+T::ok($click->status === 302 && str_starts_with($click->location, 'https://forms.ecgexhibitions.com/E-Pass/24/Karachi/web?utm_source=linkedin&utm_medium=exhibitor-share') && str_contains($click->location, 'utm_content=exhibitor-' . $lucky['id']),
+    'The kit\'s link counts the visit and goes on to visitor registration, tagged with the exhibitor');
+$botCh = curl_init($base . '/social/r.php?k=' . $lucky['kit_token']);
+curl_setopt_array($botCh, [CURLOPT_RETURNTRANSFER => true, CURLOPT_USERAGENT => 'LinkedInBot/1.0']);
+curl_exec($botCh);
+curl_close($botCh);
+T::equals(1, (int)db()->value('SELECT SUM(clicks) FROM sm_kit_clicks WHERE exhibitor_id = ?', [$lucky['id']]), 'Link previews and robots are not counted');
+$soc->get('/social/exhibitors.php?csv=1');
+T::ok((bool)preg_match('/^"Lucky Cement",A-12,1,marketing@luckycement\.pk,sent,"[^"]+","[^"]+",1$/m', $soc->body), 'The report (CSV) shows which exhibitors\' posts brought visitors');
+T::equals(404, (new B($base))->get('/social/r.php?k=' . str_repeat('a', 40))->status, 'An unknown kit link goes nowhere');
+SmExhibitors::upsert($idA, ['company' => '=HYPERLINK("https://evil.example.com","Click")'], 'website');
+$soc->get('/social/exhibitors.php?csv=1');
+T::ok(str_contains($soc->body, "\"'=HYPERLINK") && !preg_match('/^"?=HYPERLINK/m', $soc->body), 'A company name that looks like a spreadsheet formula is made harmless in the report');
+
+// =====================================================================
+T::group('Stage 3: weekly industry radar and curated news');
+SmTestBus::write('search-results', [
+    ['title' => 'Cement despatches rise 12% in September', 'url' => 'https://www.dawn.com/news/cement-sept', 'content' => 'Cement despatches rose 12% year on year in September, the All Pakistan Cement Manufacturers Association said.'],
+    ['title' => 'Karachi Port expansion approved', 'url' => 'https://www.brecorder.com/news/port', 'content' => 'A Rs. 40 billion expansion of the Karachi Port was approved.'],
+]);
+$sx = SmEvent::settings($idA);
+$sx['sectors'] = 'cement, steel, construction machinery';
+$sx['research_limit'] = 100;
+SmEvent::saveSettings($idA, $sx);
+$searchesBefore = SmRadar::researchUsed($idA);
+SmTestBus::pushAi(['items' => [
+    ['n' => 0, 'kind' => 'news', 'pillar' => 'curated', 'title' => 'Cement despatches up 12% in September', 'summary' => 'Despatches rose 12% year on year. A sign of recovering construction demand.', 'source_name' => 'Dawn'],
+    ['n' => 1, 'kind' => 'project', 'pillar' => 'opportunity', 'title' => 'Karachi Port expansion: what it means for builders', 'summary' => 'An approved expansion.', 'source_name' => 'Business Recorder'],
+    ['n' => 9, 'kind' => 'news', 'pillar' => 'news', 'title' => 'Made-up item with no source', 'summary' => 'x', 'source_name' => 'x'],
+]]);
+$soc->post('/social/plan.php', ['do' => 'radar'], '/social/plan.php');
+$radar = db()->all("SELECT * FROM sm_topics WHERE agent_id = ? AND origin = 'radar' ORDER BY id", [$idA]);
+T::ok(count($radar) === 2 && $radar[0]['source_urls'] === 'https://www.dawn.com/news/cement-sept' && $radar[0]['radar_kind'] === 'news' && $radar[1]['radar_kind'] === 'project',
+    'The radar lists new items with their sources; anything without a real source is dropped');
+T::equals($searchesBefore + 3, SmRadar::researchUsed($idA), 'It used three web searches, counted against the monthly limit');
+$searches = SmTestBus::entries('searches');
+T::ok(str_contains((string)end($searches)['query'], 'steel') || str_contains((string)$searches[count($searches) - 3]['query'], 'cement'), 'Searches are about the event\'s own sectors');
+$soc->get('/social/plan.php');
+T::ok(str_contains($soc->body, 'Industry radar') && str_contains($soc->body, 'Share as curated news') && str_contains($soc->body, 'Dawn ↗'), 'The Content plan shows the radar items, each with its source');
+SmTestBus::write('pages', ['https://www.dawn.com/news/cement-sept' => str_repeat('Cement despatches rose 12% year on year in September according to the association. ', 10)]);
+SmTestBus::pushAi(['posts' => ['linkedin' => ['text' => 'Dawn reports cement despatches rose 12% in September. A good sign for builders.', 'hashtags' => '#Cement'],
+    'facebook' => ['text' => 'Via Dawn: cement despatches up 12%.', 'hashtags' => ''], 'instagram' => ['text' => 'Cement despatches up 12% (via Dawn).', 'hashtags' => ''],
+    'x' => ['text' => 'Cement despatches up 12% in September, via Dawn.', 'hashtags' => '']], 'image_headline' => 'Cement despatches up 12%']);
+$soc->post('/social/plan.php', ['do' => 'share', 'id' => $radar[0]['id']], '/social/plan.php');
+$cur = db()->all("SELECT * FROM sm_posts WHERE agent_id = ? AND link_url = 'https://www.dawn.com/news/cement-sept'", [$idA]);
+T::ok(count($cur) === 4 && !array_diff(array_column($cur, 'status'), ['draft']), 'Shared as curated news: a draft post for each platform, waiting for approval');
+$cliPost = array_values(array_filter($cur, static fn($x) => $x['platform'] === 'linkedin'))[0];
+T::ok(str_contains(SmChecks::fullText($cliPost, SmFlow::link($agentA, $cliPost)), "\n\nhttps://www.dawn.com/news/cement-sept") && SmFlow::link($agentA, $cliPost) === 'https://www.dawn.com/news/cement-sept',
+    '…each linking to the original article, credited, without our tracking tags');
+$curCall = SmTestBus::entries('ai-calls');
+T::ok(str_contains((string)end($curCall)['system'], 'credit the source by name') && str_contains((string)end($curCall)['user'], 'Cement despatches rose 12%'), '…written from the article itself, in our own words');
+T::equals('used', (string)db()->value('SELECT status FROM sm_topics WHERE id = ?', [$radar[0]['id']]), 'The radar item is marked as used');
+$soc->post('/social/plan.php', ['do' => 'share', 'id' => $radar[1]['id']], '/social/plan.php');
+T::equals(4, (int)db()->value("SELECT COUNT(*) FROM sm_posts WHERE agent_id = ? AND link_url IS NOT NULL", [$idA]), 'An original that cannot be opened is never shared');
+$sx = SmEvent::settings($idA);
+$sx['research_limit'] = SmRadar::researchUsed($idA) + 1;
+SmEvent::saveSettings($idA, $sx);
+$aiBefore = count(SmTestBus::entries('ai-calls'));
+$res = SmRadar::run($agentA);
+T::ok(!$res['ok'] && str_contains((string)$res['error'], 'limit of') && count(SmTestBus::entries('ai-calls')) === $aiBefore, 'When the monthly web search limit would be passed, the radar does not run');
+$sx['research_limit'] = 500;
+$sx['radar_weekday'] = (int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Karachi')))->format('N');
+SmEvent::saveSettings($idA, $sx);
+db()->update('sm_events', ['radar_ran_at' => gmdate('Y-m-d H:i:s', time() - 6 * 86400)], 'agent_id = ?', [$idA]);
+SmTestBus::write('search-results', [['title' => 'Steel prices steady', 'url' => 'https://www.thenews.com.pk/steel', 'content' => 'Steel prices held steady in October.']]);
+SmTestBus::pushAi(['items' => [['n' => 0, 'kind' => 'news', 'pillar' => 'curated', 'title' => 'Steel prices steady', 'summary' => 'Held steady.', 'source_name' => 'The News']]]);
+$isMorning = (int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Karachi')))->format('G') >= 6;
+$ran = SmRadar::runDue();
+T::ok($isMorning ? $ran === 1 : $ran === 0, 'The scheduled task runs the radar on the chosen weekday (from 6 am)');
+T::equals(0, SmRadar::runDue(), '…and only once a week');
+
+// =====================================================================
 T::group('Safety rules from the independent review');
 // A form from a tab that belongs to another exhibition.
 $boss->get('/social/?agent=' . $idA);
@@ -642,16 +925,18 @@ T::ok(!str_contains($ph->body, $photo['file']), 'Each exhibition sees only its o
 
 // =====================================================================
 T::group('Pages open without errors');
-foreach (['', 'plan.php', 'articles.php', 'posts.php', 'calendar.php', 'media.php', 'settings.php', 'connections.php', 'activity.php', 'guide.php', 'article.php?id=' . $art['id'], 'post.php?id=' . $igId] as $pg) {
+foreach (['', 'plan.php', 'articles.php', 'posts.php', 'calendar.php', 'media.php', 'settings.php', 'connections.php', 'activity.php', 'guide.php', 'article.php?id=' . $art['id'], 'post.php?id=' . $igId, 'exhibitors.php', 'exhibitors.php?kit=' . $lucky['id'], 'exhibitors.php?edit=' . $lucky['id'], 'privacy.php', 'post.php?id=' . $liLater] as $pg) {
     $boss->get('/social/' . $pg);
     T::ok($boss->status === 200 && !str_contains($boss->body, 'Something went wrong') && !str_contains($boss->body, 'Fatal error') && !str_contains($boss->body, 'Warning:'), 'Opens: /social/' . ($pg ?: '(dashboard)'));
 }
+$boss->get('/social/tests/acceptance.php');
+T::equals(403, $boss->status, 'The tests are not served');
 $boss->get('/social/lib/SmAi.php');
 T::equals(403, $boss->status, 'Private code is not served');
 $boss->get('/social/activity.php');
 T::ok(str_contains($boss->body, 'Article approved') && str_contains($boss->body, 'Posted'), 'The activity log records approvals and postings');
 
 if (getenv('SM_SHOTS')) {
-    passthru('python3 ' . escapeshellarg(__DIR__ . '/shots.py') . ' ' . escapeshellarg($base) . ' ' . (int)$art['id'] . ' ' . $igId . ' ' . $fbId . ' ' . escapeshellarg(substr($local, 0, 7)));
+    passthru('python3 ' . escapeshellarg(__DIR__ . '/shots.py') . ' ' . escapeshellarg($base) . ' ' . (int)$art['id'] . ' ' . $igId . ' ' . $fbId . ' ' . escapeshellarg(substr($local, 0, 7)) . ' ' . (int)$lucky['id'] . ' ' . (int)$liLater . ' ' . escapeshellarg((string)$lucky['kit_token']));
 }
 exit(T::summary());

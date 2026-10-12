@@ -153,6 +153,23 @@ final class SmWriter
         return SmAi::json($agent, 'versions', $system, $user, 3000);
     }
 
+    /** Curated news: someone else's article, shared in our own words with credit. */
+    public static function curated(array $agent, array $topic, string $url, string $text, array $platforms): array
+    {
+        $rules = [];
+        foreach ($platforms as $p => $row) {
+            $tags = trim((string)($row['hashtags'] ?? ''));
+            $rules[] = "- $p: " . self::PLATFORM_RULES[$p] . ($tags !== '' ? " Always include these hashtags: $tags." : '');
+        }
+        $source = trim((string)($topic['source_name'] ?? '')) ?: (string)parse_url($url, PHP_URL_HOST);
+        $system = self::base($agent)
+            . "\n\nShare the article below as curated news on each platform: summarise it in your own words, say why it matters to our readers, and credit the source by name (\"$source reports…\" or \"via $source\")."
+            . "\nUse only facts that are in the article. Quote at most one short phrase, in quotation marks. Never copy sentences. Do not present it as the exhibition's own news. The link to the original is added by the system: do not write any URL."
+            . "\nPlatforms:\n" . implode("\n", $rules)
+            . "\nReturn: {\"posts\":{\"<platform>\":{\"text\":\"…\",\"hashtags\":\"#one #two\"}},\"image_headline\":\"under 60 characters\"}";
+        return SmAi::json($agent, 'curated', $system, "Source: $source\nTitle: {$topic['title']}\n\nArticle:\n$text", 2500);
+    }
+
     /** A post with no article behind it (reminders, show-day photos, announcements). */
     public static function standalone(array $agent, string $brief, array $platforms): array
     {

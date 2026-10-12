@@ -88,3 +88,7 @@
 }
 .sm-guide li { margin: 6px 0; }
 .alert-info { background: var(--accent-wash); border-color: #BCCFE6; border-left-color: var(--accent); color: var(--accent); }
+.sm-radios { display: flex; flex-wrap: wrap; gap: 6px 22px; } .sm-radios label { font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.sm-kit { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fff; }
+.sm-kit img { max-width: 100%; height: auto; border-radius: 6px; }
+.grid > .sm-kit { min-width: 0; } .sm-kit textarea { max-width: 100%; }

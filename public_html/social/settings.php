@@ -31,6 +31,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'ai_images'         => isset($_POST['ai_images']),
         'reminder_emails'   => implode(', ', $emails),
         'report_emails'     => implode(', ', array_slice($reportTo, 0, 10)),
+        'radar_enabled'     => isset($_POST['radar_enabled']),
+        'radar_weekday'     => max(1, min(7, (int)sm_in('radar_weekday', '1'))),
+        'radar_count'       => max(3, min(10, (int)sm_in('radar_count', '6'))),
+        'research_limit'    => max(0, min(2000, (int)sm_in('research_limit', '60'))),
         'blog_link_default' => isset($_POST['blog_link_default']),
         'blog_written_posts'=> isset($_POST['blog_written_posts']),
         'brand_primary'     => $hex(sm_in('brand_primary'), '#142A5C'),
@@ -45,7 +49,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 sm_layout_start('Event settings');
-echo '<nav class="set-nav"><a href="#amounts">Amounts and mix</a><a href="#voice">Subject and voice</a><a href="#ai">AI</a><a href="#people">Reminders</a><a href="#report">Monthly report</a><a href="#brand">Branding</a></nav>';
+echo '<nav class="set-nav"><a href="#amounts">Amounts and mix</a><a href="#voice">Subject and voice</a><a href="#ai">AI</a><a href="#people">Reminders</a><a href="#radar">Industry radar</a><a href="#report">Monthly report</a><a href="#brand">Branding</a></nav>';
 echo '<form method="post" class="settings-form">' . sm_csrf();
 
 echo '<section class="set-card" id="amounts"><div class="set-head"><h2>Amounts and content mix</h2><p>How much to publish for ' . e((string)$agent['name']) . ', and in which proportions. Posts per week are set for each platform on "Blog and platforms".</p></div><div class="set-body">'
@@ -75,6 +79,13 @@ echo '<section class="set-card" id="ai"><div class="set-head"><h2>AI</h2><p>Whic
 
 echo '<section class="set-card" id="people"><div class="set-head"><h2>Reminders</h2><p>Who is emailed when a scheduled post is due, for platforms posted by hand.</p></div><div class="set-body">'
    . f_area('reminder_emails', 'Email addresses (comma separated)', (string)$s['reminder_emails'], ['rows' => 2, 'hint' => 'Sent from the exhibition\'s own email profile in the sales agent when it is set up.'])
+   . '</div></section>';
+
+echo '<section class="set-card" id="radar"><div class="set-head"><h2>Industry radar</h2><p>Once a week the agent searches the web for new reports, big projects, growing sectors and news in the sectors above, and lists them on the Content plan. Nothing is written until someone picks one.</p></div><div class="set-body">'
+   . f_check('radar_enabled', 'Run the radar every week', (bool)$s['radar_enabled'])
+   . '<div class="form-grid">' . f_select('radar_weekday', 'On', [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'], (string)$s['radar_weekday'])
+   . f_text('radar_count', 'Items each week', (string)$s['radar_count'], ['type' => 'number', 'min' => 3, 'max' => 10])
+   . f_text('research_limit', 'Web searches a month, at most', (string)$s['research_limit'], ['type' => 'number', 'min' => 0, 'hint' => 'Covers the radar and article research. Used this month: ' . SmRadar::researchUsed($aid) . '.']) . '</div>'
    . '</div></section>';
 
 echo '<section class="set-card" id="report"><div class="set-head"><h2>Monthly management report</h2><p>Who receives this exhibition\'s one-page report each month: posts and articles published, the best ones, visits to the website, chats and leads from social media, and AI cost. Usually the exhibition\'s admins.</p></div><div class="set-body">'

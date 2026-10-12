@@ -10,7 +10,7 @@ declare(strict_types=1);
 if (!defined('SM_BOOT')) {
     define('SM_BOOT', true);
     define('SM_ROOT', dirname(__DIR__));
-    define('SM_VERSION', '1.2.0');
+    define('SM_VERSION', '1.3.0');
 
     require_once dirname(SM_ROOT, 2) . '/app/bootstrap.php';
 
