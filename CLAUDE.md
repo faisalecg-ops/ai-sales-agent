@@ -39,7 +39,7 @@ Read this before any task on this project.
       setting `blog_written_posts`; dashboard card "Waiting for approval in the
       blog" from the blog's `GET /pending`. Blog-written articles are read-only
       in /social (`sm_articles.origin = 'blog'`).
-    - **Stage 2 BUILT 12 Oct 2026, not yet installed:** blog 1.3.0 (Industry Voices:
+    - **Stage 2 BUILT and INSTALLED live 12 Oct 2026 (owner):** blog 1.3.0 (Industry Voices:
       `core/Voices.php`, `{p}contributors`, `{p}submissions`, /industry-voices/,
       /write-for-us; sponsored articles: `core/Sponsored.php`, `sponsor_*` columns,
       `{p}article_clicks`, go/a/ signed click links, admin "Sponsored articles" +
@@ -60,6 +60,14 @@ Read this before any task on this project.
     - Tests: `php public_html/social/tests/acceptance.php` (140). They use real
       sign-ins, a real test blog (database `smblog`) and stand-in AI and
       research. An independent review was done and every finding was fixed.
+  - **Next: Stage 3 (reach)**, to be reviewed with the owner at the start of the
+    next session: direct Meta/LinkedIn posting (needs their app approvals),
+    X, exhibitor share kit, curated news, weekly industry radar. Facts checked
+    12 Oct 2026: X has no free API tier since Feb 2026 (pay per use, about
+    $0.015 a post, $0.20 a post with a link); LinkedIn company-page posting
+    needs the Community Management API (business review, no fixed time);
+    Meta needs app review (screencast, test account) and usually Business
+    verification.
   - **Choices made with the approval:**
     - Stage 3 waits for free direct approval from Meta and LinkedIn; no paid
       posting service.
