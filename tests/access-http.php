@@ -76,14 +76,46 @@ $user('newbie', 'staff', [['sales', $idA, 'manager']], 1);
 // ---------------------------------------------------------------------
 // A small web client
 // ---------------------------------------------------------------------
+if (PHP_SAPI !== 'cli') {
+    exit("Run from the command line only.\n");
+}
+
+// The web server runs on a temporary copy of public_html, so this test can
+// pretend /social is or is not installed without ever touching a real
+// public_html/social folder. app, config and storage are linked, not copied.
+$repo = dirname(__DIR__);
+$site = sys_get_temp_dir() . '/aisa-access-http-' . getmypid();
+$root = $site . '/public_html';
+$copy = static function (string $from, string $to) use (&$copy): void {
+    @mkdir($to, 0777, true);
+    foreach (scandir($from) ?: [] as $f) {
+        if ($f === '.' || $f === '..' || ($from === dirname(__DIR__) . '/public_html' && $f === 'social')) {
+            continue;
+        }
+        is_dir("$from/$f") ? $copy("$from/$f", "$to/$f") : copy("$from/$f", "$to/$f");
+    }
+};
+$copy($repo . '/public_html', $root);
+foreach (['app', 'config', 'storage', 'tests'] as $link) {
+    symlink($repo . '/' . $link, $site . '/' . $link);
+}
+$wipe = static function (string $dir) use (&$wipe): void {
+    foreach (scandir($dir) ?: [] as $f) {
+        if ($f === '.' || $f === '..') {
+            continue;
+        }
+        $path = "$dir/$f";
+        is_link($path) || !is_dir($path) ? unlink($path) : $wipe($path);
+    }
+    rmdir($dir);
+};
+
 $port = 8200 + random_int(0, 500);
-$root = dirname(__DIR__) . '/public_html';
 $log  = sys_get_temp_dir() . '/aisa-access-http-' . $port . '.log';
 $server = proc_open(['php', '-S', '127.0.0.1:' . $port, '-t', $root], [1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $pipes);
-register_shutdown_function(static function () use ($server, $root): void {
-    @unlink($root . '/social/index.php');
-    @rmdir($root . '/social');
+register_shutdown_function(static function () use ($server, $site, $wipe): void {
     proc_terminate($server);
+    $wipe($site);
 });
 for ($i = 0; $i < 50 && !@fsockopen('127.0.0.1', $port); $i++) {
     usleep(100000);

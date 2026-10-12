@@ -53,3 +53,36 @@ file, "Done — what /social can rely on", is the contract for the /social chat.
 - The session contract in the handover file (cookie `aisa_admin`,
   `$_SESSION['admin_id']`, `$_SESSION['agent_id']`, login `?next=`, logout) must
   stay stable.
+
+## 4. What /social uses from the sales agent — keep these stable (checked 12 Oct 2026)
+
+/social (`public_html/social/`, 1.2.0) writes **only** its own `sm_` tables. It
+changes no sales agent file and creates no sales agent table. Besides the
+agreed contract (session, `Access.php`, login/account/logout, the switcher
+markup), it also **calls or reads** the parts below. Change any of them only
+together with /social, or /social breaks.
+
+| Sales agent part | How /social uses it |
+|---|---|
+| `app/bootstrap.php`, `db()`, `url()`, `e()`, `cfg()` | loaded by `public_html/social/lib/boot.php` |
+| `Security::startSession`, `csrfField`, `requireCsrf`, `htmlHeaders` | its pages and forms |
+| `Access::*` | who may open which exhibition on `social` |
+| `Audit::setActor` | names the user (it writes its own `sm_activity`, not `audit_log`) |
+| `Settings::get('llm.openai.api_key')`, `Settings::get('research.tavily.api_key')` | AI images and web research (read only) |
+| `LlmProviderFactory::make`, `AiModels::live`, `AiModels::backgroundProvider` | the AI writer, using each exhibition's provider and models |
+| `MailProfile::forAgent`, `MailProfile::problem`, `Mailer::sendWith` | reminder emails sent through the exhibition's own mail server |
+| `Crypto::encrypt` / `decrypt` | the blog key and hook secret it stores |
+| `Http::request`, `Http::decode`, `Validator::email`, `Validator::url` | blog API calls, form checks |
+| `agents` columns (name, slug, event facts, mail profile, AI provider) | read only |
+| `admin_users`, `knowledge_articles`, `faq_entries` | read only |
+| `public_html/assets/admin.css` and `admin.js` | /social uses the sales agent's look and its classes (cards, buttons, menu, top bar) |
+
+**Test safety (12 Oct 2026):**
+- `tests/harness.php` now refuses to run from a browser, and refuses to run
+  when `config/config.php` says `'environment' => 'production'`. The tests
+  empty their database, and /social's tests load the same harness, so this
+  protects the live server in both cases.
+- `tests/access-http.php` now runs its web server on a temporary copy of
+  `public_html`. Before this fix it created and deleted
+  `public_html/social/index.php` to simulate /social, and would have removed
+  the real one.

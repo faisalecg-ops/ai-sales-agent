@@ -7,6 +7,19 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
+// The tests empty the database they run on. They must never run on a live
+// installation (config 'environment' => 'production'), nor from a browser.
+// /social's tests load this file too, so the same guard protects them.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit("The tests run from the command line only.\n");
+}
+if (APP_ENV === 'production') {
+    fwrite(STDERR, "Refusing to run: config/config.php says this is a production installation, and the "
+        . "tests would empty its database. Run them on a test copy whose config says 'development'.\n");
+    exit(1);
+}
+
 /** A provider whose replies the test script controls. */
 final class MockLlmProvider extends BaseLlmProvider
 {
