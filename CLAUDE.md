@@ -117,6 +117,13 @@ Read this before any task on this project.
   - Agreed points
   and open questions: `docs/ecosystem-plan-discussion.md` (§4, §6b). The end
   of the earlier chat is saved in `docs/reference/previous-chat-2026-10-09.md`.
+- **Backup Manager (15 Oct 2026, discussion only, nothing built):** a
+  standalone backup system for the sales agent, /social, the event websites and
+  their blogs, built in its own chat and repository `faisalecg-ops/backup-manager`
+  (brief: its `docs/handover/2026-10-15-from-sales-agent-chat.md`). It is not
+  part of the sales agent and only reads it. If sales agent work moves a
+  folder, adds an upload folder or changes `config/config.php`, leave a note in
+  that repository's `docs/handover/`.
 - Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's
   new site is being built in a separate chat (review copy at
   buildasia.ecgateway.net, then buildasia.net); Pharma Asia

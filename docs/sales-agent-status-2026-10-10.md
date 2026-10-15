@@ -50,6 +50,11 @@ file, "Done — what /social can rely on", is the contract for the /social chat.
   from someone who is not a manager on the current exhibition. Pages need no
   code for this.
 - Never create, alter or drop `sm_` tables. They belong to /social.
+- The Backup Manager (`faisalecg-ops/backup-manager`, from 15 Oct 2026) backs up
+  `config/config.php` (its `encryption_key` unlocks every saved secret), the
+  database, `storage/uploads/` and `public_html/social/uploads/`. If you move
+  any of these or add a new upload folder, leave a note in that repository's
+  `docs/handover/`.
 - The session contract in the handover file (cookie `aisa_admin`,
   `$_SESSION['admin_id']`, `$_SESSION['agent_id']`, login `?next=`, logout) must
   stay stable.
