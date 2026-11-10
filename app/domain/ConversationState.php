@@ -112,7 +112,7 @@ final class ConversationState
         if (preg_match('/\b\d{1,3}\s?(?:sqm|sq\.?\s?m|square\s?met(?:re|er)s?|m2|x\s?\d{1,3})\b/i', $message)) {
             $signals['specified_size_or_tier'] = true;
         }
-        if (self::mentions($text, ['platinum', 'gold', 'silver', 'bronze', 'diamond', 'title sponsor', 'shell scheme', 'bare space', 'raw space'])) {
+        if (self::mentions($text, ['platinum', 'gold', 'silver', 'bronze', 'diamond', 'title sponsor', 'shell scheme', 'bare space', 'raw space', 'outdoor space', 'outdoor exhibit'])) {
             $signals['specified_size_or_tier'] = true;
         }
 

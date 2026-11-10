@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS stall_packages (
   id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
   agent_id       INT UNSIGNED NOT NULL,
   package_name   VARCHAR(160) NOT NULL,
-  package_type   ENUM('shell','bare') NOT NULL DEFAULT 'shell',
+  package_type   ENUM('shell','bare','outdoor') NOT NULL DEFAULT 'shell',
   stall_size     VARCHAR(64) NOT NULL,
   size_sqm       DECIMAL(10,2) NULL,
   currency       CHAR(3) NOT NULL DEFAULT 'USD',

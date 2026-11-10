@@ -711,6 +711,50 @@ T::equals('USD 7,245', PricingEngine::toCard($bareRow, 'stall', 18)['price_lines
 
 db()->exec('DELETE FROM stall_packages WHERE id = ?', [$bareId]);
 
+// Outdoor exhibit space (approved 10 November 2026): a third kind of stand,
+// sold per square metre, that a tariff may publish with no minimum size.
+T::ok(Migrations::enumAllows('stall_packages', 'package_type', 'outdoor'),
+    'The stand pricing table accepts outdoor space as a kind of stand');
+T::equals('Outdoor space', PricingEngine::kindLabel('outdoor'), 'Outdoor space has its own name');
+T::equals('Shell scheme', PricingEngine::kindLabel('shell'), 'Shell scheme keeps its name');
+T::equals('Bare space', PricingEngine::kindLabel('bare'), 'Bare space keeps its name');
+
+$outdoorId = db()->insert('stall_packages', [
+    'agent_id' => (int)$agent['id'], 'package_name' => 'Outdoor Exhibit Space', 'package_type' => 'outdoor',
+    'stall_size' => 'Open area outside the halls', 'size_sqm' => null,
+    'pricing_mode' => 'per_sqm', 'rate_per_sqm' => 150.00,
+    'min_sqm' => null, 'increment_sqm' => null, 'max_sqm' => null,
+    'price' => 150.00, 'price_basis' => 'per_sqm', 'currency' => 'USD',
+    'region_group' => 'international', 'active' => 1, 'status' => 'approved',
+    'tax_included' => 'no', 'tax_rate_percent' => 15.00, 'tax_label' => 'VAT',
+]);
+$outdoorRow = db()->one('SELECT * FROM stall_packages WHERE id = ?', [$outdoorId]);
+
+T::ok(PricingEngine::recordIsValid($outdoorRow, 'stall'), 'An outdoor record with no minimum can be shown');
+$outdoorCard = PricingEngine::toCard($outdoorRow, 'stall');
+T::ok(in_array('Outdoor space', $outdoorCard['meta'], true), 'The card names it as outdoor space, not bare space');
+T::equals(1.0, (float)$outdoorCard['sqm'], 'With no minimum and no size asked, it is shown per single square metre');
+T::equals('USD 150', $outdoorCard['price_lines'][0]['value'], 'Which is the published rate itself');
+T::equals('VAT at 15%', $outdoorCard['price_lines'][1]['label'], 'The tax line carries the tariff\'s own name for the tax');
+T::equals('USD 22.50', $outdoorCard['price_lines'][1]['value'], 'Tax on one square metre is calculated');
+T::equals('USD 172.50', $outdoorCard['price_lines'][2]['value'], 'And so is the total');
+T::ok(PricingEngine::checkSize($outdoorRow, 4)['ok'], 'With no minimum, a small outdoor area is quotable');
+T::equals('USD 3,450', PricingEngine::toCard($outdoorRow, 'stall', 20)['price_lines'][2]['value'],
+    'Outdoor space at 20 sqm totals correctly with tax');
+$outdoorFacts = PricingEngine::factsForPrompt([$outdoorRow], 'stall');
+T::ok(str_contains((string)$outdoorFacts[0]['sold_as'], 'No minimum size is published'),
+    'The assistant is told no minimum is published, never "Minimum 0 sqm"');
+T::ok(!str_contains((string)$outdoorFacts[0]['sold_as'], 'Minimum 0'), 'No zero minimum appears in the facts');
+T::equals('stall_package:outdoor', FindingExtractor::subjectKey('stall_package', 'Outdoor Exhibit Space'),
+    'A document\'s outdoor space is recognised as outdoor');
+T::equals('stall_package:bare', FindingExtractor::subjectKey('stall_package', 'Bare Space Inside Halls'),
+    'Bare space inside halls is still bare space');
+db()->exec('DELETE FROM stall_packages WHERE id = ?', [$outdoorId]);
+
+// A bare record with no minimum behaves as before: nothing is assumed for it.
+T::equals(0.0, PricingEngine::referenceSize(['package_type' => 'bare', 'min_sqm' => null]),
+    'Only outdoor space is referenced per single square metre');
+
 // A sponsorship tier with no remaining inventory is not offered.
 $soldOutId = db()->insert('sponsorship_packages', [
     'agent_id' => (int)$agent['id'], 'tier_name' => 'Title Sponsor', 'currency' => 'USD',
@@ -1181,6 +1225,24 @@ T::equals('AnthropicLlmProvider', get_class(LlmProviderFactory::make('anthropic'
     'Claude uses its own request format');
 T::equals('GeminiLlmProvider', get_class(LlmProviderFactory::make('gemini')),
     'Gemini uses its own request format');
+// OpenAI's GPT-6 family takes different request settings (10 November 2026).
+$chatMsgs = [['role' => 'system', 'content' => 's'], ['role' => 'user', 'content' => 'u']];
+$oaMeta   = LlmCatalogue::meta('openai');
+$old = OpenAiCompatibleProvider::requestBody('openai', 'gpt-4o', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::ok(isset($old['max_tokens'], $old['temperature']) && !isset($old['reasoning_effort'], $old['max_completion_tokens']),
+    'Earlier OpenAI models are asked exactly as before');
+$luna = OpenAiCompatibleProvider::requestBody('openai', 'gpt-6-luna', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::equals('none', $luna['reasoning_effort'] ?? null, 'GPT-6 Luna answers a live chat without a reasoning delay');
+T::equals(700, $luna['max_completion_tokens'] ?? null, 'GPT-6 Luna gets its length limit under the new name');
+T::ok(!isset($luna['max_tokens']) && isset($luna['temperature']), 'And keeps temperature, which it accepts without reasoning');
+$sol = OpenAiCompatibleProvider::requestBody('openai', 'gpt-6.1-sol', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::equals('low', $sol['reasoning_effort'] ?? null, 'GPT-6.1 Sol reasons at its lowest setting');
+T::ok(!isset($sol['temperature']) && !isset($sol['max_tokens']), 'GPT-6.1 Sol is not sent temperature, which it refuses while reasoning');
+T::equals(2700, $sol['max_completion_tokens'] ?? null, 'GPT-6.1 Sol gets room for its reasoning on top of the reply');
+T::equals(['type' => 'json_object'], $sol['response_format'] ?? null, 'GPT-6 is still asked for JSON');
+T::equals(null, OpenAiCompatibleProvider::gpt6Effort('grok', 'gpt-6-luna'), 'Other services with a similar model name are left alone');
+T::ok(in_array('gpt-6-luna', $oaMeta['models'], true) && in_array('gpt-6.1-sol', $oaMeta['models'], true),
+    'GPT-6 Luna and GPT-6.1 Sol are offered in the model list');
 T::equals('OpenAiCompatibleProvider', get_class(LlmProviderFactory::make('grok')),
     'Grok uses the OpenAI request format');
 T::equals('OpenAiCompatibleProvider', get_class(LlmProviderFactory::make('ollama')),

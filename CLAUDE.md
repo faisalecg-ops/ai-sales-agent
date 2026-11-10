@@ -134,6 +134,16 @@ Read this before any task on this project.
   saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
   texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter
   pack had saved its menus as full review-copy addresses. 340 blog tests pass.
+- **Pharma Asia after the 24th edition (owner approved 10 Nov 2026; plan: Claude doc
+  "Pharma Asia 2026 Post-Event Update Plan"):** built on branch `pharma-asia-2027`, owner to
+  install. Read `docs/upgrade-2026-11-pharma-asia.md`. Approved sales agent changes: outdoor
+  exhibit space as a third kind of stand (step `2026_11_outdoor_package`), and OpenAI GPT-6
+  models with their request settings (owner: GPT-6 Luna for the website chat, GPT-6.1 Sol for
+  prospect emails). Pharma Asia's 2027 content and the Pulse update are SQL files built by
+  `tools/pharmaasia-2027/` and tested on copies of the live databases. Rule for every 2026
+  fact: Post-Event Fact Sheet first, Closing Day Press Release second, Pre-Event Press
+  Release third. Pharma Asia already exists live as exhibition `pharmaasia` (all content in
+  draft, chat not yet switched on at the website, /social set up but not connected to Pulse).
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.

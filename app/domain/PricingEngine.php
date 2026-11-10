@@ -391,6 +391,31 @@ final class PricingEngine
         return ['ok' => true, 'sqm' => $sqm, 'reason' => null, 'message' => null];
     }
 
+    /** The visitor-facing name of each kind of stand. */
+    public static function kindLabel(string $packageType): string
+    {
+        return match ($packageType) {
+            'shell'   => 'Shell scheme',
+            'outdoor' => 'Outdoor space',
+            default   => 'Bare space',
+        };
+    }
+
+    /**
+     * The size a rate-based record is shown at when the visitor has not
+     * given one: its minimum. Outdoor space may be published with a rate and
+     * no minimum; it is then shown per single square metre, which is the
+     * published rate itself and not an invented size.
+     */
+    public static function referenceSize(array $record): float
+    {
+        $min = (float)($record['min_sqm'] ?? 0);
+        if ($min > 0) {
+            return $min;
+        }
+        return (string)($record['package_type'] ?? '') === 'outdoor' ? 1.0 : 0.0;
+    }
+
     private static function sqmText(float $sqm): string
     {
         $whole = (fmod($sqm, 1.0) === 0.0);
@@ -407,7 +432,7 @@ final class PricingEngine
             return (float)$record['price'];
         }
         $rate = (float)($record['rate_per_sqm'] ?? 0);
-        $size = $sqm ?? (float)($record['min_sqm'] ?? 0);
+        $size = $sqm ?? self::referenceSize($record);
         if ($rate <= 0 || $size <= 0) {
             return (float)$record['price'];
         }
@@ -458,13 +483,13 @@ final class PricingEngine
     {
         $currency = strtoupper((string)$record['currency']);
         $perSqm   = (string)($record['pricing_mode'] ?? 'fixed') === 'per_sqm';
-        $size     = $perSqm ? ($sqm ?? (float)($record['min_sqm'] ?? 0)) : null;
+        $size     = $perSqm ? ($sqm ?? self::referenceSize($record)) : null;
         $base     = self::basePrice($record, $size);
         $tax      = self::taxBreakdown($record, $base);
 
         if ($type === self::TYPE_STALL) {
             $title  = (string)$record['package_name'];
-            $scheme = ((string)$record['package_type']) === 'shell' ? 'Shell scheme' : 'Bare space';
+            $scheme = self::kindLabel((string)$record['package_type']);
             $items  = self::lines((string)($record['included_items'] ?? ''));
             $meta   = [$scheme];
 
@@ -582,7 +607,7 @@ final class PricingEngine
                         $sizeNote = $check['message'];
                     }
                 }
-                $useSize ??= (float)($r['min_sqm'] ?? 0);
+                $useSize ??= self::referenceSize($r);
             }
 
             $card = self::toCard($r, $type, $useSize);
@@ -603,8 +628,11 @@ final class PricingEngine
             ];
 
             if ($perSqm) {
-                $fact['sold_as'] = 'Charged per square metre. Minimum '
-                    . self::sqmText((float)($r['min_sqm'] ?? 0))
+                $minimum = (float)($r['min_sqm'] ?? 0);
+                $fact['sold_as'] = 'Charged per square metre. '
+                    . ($minimum > 0 || (string)($r['package_type'] ?? '') !== 'outdoor'
+                        ? 'Minimum ' . self::sqmText($minimum)
+                        : 'No minimum size is published')
                     . ($r['increment_sqm'] ? ', in units of ' . self::sqmText((float)$r['increment_sqm']) : '')
                     . '. The figures above are for ' . self::sqmText((float)$card['sqm']) . '.';
             }

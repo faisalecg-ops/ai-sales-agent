@@ -159,7 +159,7 @@ final class LlmCatalogue
             'endpoint'     => 'https://api.openai.com/v1/chat/completions',
             'json_mode'    => true,
             'default_model' => 'gpt-4o',
-            'models'       => ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'],
+            'models'       => ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-6-luna', 'gpt-6.1-sol'],
             'notes'        => 'Widely available. Billed per token on your OpenAI account.',
         ],
         'gemini' => [
@@ -612,6 +612,65 @@ class OpenAiCompatibleProvider extends BaseLlmProvider
         return LlmCatalogue::isConfigured($this->providerKey);
     }
 
+    /**
+     * How much thinking an OpenAI GPT-6 model does before it answers, or null
+     * for every other model.
+     *
+     * The GPT-6 family reasons before replying and takes different request
+     * settings from earlier models (OpenAI's "Using GPT-6" guide, read 10
+     * November 2026). GPT-6 Luna and GPT-6 Sol can answer without reasoning,
+     * which suits a live chat where someone is waiting. GPT-6.1 Sol, GPT-6.1
+     * Terra and GPT-6 Astra cannot go below "low".
+     */
+    public static function gpt6Effort(string $providerKey, string $model): ?string
+    {
+        $model = strtolower(trim($model));
+        if ($providerKey !== 'openai' || !str_starts_with($model, 'gpt-6')) {
+            return null;
+        }
+        return in_array($model, ['gpt-6-luna', 'gpt-6-sol'], true) ? 'none' : 'low';
+    }
+
+    /**
+     * The request sent to the service. Kept apart from the sending so the
+     * tests can check it without calling anyone.
+     */
+    public static function requestBody(string $providerKey, string $model, array $chat, array $options, array $meta): array
+    {
+        $temperature = (float)($options['temperature'] ?? 0.3);
+        $maxTokens   = (int)($options['max_tokens'] ?? 700);
+        $effort      = self::gpt6Effort($providerKey, $model);
+
+        if ($effort === null) {
+            $payload = [
+                'model'       => $model,
+                'messages'    => $chat,
+                'temperature' => $temperature,
+                'max_tokens'  => $maxTokens,
+            ];
+        } else {
+            // GPT-6: the length limit has a different name, and it also has
+            // to cover the model's own reasoning, so room is added for that
+            // when it reasons. Temperature is only accepted with no reasoning.
+            $payload = [
+                'model'                 => $model,
+                'messages'              => $chat,
+                'reasoning_effort'      => $effort,
+                'max_completion_tokens' => $effort === 'none' ? $maxTokens : $maxTokens + 2000,
+            ];
+            if ($effort === 'none') {
+                $payload['temperature'] = $temperature;
+            }
+        }
+
+        // Only asked for where the service is known to support it; the reply
+        // parser copes with plain text containing JSON either way.
+        if (!empty($meta['json_mode'])) {
+            $payload['response_format'] = ['type' => 'json_object'];
+        }
+        return $payload;
+    }
+
     public function complete(string $system, array $messages, array $options): array
     {
         $meta  = LlmCatalogue::meta($this->providerKey);
@@ -639,18 +698,7 @@ class OpenAiCompatibleProvider extends BaseLlmProvider
             ];
         }
 
-        $payload = [
-            'model'       => $model,
-            'messages'    => $chat,
-            'temperature' => (float)($options['temperature'] ?? 0.3),
-            'max_tokens'  => (int)($options['max_tokens'] ?? 700),
-        ];
-
-        // Only asked for where the service is known to support it; the reply
-        // parser copes with plain text containing JSON either way.
-        if (!empty($meta['json_mode'])) {
-            $payload['response_format'] = ['type' => 'json_object'];
-        }
+        $payload = self::requestBody($this->providerKey, $model, $chat, $options, $meta);
 
         $headers = [];
         if ($apiKey !== '') {

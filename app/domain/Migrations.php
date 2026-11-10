@@ -744,6 +744,20 @@ final class Migrations
                         ADD KEY idx_conv_campaign (agent_id, utm_campaign, utm_content)",
                 ],
             ],
+
+            // Outdoor exhibit space as its own kind of stand (approved by the
+            // owner, 10 November 2026, for Pharma Asia's tariff). Outdoor space
+            // is floor area in the open, sold per square metre, and a tariff
+            // may publish no minimum size for it.
+            [
+                'key'   => '2026_11_outdoor_package',
+                'label' => 'Outdoor exhibit space as a third kind of stand',
+                'check' => static fn(): bool => self::enumAllows('stall_packages', 'package_type', 'outdoor'),
+                'sql'   => [
+                    "ALTER TABLE stall_packages
+                        MODIFY COLUMN package_type ENUM('shell','bare','outdoor') NOT NULL DEFAULT 'shell'",
+                ],
+            ],
         ];
     }
 

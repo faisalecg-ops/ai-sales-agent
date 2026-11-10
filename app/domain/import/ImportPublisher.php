@@ -172,11 +172,15 @@ final class ImportPublisher
         if ($price === null && $rate !== null && $min !== null) {
             $price = round($rate * $min, 2);
         }
+        // Outdoor space with no published minimum: the published rate itself.
+        if ($price === null && $rate !== null && ($payload['package_type'] ?? '') === 'outdoor') {
+            $price = $rate;
+        }
 
         $id = db()->insert('stall_packages', [
             'agent_id'         => (int)$agent['id'],
             'package_name'     => mb_substr((string)($payload['package_name'] ?? $proposal['title']), 0, 160),
-            'package_type'     => in_array($payload['package_type'] ?? '', ['shell', 'bare'], true)
+            'package_type'     => in_array($payload['package_type'] ?? '', ['shell', 'bare', 'outdoor'], true)
                 ? (string)$payload['package_type'] : 'shell',
             'stall_size'       => mb_substr((string)($payload['stall_size'] ?? ''), 0, 64),
             'size_sqm'         => $min,
