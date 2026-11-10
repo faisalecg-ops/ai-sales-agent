@@ -37,10 +37,12 @@ $open = array_filter($setup, static fn($s) => !$s[1]);
 $seenAt = Auth::can('settings') ? address_mismatch() : null;
 if ($seenAt !== null && is_post() && in('do') === 'use_address') {
     post_guard();
+    $was = rtrim((string)(Settings::get('site_url', '') ?: cfg('base_url', '')), '/');
     Settings::set('site_url', $seenAt);
+    $moved = Settings::moveLinks($was, $seenAt);
     Cache::clear();
-    Activity::log('settings', 'Blog address set to ' . $seenAt . ' from the dashboard');
-    flash('ok', 'The blog address is now ' . $seenAt . '.');
+    Activity::log('settings', 'Blog address set to ' . $seenAt . ' from the dashboard' . ($moved ? ' (' . $moved . ' saved links changed)' : ''));
+    flash('ok', 'The blog address is now ' . $seenAt . '.' . ($moved ? ' ' . $moved . ' saved link(s) (menus, buttons, articles) were changed to it.' : ''));
     back_to('dashboard');
 }
 

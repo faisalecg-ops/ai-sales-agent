@@ -617,12 +617,27 @@ $css = $cssOf($other['body']);
 T::ok(str_starts_with($css, '/blog/'), 'With a wrong domain saved, styles still come from this website');
 $got = http('GET', $origin . $css);
 T::ok($got['status'] === 200 && str_contains($got['headers'], 'text/css'), '…and the stylesheet loads');
+// Links saved as full addresses at the old place (menus from a starter pack, slide buttons, article texts).
+Settings::set('main_menu', [['label' => 'News', 'url' => 'https://buildasia.net/blog/news/'], ['label' => 'Main site', 'url' => 'https://buildasia.net/']]);
+db()->exec("INSERT INTO {p}settings (name, value) VALUES ('footer_menu', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)",
+    ['[{"label":"Events","url":"https:\\/\\/buildasia.net\\/blog\\/events\\/"}]']);
+$moveArt = publish_article('Moved links article', make_category('Moving'), ['body' => '<p>' . str_repeat('Read more. ', 12) . '<a href="https://buildasia.net/blog/news/">news</a> <a href="https://example.com/blog/x">other</a></p>']);
+Settings::flush();
 $adm = http('GET', '/admin/?p=dashboard', ['jar' => $jar]);
 T::has($adm['body'], 'The blog address does not match this website', 'The dashboard warns that the saved address is wrong');
 T::ok(str_contains($adm['body'], 'href="/blog/admin/assets/admin.css'), 'The admin styles still load');
 $fix = http('POST', '/admin/?p=dashboard', ['jar' => $jar, 'form' => ['do' => 'use_address', '_csrf' => csrf_from($adm['body'])]]);
 Settings::flush();
 T::eq(Settings::get('site_url'), $origin . '/blog', 'One click sets the address to the one in use');
+$mm = (array)Settings::get('main_menu', []);
+T::eq($mm[0]['url'] ?? '', $origin . '/blog/news/', '…and menu links saved with the old address now use the new one');
+T::eq($mm[1]['url'] ?? '', 'https://buildasia.net/', '…while links outside the blog are left alone');
+T::eq(((array)Settings::get('footer_menu', []))[0]['url'] ?? '', $origin . '/blog/events/', '…also when saved with escaped slashes');
+$movedBody = (string)db()->value('SELECT body FROM {p}articles WHERE id = ?', [$moveArt['id']]);
+T::ok(str_contains($movedBody, 'href="' . $origin . '/blog/news/"') && str_contains($movedBody, 'https://example.com/blog/x'), '…and links inside article texts too');
+T::eq(Settings::moveLinks($origin . '/blog', $origin . '/blog'), 0, 'Nothing changes when the address stays the same');
+Settings::set('main_menu', []);
+Settings::set('footer_menu', []);
 Settings::set('site_url', $savedUrl);
 Cache::clear();
 

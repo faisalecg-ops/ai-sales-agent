@@ -252,6 +252,36 @@ final class Settings
         ];
     }
 
+    /**
+     * The blog moved (e.g. from the review copy to the live website): replace the old blog
+     * address with the new one wherever it was saved as a full address — header and footer
+     * menus, slide buttons, article texts, settings. Also the JSON form with "\/" slashes.
+     * @return int rows changed
+     */
+    public static function moveLinks(string $old, string $new): int
+    {
+        $old = rtrim($old, '/');
+        $new = rtrim($new, '/');
+        if ($old === '' || $new === '' || strcasecmp($old, $new) === 0 || !is_web_url($old) || !is_web_url($new)) {
+            return 0;
+        }
+        $prefix = db()->prefix();
+        $like = str_replace(['\\', '_', '%'], ['\\\\', '\\_', '\\%'], $prefix) . '%';
+        $cols = db()->all("SELECT TABLE_NAME t, COLUMN_NAME c FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE ? AND DATA_TYPE IN ('char','varchar','tinytext','text','mediumtext','longtext','json')", [$like]);
+        $pairs = [[$old, $new], [str_replace('/', '\\/', $old), str_replace('/', '\\/', $new)]];
+        $changed = 0;
+        foreach ($cols as $col) {
+            $t = '`' . str_replace('`', '', (string)$col['t']) . '`';
+            $c = '`' . str_replace('`', '', (string)$col['c']) . '`';
+            foreach ($pairs as [$from, $to]) {
+                $changed += db()->exec("UPDATE $t SET $c = REPLACE($c, ?, ?) WHERE INSTR($c, ?) > 0", [$from, $to, $from]);
+            }
+        }
+        self::$cache = null;
+        return $changed;
+    }
+
     private static function load(): array
     {
         if (self::$cache === null) {

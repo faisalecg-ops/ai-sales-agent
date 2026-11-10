@@ -34,9 +34,14 @@ if (is_post()) {
         'show_reading_time' => (bool)in('show_reading_time'),
         'show_share_buttons' => (bool)in('show_share_buttons'),
     ]);
+    $moved = $url !== $oldUrl ? Settings::moveLinks($oldUrl, $url) : 0;
     Cache::clear();
     Activity::log('settings.updated');
     if ($url !== $oldUrl) {
+        if ($moved > 0) {
+            Activity::log('settings', 'Blog moved: ' . $moved . ' saved link(s) changed from ' . $oldUrl . ' to ' . $url);
+            flash('ok', $moved . ' saved link(s) (menus, buttons, articles) now point to the new address.');
+        }
         flash('warn', 'The blog address changed. If this is a move to a new website (for example from the review copy to buildasia.net/blog), also update the address in the sales agent\'s allowed domains and in Google Search Console.');
     }
     flash('ok', 'Settings saved.');

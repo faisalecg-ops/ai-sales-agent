@@ -126,8 +126,14 @@ Read this before any task on this project.
   that repository's `docs/handover/`.
 - Event websites are plain HTML/PHP on cPanel **shared** hosting. Build Asia's
   new site is being built in a separate chat (review copy at
-  buildasia.ecgateway.net, then buildasia.net); Pharma Asia
-  (pharmaasia.com.pk) is due for renovation, not yet started.
+  buildasia.ecgateway.net, then buildasia.net). Pharma Asia's renovated website
+  (repository faisalecg-ops/pharmaasia) is LIVE at https://pharmaasia.com.pk since
+  7 Nov 2026, with Pharma Asia Pulse (this blog script) at /pulse; the review copy
+  pharmaasia.ecgateway.net is only a backup now.
+- **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links
+  saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
+  texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter
+  pack had saved its menus as full review-copy addresses. 340 blog tests pass.
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.

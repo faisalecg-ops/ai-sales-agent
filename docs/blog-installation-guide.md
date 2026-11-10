@@ -11,7 +11,7 @@ its own admin and its own content.
 
 ## What you need
 
-- The package **event-blog-1.4.0.zip**.
+- The package **event-blog-1.4.1.zip**.
 - cPanel access for the event website.
 - The exhibition's logo (PNG, ideally with a transparent background, plus a
   white version for dark backgrounds), its brand colours, and the addresses
@@ -150,25 +150,35 @@ When the new website goes live at buildasia.net, there are two ways:
   the live account, then in the blog admin → **Readers & general**, change
   the **Blog address** to `https://buildasia.net/blog`, untick **Hide the blog
   from Google**, and update `config/config.php` if the database details differ.
+  From 1.4.1, changing the Blog address (or the dashboard's "use this address"
+  button) also changes every link that was saved with the old address: header
+  and footer menus, slide buttons and links inside articles. Also check
+  **Event** (main website, Register and Book a stand addresses).
 
 Either way, the new main website should leave the `/blog` folder alone and
 link to it in its menu.
 
-## Pharma Asia's renovation
+## Pharma Asia
 
-The blog can be installed on the current pharmaasia.com.pk now. When the new
-website replaces the old one, keep the `public_html/blog` folder (and its
-database) as it is — the blog carries on unchanged under the new site.
+Pharma Asia Pulse runs at `https://pharmaasia.com.pk/pulse` (folder
+`public_html/pulse`), next to the renovated Pharma Asia website. It was moved
+there from the review copy (pharmaasia.ecgateway.net/pulse) on 7 Nov 2026.
 
 ---
 
 ## Updating the blog later
 
-Upload the new **event-blog-1.4.0.zip** into `public_html/blog` and extract it,
+Upload the new **event-blog-1.4.1.zip** into `public_html/blog` (Pharma Asia: `public_html/pulse`) and extract it,
 replacing files. Your settings (`config/config.php`), uploaded images
 (`uploads/`) and saved data are not in the package, so they are never
 overwritten. Then open the admin once: any database changes are applied
 automatically.
+
+**New in 1.4.1 (10 Nov 2026):** when the blog moves (the Blog address changes),
+links saved with the old address are changed too: menus from the starter
+content, slide buttons and links inside articles (found on Pharma Asia Pulse
+after its move from pharmaasia.ecgateway.net to pharmaasia.com.pk). Nothing to
+set up.
 
 **New in 1.4.0 (12 Oct 2026):** visits that arrive from social media posts
 (links with tracking tags) are counted per article and per post, and the Social
