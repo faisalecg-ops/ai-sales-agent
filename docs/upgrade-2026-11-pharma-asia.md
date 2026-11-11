@@ -70,3 +70,25 @@ Post-Event Update Plan").
 `php tests/acceptance.php` 1,235 pass (28 new); `php tests/access-http.php` 82 pass.
 The upgrade step and the import were run on a copy of the live database of 10 November
 2026, twice, with the same result both times.
+
+## Second part — 11 November 2026: packages and sponsorship in the chat
+
+Found while testing the live Pharma Asia chat with the owner.
+
+- **The assistant can describe what is on offer without a price being asked.** Before, the
+  stand and sponsorship records reached the AI only when the message contained a price word,
+  so "brief me the packages and sponsorship options" got no details. Now, when a visitor asks
+  about packages, stands, outdoor space or sponsorship (`ChatOrchestrator::detectCatalogueRequest`),
+  or asks a price that cannot be shown to them, the AI is given names, sizes, inclusions and
+  tier benefits with no figures of money (`PricingEngine::catalogueForPrompt`, prompt section
+  "WHAT IS ON OFFER"). Prices are still given only on a price request, only to visitors who
+  may see them, and the reply guard is unchanged. Visitors in Pakistan are told what is
+  offered and passed to the local sales representative when price comes up.
+- **Sponsorship tiers** (`pharmaasia-sponsorship-2027.sql`): the four approved Pharma Asia
+  tiers still ended on 22 October 2026, so the platform treated them as expired although the
+  admin list said Live. The file removes the end date, labels them for December 2027 and
+  words the tax as 15% VAT. Prices and benefits are not changed.
+
+Files: `app/domain/PricingEngine.php`, `ChatOrchestrator.php`, `PromptBuilder.php`.
+Install: upload the three files, then import the SQL. No Database upgrade step.
+Tests: 1,245 acceptance (10 new), 82 access.

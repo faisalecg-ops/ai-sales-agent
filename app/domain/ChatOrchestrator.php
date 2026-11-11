@@ -180,6 +180,14 @@ final class ChatOrchestrator
             }
         }
 
+        // What is on offer, without prices: when the visitor asks about the
+        // packages or sponsorship (or asks a price that cannot be shown to
+        // them) and no price facts were prepared for this turn.
+        $catalogue = [];
+        if (!$facts && ($pricingRequested || self::detectCatalogueRequest($message))) {
+            $catalogue = PricingEngine::catalogueForPrompt($agentId);
+        }
+
         // ---- Circuit breaker (Section 45) ---------------------------------
         if (CircuitBreaker::shouldSkipModel($agent)) {
             return self::staticResponse($agent, $conversation, 'agent_unavailable', null, true);
@@ -209,6 +217,7 @@ final class ChatOrchestrator
             'intent'            => (string)$conversation['intent'],
             'knowledge'         => $knowledge,
             'pricing_facts'     => $facts,
+            'catalogue'         => $catalogue,
             'pricing_allowed'   => $pricingAllowed,
             'pricing_requested' => $pricingRequested,
             'pricing_country'   => $classification,
@@ -847,6 +856,19 @@ final class ChatOrchestrator
             return true;
         }
         return false;
+    }
+
+    /**
+     * Is the visitor asking what can be bought (packages, stands, sponsorship),
+     * as opposed to what it costs?
+     */
+    public static function detectCatalogueRequest(string $message): bool
+    {
+        return (bool)preg_match(
+            '/\b(?:packages?|sponsor(?:s|ship|ships|ing)?|tiers?|stalls?|stands?|booths?|shell\s+scheme|'
+            . 'bare\s+space|raw\s+space|outdoor|participation|participating|exhibit(?:ing)?\s+(?:options?|space))\b/i',
+            $message
+        );
     }
 
     private static function pricingFallbackKey(string $classification): string

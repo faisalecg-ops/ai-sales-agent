@@ -749,6 +749,38 @@ T::equals('stall_package:outdoor', FindingExtractor::subjectKey('stall_package',
     'A document\'s outdoor space is recognised as outdoor');
 T::equals('stall_package:bare', FindingExtractor::subjectKey('stall_package', 'Bare Space Inside Halls'),
     'Bare space inside halls is still bare space');
+
+// What is on offer, described without prices (approved 11 November 2026).
+T::ok(ChatOrchestrator::detectCatalogueRequest('brief me the participantion packages and sponsorship options of the event'),
+    'Asking to be briefed on packages and sponsorship is recognised');
+T::ok(!ChatOrchestrator::detectPricingRequest('brief me the participation packages and sponsorship options of the event', 'education'),
+    'And it is still not treated as a price request');
+T::ok(ChatOrchestrator::detectCatalogueRequest('Is outdoor possible?') && ChatOrchestrator::detectCatalogueRequest('tell me about your stalls'),
+    'Stands and outdoor space are recognised too');
+T::ok(!ChatOrchestrator::detectCatalogueRequest('I understand, thank you') && !ChatOrchestrator::detectCatalogueRequest('When is the show?'),
+    'Ordinary messages are not ("understand" does not count as "stand")');
+$catalogue = PricingEngine::catalogueForPrompt((int)$agent['id']);
+T::ok(count($catalogue) >= 1, 'Live packages are listed for the assistant to describe');
+$catalogueText = json_encode($catalogue);
+T::ok(!preg_match('/(USD|PKR|EUR|GBP|Rs\.?|\$)\s?\d/', (string)$catalogueText), 'The list carries no figure of money');
+$outdoorEntry = array_values(array_filter($catalogue, static fn($c) => $c['name'] === 'Outdoor Exhibit Space'))[0] ?? null;
+T::ok($outdoorEntry !== null && !str_contains($outdoorEntry['details'], '1 sqm'), 'Outdoor space is not described as a 1 sqm stand');
+$cataloguePrompt = PromptBuilder::build([
+    'agent' => $agent, 'message' => 'what packages do you have', 'state' => 'education', 'intent' => 'exhibitor',
+    'knowledge' => ['faqs' => [], 'articles' => []], 'pricing_facts' => [], 'catalogue' => $catalogue,
+    'pricing_allowed' => true, 'pricing_requested' => false, 'pricing_country' => 'international',
+    'lead_state' => [], 'recent_messages' => [],
+])['system'];
+T::ok(str_contains($cataloguePrompt, 'WHAT IS ON OFFER (descriptions only, no prices)'), 'The assistant is given the list');
+T::ok(!str_contains($cataloguePrompt, 'No package matches what they have described'),
+    'And is no longer told that no package matches when nobody asked a price');
+$plainPrompt = PromptBuilder::build([
+    'agent' => $agent, 'message' => 'hello', 'state' => 'education', 'intent' => 'exhibitor',
+    'knowledge' => ['faqs' => [], 'articles' => []], 'pricing_facts' => [], 'catalogue' => [],
+    'pricing_allowed' => true, 'pricing_requested' => false, 'pricing_country' => 'international',
+    'lead_state' => [], 'recent_messages' => [],
+])['system'];
+T::ok(!str_contains($plainPrompt, 'WHAT IS ON OFFER'), 'Without such a question the prompt is unchanged');
 db()->exec('DELETE FROM stall_packages WHERE id = ?', [$outdoorId]);
 
 // A bare record with no minimum behaves as before: nothing is assumed for it.

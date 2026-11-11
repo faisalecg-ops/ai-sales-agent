@@ -645,6 +645,79 @@ final class PricingEngine
         return $facts;
     }
 
+    /**
+     * What is on offer, described without any price (approved 11 November 2026).
+     *
+     * A visitor who asks to be briefed on the packages or the sponsorship
+     * options has not asked a price, so no price facts are prepared for that
+     * turn; before this, the assistant then had nothing to describe. This gives
+     * it the names, sizes, inclusions and tier benefits of every live record.
+     * It is the same for every visitor, whatever their country: a visitor in
+     * Pakistan is told what is offered and is passed to the local sales
+     * representative when price comes up.
+     *
+     * Nothing here may carry a figure of money: anything that looks like one
+     * is dropped, and the reply guard still discards any price in the answer.
+     *
+     * @return array<int, array{kind:string,name:string,details:string,includes:array,sold_as:string}>
+     */
+    public static function catalogueForPrompt(int $agentId): array
+    {
+        $money = '/(?:\b[A-Z]{3}\b\s?\d|[$€£¥₨]|\b(?:Rs|PKR|USD|EUR|GBP|AED)\b)/u';
+        $out   = [];
+        $seen  = [];
+
+        foreach ([
+            [self::TYPE_STALL, 'stall_packages', 'Participation option'],
+            [self::TYPE_SPONSORSHIP, 'sponsorship_packages', 'Sponsorship tier'],
+        ] as [$type, $table, $kind]) {
+            $rows = db()->all(
+                "SELECT * FROM {$table}
+                 WHERE agent_id = ? AND active = 1 AND status IN ('approved','pending_review')
+                 ORDER BY sort_order ASC, id ASC LIMIT 60",
+                [$agentId]
+            );
+            foreach (self::servable($rows, $type) as $r) {
+                $card = self::toCard($r, $type, null);
+                $name = trim((string)$card['title']);
+                $key  = $type . '|' . mb_strtolower($name);
+                if ($name === '' || isset($seen[$key])) {
+                    continue;   // the same package priced for another region
+                }
+                $seen[$key] = true;
+
+                $clean = static fn(array $list): array => array_values(array_filter(
+                    array_map(static fn($v) => trim((string)$v), $list),
+                    static fn(string $v): bool => $v !== '' && !preg_match($money, $v)
+                ));
+
+                $soldAs = '';
+                if ($type === self::TYPE_STALL && (string)($r['pricing_mode'] ?? 'fixed') === 'per_sqm') {
+                    $minimum = (float)($r['min_sqm'] ?? 0);
+                    $soldAs  = 'Charged per square metre. '
+                        . ($minimum > 0 ? 'Minimum ' . self::sqmText($minimum) : 'No minimum size is published')
+                        . (!empty($r['increment_sqm']) ? ', in units of ' . self::sqmText((float)$r['increment_sqm']) : '')
+                        . '.';
+                }
+
+                $meta = $clean($card['meta'] ?? []);
+                if ($soldAs !== '' && (float)($r['min_sqm'] ?? 0) <= 0) {
+                    // No minimum: the card's "1 sqm" is only a pricing reference, not a size on offer.
+                    $meta = array_values(array_filter($meta, static fn(string $v): bool => !preg_match('/^[\d.]+\s*sqm$/i', $v)));
+                }
+
+                $out[] = [
+                    'kind'     => $kind,
+                    'name'     => $name,
+                    'details'  => implode(', ', $meta),
+                    'includes' => $clean($card['items'] ?? []),
+                    'sold_as'  => $soldAs,
+                ];
+            }
+        }
+        return $out;
+    }
+
     /** Every figure a reply is permitted to contain, given these facts. */
     public static function allowedFigures(array $records, string $type, ?float $sqm = null): array
     {

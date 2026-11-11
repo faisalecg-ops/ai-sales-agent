@@ -30,6 +30,7 @@ final class PromptBuilder
         $sections[] = self::salesRules($agent);
         $sections[] = self::knowledge($ctx['knowledge'] ?? ['faqs' => [], 'articles' => []]);
         $sections[] = self::pricing($ctx);
+        $sections[] = self::catalogue($ctx);
         $sections[] = self::conversationState($ctx);
         $sections[] = self::leadFields($ctx['lead_state'] ?? []);
         $sections[] = (string)($ctx['research'] ?? '');
@@ -152,6 +153,40 @@ final class PromptBuilder
     }
 
     // -----------------------------------------------------------------
+    // 5b. What is on offer, without prices
+    // -----------------------------------------------------------------
+    private static function catalogue(array $ctx): string
+    {
+        $items = $ctx['catalogue'] ?? [];
+        if (!$items) {
+            return '';
+        }
+
+        $lines = [
+            "WHAT IS ON OFFER (descriptions only, no prices)",
+            "These are the participation options and sponsorship tiers currently offered. When the visitor "
+            . "asks about packages, stands or sponsorship, describe them from this list: name each one and "
+            . "say briefly what it is and what it includes. This list carries no prices. Do not state, "
+            . "estimate or hint at a price for any of them; the pricing rule above decides what happens "
+            . "when price is asked.",
+            "",
+        ];
+        foreach ($items as $it) {
+            $lines[] = "- " . (string)$it['kind'] . ": " . (string)$it['name'];
+            if (trim((string)$it['details']) !== '') {
+                $lines[] = "  Details: " . (string)$it['details'];
+            }
+            if (!empty($it['includes'])) {
+                $lines[] = "  Includes: " . implode('; ', array_map('strval', $it['includes']));
+            }
+            if (trim((string)$it['sold_as']) !== '') {
+                $lines[] = "  How it is sold: " . (string)$it['sold_as'];
+            }
+        }
+        return implode("\n", $lines);
+    }
+
+    // -----------------------------------------------------------------
     // 5. Authoritative pricing facts (Sections 17-21)
     // -----------------------------------------------------------------
     private static function pricing(array $ctx): string
@@ -180,6 +215,13 @@ final class PromptBuilder
                 : "If price comes up, follow the same rule.";
 
             return "APPROVED PRICING FACTS\n" . $reason . "\n" . $action;
+        }
+
+        // Nothing was asked about price this turn and the offer is described
+        // in the next section: say so plainly instead of "no package matches".
+        if (!$facts && !$requested && !empty($ctx['catalogue'])) {
+            return "APPROVED PRICING FACTS\nPrice has not been asked about in this message, so no figures are "
+                 . "provided for this turn. Do not state, estimate or hint at any price.";
         }
 
         if (!$facts) {
