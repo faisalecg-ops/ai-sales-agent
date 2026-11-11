@@ -142,8 +142,14 @@ Read this before any task on this project.
   prospect emails). Pharma Asia's 2027 content and the Pulse update are SQL files built by
   `tools/pharmaasia-2027/` and tested on copies of the live databases. Rule for every 2026
   fact: Post-Event Fact Sheet first, Closing Day Press Release second, Pre-Event Press
-  Release third. Pharma Asia already exists live as exhibition `pharmaasia` (all content in
-  draft, chat not yet switched on at the website, /social set up but not connected to Pulse).
+  Release third. Pharma Asia exists live as exhibition `pharmaasia`; /social is set up but not
+  connected to Pulse.
+  **11 Nov 2026:** both deliveries installed by the owner and the Pharma Asia content approved;
+  cron jobs added on both accounts. Second update: the chat describes packages and sponsorship
+  tiers without prices when asked (`PricingEngine::catalogueForPrompt`, prompt section "WHAT IS
+  ON OFFER"), and the sponsorship tiers' 22 Oct 2026 end date removed. **Testing with the owner
+  is in progress: collect findings, do not fix until the owner decides.** Read
+  `docs/sales-agent-status-2026-11-11.md` (findings 1–10, causes, open items).
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.
