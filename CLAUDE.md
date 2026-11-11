@@ -150,6 +150,14 @@ Read this before any task on this project.
   ON OFFER"), and the sponsorship tiers' 22 Oct 2026 end date removed. **Testing with the owner
   is in progress: collect findings, do not fix until the owner decides.** Read
   `docs/sales-agent-status-2026-11-11.md` (findings 1–10, causes, open items).
+  **Owner approved the chat fix plan (11 Nov 2026, built by the AI Sales Agent chat):** read
+  `docs/handover/2026-11-11-chat-review-and-fix-plan.md` and the Claude doc "AI Sales Agent
+  chat — review and fix plan" (https://claude.ai/code/artifact/723bf221-9947-403a-ac4b-7c4749d64e74).
+  Six steps: human wording (no "approved", no country in price replies, ask which option first),
+  contact asked once with a gap, whole-chat memory of the offer, research before the first
+  exhibitor reply (silent 10–20 s), sponsorship benefits/compare/recommend, Pharma Asia sectors +
+  Market article + tier guidance, outdoor from 80 sqm, 15 test chats. This ends the "do not fix
+  yet" pause.
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.
