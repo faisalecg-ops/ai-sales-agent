@@ -14,11 +14,11 @@ declare(strict_types=1);
  * exhibition justifies — lightly offered exhibiting or the conference. No
  * lead is created unless they take it up.
  *
- * Exhibiting: the answer goes through the ordinary chat engine, so pricing,
- * country rules, knowledge and handoff behave exactly as they do for a typed
- * message. This is where company research will run once it exists — before
- * the reply, so the first thing an exhibitor hears is already about their
- * business.
+ * Exhibiting: their company is researched first (waiting at most a few
+ * seconds), then the answer goes through the ordinary chat engine, so
+ * pricing, country rules, knowledge and handoff behave exactly as they do for
+ * a typed message, and the first thing an exhibitor hears is already about
+ * their business.
  */
 final class ChatIntro
 {
@@ -185,9 +185,20 @@ final class ChatIntro
         ?string $company,
         ?string $country
     ): array {
-        // Company research (owner's rule 1B) will run here, before the reply,
-        // once it exists. Until then the assistant works from what the
-        // visitor told us and the exhibition's approved knowledge.
+        // Company research (owner's rule 1B; fix plan step 3, 11 Nov 2026)
+        // runs here, before the reply, so the first thing an exhibitor hears
+        // is already about their business. It waits at most the set number of
+        // seconds (owner: 10 to 20) with nothing said — the widget shows only
+        // the typing dots. If it is not finished by then, the reply goes out
+        // as normal and research is finished straight after it, for the next
+        // turn.
+        $wait = CompanyResearch::firstReplyWait();
+        if ($wait > 0) {
+            $outcome = CompanyResearch::beforeFirstReply($agent, $conversation, $wait);
+            app_log('research', 'before the first reply', [
+                'agent' => (int)$agent['id'], 'conversation' => (int)$conversation['id'], 'outcome' => $outcome,
+            ]);
+        }
 
         $response = ChatOrchestrator::handle($agent, [
             'request_id'     => (string)($input['request_id'] ?? ('intro' . bin2hex(random_bytes(8)))),

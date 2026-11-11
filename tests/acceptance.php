@@ -771,7 +771,7 @@ $cataloguePrompt = PromptBuilder::build([
     'pricing_allowed' => true, 'pricing_requested' => false, 'pricing_country' => 'international',
     'lead_state' => [], 'recent_messages' => [],
 ])['system'];
-T::ok(str_contains($cataloguePrompt, 'WHAT IS ON OFFER (descriptions only, no prices)'), 'The assistant is given the list');
+T::ok(str_contains($cataloguePrompt, 'WHAT IS ON OFFER (names and what each includes, no prices)'), 'The assistant is given the list');
 T::ok(!str_contains($cataloguePrompt, 'No package matches what they have described'),
     'And is no longer told that no package matches when nobody asked a price');
 $plainPrompt = PromptBuilder::build([
@@ -3448,7 +3448,8 @@ $rsQ = CompanyResearch::queries($agent, ['company_name' => 'Gulf Cranes', 'compa
 T::equals(4, count($rsQ), 'No more searches than the limit per company');
 T::equals(['gulfcranes.example'], $rsQ[0]['options']['include_domains'] ?? null,
     'The company\'s own website is searched first, when it is known');
-T::ok(str_contains($rsQ[1]['query'], 'trade show'), 'Then its exhibition history');
+T::ok(str_contains($rsQ[1]['query'], 'Pakistan') && str_contains($rsQ[2]['query'], 'trade show'),
+    'Then its Pakistan connection and its exhibition history (11 Nov 2026: Pakistan moved up for the pitch)');
 T::equals(1, CompanyResearch::tier('https://www.gulfcranes.example/about', 'gulfcranes.example', $agent),
     'The company\'s own site is a first-tier source');
 T::equals(2, CompanyResearch::tier('https://www.linkedin.com/company/gulf-cranes', null, $agent),
@@ -3596,7 +3597,7 @@ T::ok(str_contains($rcPrompt, 'Makes passenger lifts for high-rise buildings'),
     'The assistant is given the facts research found');
 T::ok(str_contains($rcPrompt, 'never state this as fact') && str_contains($rcPrompt, 'Looking for an agent in Pakistan'),
     'And the reasoning, marked as its own judgement rather than something to state');
-T::ok(str_contains($rcPrompt, 'Prices still come only from the approved pricing'),
+T::ok(str_contains($rcPrompt, 'Prices still come only from the price section'),
     'While prices still come only from approved pricing');
 
 db()->update('company_research', ['findings' => json_encode(['match_level' => 'direct',
@@ -5005,6 +5006,322 @@ $wjs = (string)file_get_contents(APP_ROOT . '/public_html/widget/widget.js');
 T::ok(str_contains($wjs, "STORAGE_ARRIVAL = 'aisa_arrival'") && str_contains($wjs, 'arrival: readArrival()'),
     'The widget keeps the arrival tags and sends them when a chat starts');
 db()->exec('DELETE FROM conversations WHERE id IN (' . (int)$arr['id'] . ',' . (int)$arrBad['id'] . ',' . (int)$arrNone['id'] . ')');
+
+// =====================================================================
+// Chat fix plan (owner, 11 Nov 2026): docs/handover/2026-11-11-chat-review-and-fix-plan.md
+// =====================================================================
+T::group('Chat fix plan: the exhibition used for these tests');
+
+$fpId = db()->insert('agents', [
+    'slug' => 'acc-pharma', 'name' => 'Pharma Asia', 'status' => 'active',
+    'website_url' => 'https://pharmaasia.com.pk', 'allowed_domains' => "pharmaasia.com.pk",
+    'persona' => AgentDefaults::PERSONA, 'sales_objectives' => AgentDefaults::OBJECTIVES,
+    'sales_rules' => AgentDefaults::SALES_RULES . "\n\nRecommending a sponsorship tier\n- Silver: a specialist or first-time supplier.",
+    'llm_provider' => 'mock', 'llm_model' => 'mock-model', 'notify_email' => 'sales@example.net',
+    'readiness_min_signals' => 2, 'book_stand_url' => 'https://pharmaasia.com.pk/book-a-stand/',
+    'exhibition_sectors' => "Pharmaceutical machinery\nPackaging machinery\nPumps, valves and sensors\nAPIs\nPharmaceutical raw materials\nLaboratory equipment\nPharmaceuticals",
+]);
+Fallbacks::seed($fpId);
+$fpAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$fpId]);
+$fpStall = static function (string $name, string $type, float $rate, ?float $min, ?float $inc, int $order) use ($fpId): int {
+    return db()->insert('stall_packages', [
+        'agent_id' => $fpId, 'package_name' => $name, 'package_type' => $type, 'stall_size' => 'per sqm',
+        'currency' => 'USD', 'price' => $rate * max(1, (float)$min), 'pricing_mode' => 'per_sqm', 'price_basis' => 'per_sqm',
+        'rate_per_sqm' => $rate, 'min_sqm' => $min, 'increment_sqm' => $inc, 'region_group' => 'international',
+        'active' => 1, 'status' => 'approved', 'tax_included' => 'no', 'tax_rate_percent' => 15, 'tax_label' => 'VAT',
+        'included_items' => $type === 'shell' ? "Walls and fascia\nCarpet\nOne table and two chairs" : '',
+        'sort_order' => $order,
+    ]);
+};
+$fpShell   = $fpStall('Shell Scheme Stall', 'shell', 375, 9, 9, 1);
+$fpBare    = $fpStall('Bare Space Inside Halls', 'bare', 325, 18, 9, 2);
+$fpOutdoor = $fpStall('Outdoor Exhibit Space', 'outdoor', 150, 80, null, 3);
+foreach ([['Title Partner', 75000, "Exhibition space included: 144 sqm\nSpeaking slot at the International Pharma Convention\nLogo on all branding"],
+          ['Platinum Partner', 40000, "Exhibition space included: 72 sqm\nFour outer grill panels\n100 VIP passes"],
+          ['Gold Partner', 20000, "Exhibition space included: 36 sqm\nTwo outer grill panels\n50 VIP passes"],
+          ['Silver Partner', 10000, "Exhibition space included: 18 sqm\nOne corridor panel\n25 VIP passes"]] as $i => [$tn, $tp, $tb]) {
+    db()->insert('sponsorship_packages', [
+        'agent_id' => $fpId, 'tier_name' => $tn, 'currency' => 'USD', 'price' => $tp, 'benefits' => $tb,
+        'region_group' => 'international', 'active' => 1, 'status' => 'approved',
+        'tax_included' => 'no', 'tax_rate_percent' => 15, 'tax_label' => 'VAT', 'sort_order' => $i + 1,
+    ]);
+}
+db()->insert('knowledge_articles', [
+    'agent_id' => $fpId, 'title' => "Pakistan's pharmaceutical market: the opportunity for suppliers", 'category' => 'market',
+    'body' => 'Pakistan has more than 650 pharmaceutical manufacturers. Plants upgrading to international standards need pumps, valves, sensors and spare parts.',
+    'keywords' => 'pakistan market opportunity machinery pumps valves sensors apis laboratory', 'status' => 'approved', 'active' => 1,
+]);
+db()->insert('knowledge_articles', [
+    'agent_id' => $fpId, 'title' => 'Why exhibit at Pharma Asia', 'category' => 'benefits',
+    'body' => 'Pharma Asia gathers pharmaceutical manufacturers, buyers and distributors in one place.',
+    'keywords' => 'why exhibit benefits buyers', 'status' => 'approved', 'active' => 1,
+]);
+T::ok($fpAgent !== null, 'A Pharma-style exhibition with per-sqm stands, outdoor space from 80 sqm and four tiers');
+
+// A conversation with a company in Germany, told on the introduction card.
+$fpStart = static function () use ($fpAgent): array {
+    $st = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk',
+        'page_url' => 'https://pharmaasia.com.pk/']);
+    $c = ChatOrchestrator::applyFormCountry($fpAgent, $st['conversation'], 'DE');
+    db()->update('conversations', ['intent' => 'exhibitor',
+        'lead_state' => json_encode(['name' => 'Creasida', 'company' => 'Bartels', 'company_country' => 'Germany'])], 'id = ?', [(int)$c['id']]);
+    return [reload_conversation($c), $st['session_secret']];
+};
+
+T::group('Chat fix plan, step 1: talk like a sales person');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Which option interests you: a stand or sponsorship?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'What are the rates?');
+$p = $mock->lastSystemPrompt();
+T::ok(!str_contains($p, 'APPROVED PRICING FACTS') && !str_contains($p, 'APPROVED KNOWLEDGE'),
+    'The prompt no longer uses the heading "APPROVED PRICING FACTS" (finding 2)');
+T::ok(str_contains($p, 'PRICES YOU MAY QUOTE'), 'Prices come under a neutral heading');
+T::ok(str_contains($p, 'Never use the words "approved", "pricing facts", "stage", "system"'),
+    'The assistant is told never to say "approved", "pricing facts", "stage" or "system" (findings 2 and 10)');
+T::ok(str_contains($p, "Never mention the visitor's country when you give a price"),
+    'Nor to mention their country with a price, or suggest prices differ by country');
+T::ok(str_contains($p, 'THEY ASKED ABOUT PRICE WITHOUT SAYING WHICH OPTION'),
+    '"What are the rates?" with no option named: ask which option first (owner)');
+
+$mock->push(['reply' => 'Here are the rates.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'What are the rates for stands and sponsorship?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'They asked about stand prices') && str_contains($p, 'They asked about sponsorship prices'),
+    'Stands and sponsorship named: each stand on its own line, and the range of tiers');
+T::ok(str_contains($p, 'Quote line: Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)'),
+    'Each price comes as one ready line: name, size, price and total with VAT (finding 5)');
+T::ok(str_contains($p, 'Quote line: Outdoor Exhibit Space, 80 sqm: USD 12,000 (USD 13,800 with 15% VAT)'),
+    'Outdoor space is quoted from 80 sqm, never "1 sqm" (finding 4, owner)');
+T::ok(!str_contains($p, 'summarise briefly rather than listing every inclusion'),
+    'The old "summarise briefly" rule is gone (finding 8)');
+T::ok(str_contains($p, 'When they ask what is included, list the inclusions, one per line'),
+    'Inclusions are listed when asked');
+
+$mock->push(['reply' => 'Gold Partner is USD 20,000.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'How much is Gold?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THIS PRICE QUESTION is about: "Gold Partner"'),
+    'A price question naming one tier is about that tier only');
+
+$quoteAllowed = PricingEngine::allowedFigures(PricingEngine::stallPackages($fpId, ['international', 'both']), 'stall');
+T::equals(null, PricingEngine::findUnauthorisedPrice("- Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)", $quoteAllowed),
+    'A copied quote line passes the price guard');
+T::equals(80.0, PricingEngine::referenceSize(['package_type' => 'outdoor', 'min_sqm' => 80]), 'Outdoor reference size is its minimum, 80 sqm');
+$fpOutRow = db()->one('SELECT * FROM stall_packages WHERE id = ?', [$fpOutdoor]);
+T::equals('below_minimum', PricingEngine::checkSize($fpOutRow, 50)['reason'], 'A smaller outdoor area is not priced');
+
+T::group('Chat fix plan, step 1: asking for contact details');
+
+T::ok(ChatGuide::replyAsksForContact('Could you share your email address so the team can send a proposal?'), 'An ask is recognised');
+T::ok(ChatGuide::replyAsksForContact('Please leave your phone number and a colleague will call.'), 'So is a request without a question mark');
+T::ok(!ChatGuide::replyAsksForContact('Our team will email the floor plan to every exhibitor.'), 'Mentioning email is not asking');
+T::ok(ChatGuide::isDecline('no thanks') && ChatGuide::isDecline("I'd rather not share my email")
+    && ChatGuide::isDecline('just tell me the price'), 'A refusal is recognised');
+T::ok(!ChatGuide::isDecline('No, we have not exhibited in Pakistan before'), 'A "no" to another question is not a refusal');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Shall I have the team send a proposal? Could you share your email address?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'Tell me about the shell scheme stall');
+$cs = ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [];
+T::equals(1, (int)($cs['asked'] ?? 0), 'The ask is counted');
+$mock->push(['reply' => 'The halls are air-conditioned.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Are the halls air-conditioned?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'Do not ask for contact details in this reply.'), 'The next reply may not ask again (never two in a row)');
+foreach (['What about parking?', 'And the opening hours?', 'Is there a conference?'] as $q) {
+    $mock->push(['reply' => 'Yes.', 'intent' => 'exhibitor']);
+    say($fpAgent, reload_conversation($fc), $fs, $q);
+    T::ok(str_contains($mock->lastSystemPrompt(), 'Do not ask for contact details in this reply.'),
+        'Still not within four visitor messages: "' . $q . '"');
+}
+$mock->push(['reply' => 'Would you like a proposal? Could you share your email?', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Thanks, that helps');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'Do not ask for contact details in this reply.'),
+    'After four more messages it may ask again, once');
+$mock->push(['reply' => 'Certainly.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Do you have a floor plan?');
+$cs = ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [];
+T::ok(!empty($cs['stopped']), 'Not given twice (ignored), so the asking stops');
+$mock->push(['reply' => 'Of course.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'How do we go ahead?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'never ask again') && str_contains($p, 'https://pharmaasia.com.pk/book-a-stand/'),
+    'Then it never asks again and points to the Book a stand page');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Could you share your email so I can send the details?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'I want to know about bare space');
+$mock->push(['reply' => 'No problem.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, "No thanks, I'd rather not share my email");
+T::ok(!empty((ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [])['stopped']),
+    'A refusal stops the asking straight away');
+$mock->push(['reply' => 'Sure.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Can someone call me tomorrow?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'They have asked for a call, a proposal or a person'),
+    'But if they ask for a call themselves, the assistant may take their details');
+
+T::ok(ConversationState::next(ConversationState::LEAD_CAPTURE, ['intent' => 'exhibitor', 'contact_captured' => false,
+    'suggested' => ConversationState::PRICING]) === ConversationState::PRICING,
+    'Without contact details the chat is no longer held in "capturing contact details" (finding 6)');
+
+T::group('Chat fix plan, step 2: remember the whole conversation');
+
+T::ok(ChatOrchestrator::detectCatalogueRequest('What do I get with Silver?')
+    && ChatOrchestrator::detectCatalogueRequest('Compare Gold and Platinum')
+    && ChatOrchestrator::detectCatalogueRequest('Which one do you suggest for us?'),
+    'Tier names and follow-ups are recognised (finding 7)');
+$fpOffers = PricingEngine::catalogueForPrompt($fpId);
+$q = ChatGuide::offerQuestion('Compare Gold and Platinum', $fpOffers);
+T::equals(['Platinum Partner', 'Gold Partner'], $q['items'], 'Both tiers are read from the message');
+T::equals('compare', $q['mode'], 'As a comparison');
+T::equals('recommend', ChatGuide::offerQuestion('Which one do you suggest for us?', $fpOffers)['mode'], 'A request for advice');
+T::equals('detail', ChatGuide::offerQuestion('What do I get with Silver?', $fpOffers)['mode'], 'One tier in detail');
+T::equals([], ChatGuide::offerQuestion('My job title is export manager', $fpOffers)['items'], '"Job title" is not Title Partner');
+T::equals(['Outdoor Exhibit Space'], ChatGuide::offerQuestion('Is outdoor possible?', $fpOffers)['items'], 'Outdoor space is named');
+
+// A visitor in Pakistan: no prices, but the offer stays in view for the whole chat.
+$mock->reset();
+$pkSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$pkC = ChatOrchestrator::applyFormCountry($fpAgent, $pkSt['conversation'], 'PK');
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['name' => 'Ali', 'company' => 'Karachi Pharma Machinery', 'company_country' => 'Pakistan'])], 'id = ?', [(int)$pkC['id']]);
+$mock->push(['reply' => 'We offer shell scheme, bare space, outdoor space and four sponsorship tiers.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Brief me on the participation packages and sponsorship options');
+for ($i = 0; $i < 8; $i++) {
+    $mock->push(['reply' => 'Happy to help with that.', 'intent' => 'exhibitor']);
+    say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'One more question about the venue, number ' . ($i + 1));
+}
+T::ok((int)reload_conversation($pkC)['message_count'] >= 18, 'The chat is now past the 12 recent messages');
+$mock->push(['reply' => 'Silver Partner includes 18 sqm.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'What do I get with Silver?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'WHAT IS ON OFFER') && str_contains($p, 'One corridor panel'),
+    'Fifteen messages later the tiers and their benefits are still in view');
+T::ok(str_contains($p, 'They are asking about "Silver Partner". Give what it includes in full'),
+    'And one tier asked about is given in full (step 5)');
+T::ok(!preg_match('/USD\s?\d/', $p), 'A visitor in Pakistan still gets no price');
+T::ok(str_contains($p, 'WHAT HAS HAPPENED IN THIS CHAT SO FAR') && str_contains($p, 'Karachi Pharma Machinery'),
+    'A running summary of the whole chat is in every prompt');
+T::ok(!str_contains($mock->lastUserContent(), '[Summary of the earlier part'), 'It is no longer a pretend visitor message');
+
+$mock->push(['reply' => 'Gold suits you.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Compare Gold and Platinum');
+T::ok(str_contains($mock->lastSystemPrompt(), 'only the differences between them'), 'A comparison sets out only the differences');
+$mock->push(['reply' => 'Silver would suit you.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Which one do you suggest for us?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'Recommend ONE option, with one reason') && str_contains($p, 'Recommending a sponsorship tier'),
+    'A request for advice gets one recommendation, using the How to sell guidance');
+
+// An international visitor who was given prices keeps them for a later follow-up.
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => "- Gold Partner: USD 20,000 (USD 23,000 with 15% VAT)", 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'What is the price of the Gold sponsorship?');
+T::ok(!empty(ConversationStore::leadState(reload_conversation($fc))['prices_given']), 'That prices were given is remembered');
+$mock->push(['reply' => 'Silver is the smaller tier.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'And what do I get with Silver?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Quote line: Silver Partner: USD 10,000 (USD 11,500 with 15% VAT)'),
+    'A later follow-up still has the prices, without the word "price"');
+
+// A visitor asking about "benefits" of visiting is not shown the stand list;
+// anyone asking what packages there are is, from the first message.
+$mock->reset();
+$vSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'attendee'], 'id = ?', [(int)$vSt['conversation']['id']]);
+$mock->push(['reply' => 'Visiting is free.', 'intent' => 'attendee']);
+say($fpAgent, reload_conversation($vSt['conversation']), $vSt['session_secret'], 'What are the benefits of visiting?');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'WHAT IS ON OFFER'), 'A visitor asking about the benefits of visiting is not given the stand list');
+$nSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$mock->push(['reply' => 'We have three stand options and four tiers.', 'intent' => 'exhibitor']);
+say($fpAgent, $nSt['conversation'], $nSt['session_secret'], 'What packages do you have?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'WHAT IS ON OFFER'), 'Someone asking what packages there are is, from the first message');
+
+T::group('Chat fix plan, step 3: research first, then a pitch built on it');
+
+T::equals('pharmaceutical', CompanyResearch::industryHint($fpAgent), 'The exhibition\'s industry is read from its sector list');
+$fpRs = new MockResearchProvider();
+$fpRs->pages = [
+    ['title' => 'Bartels Mikrotechnik: micropumps', 'url' => 'https://www.bartels-mikrotechnik.de/', 'content' => 'Bartels Mikrotechnik GmbH in Dortmund, Germany makes micropumps, sensors and valves for microfluidics.'],
+    ['title' => 'Bartels at Achema', 'url' => 'https://news.example/bartels-achema', 'content' => 'Bartels Mikrotechnik exhibited at Achema.'],
+];
+ResearchProviderFactory::setTestProvider($fpRs);
+Settings::set('research.searches_per_company', '4');
+Settings::set('research.monthly_credit_limit', '900');
+Settings::set('research.first_reply_wait_seconds', '18');
+$fpAnalysis = ['official_website' => 'https://www.bartels-mikrotechnik.de', 'summary' => 'Bartels Mikrotechnik makes micropumps, sensors and valves.',
+    'facts' => [['claim' => 'Makes micropumps, sensors and valves for microfluidics', 'source' => 'S1']],
+    'products' => ['micropumps', 'sensors', 'valves'], 'match_level' => 'strong', 'prospect_type' => 'exhibitor',
+    'components' => [], 'why_exhibit' => 'Pharma plants upgrading need pumps and sensors', 'best_offer' => ['reference' => null, 'reason' => '']];
+
+$mock->reset();
+$mock->push($fpAnalysis);                                                   // the research reading
+$mock->push(['reply' => 'I see Bartels makes micropumps and sensors.', 'intent' => 'exhibitor']);   // the first reply
+$ivSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$iv = ChatIntro::submit($fpAgent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$ivSt['conversation']['session_id'],
+    'session_secret' => $ivSt['session_secret'], 'first_name' => 'Creasida', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit']);
+T::ok(!empty($iv['ok']), 'The introduction card is answered');
+$ivRow = db()->one('SELECT * FROM company_research WHERE conversation_id = ? ORDER BY id DESC LIMIT 1', [(int)$ivSt['conversation']['id']]);
+T::equals('done', (string)($ivRow['status'] ?? ''), 'Their company is researched BEFORE the first reply (owner\'s rule 1B)');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'WHAT RESEARCH FOUND ABOUT THEIR COMPANY') && str_contains($p, 'micropumps'),
+    'So the first reply already knows what they make');
+T::ok(str_contains($p, 'never ask them'), 'And is told never to ask what they make');
+T::ok(str_contains($p, 'HOW TO MAKE THE CASE FOR EXHIBITING') && str_contains($p, "PAKISTAN'S PHARMACEUTICAL MARKET"),
+    'The four-step case, with the market note for their sector (pumps)');
+T::ok(str_contains($fpRs->queries[0]['query'], 'Germany') && str_contains($fpRs->queries[1]['query'] ?? '', 'pharmaceutical'),
+    'A short name is searched with their country and the exhibition\'s industry, to find the right Bartels');
+
+// Not finished within the wait: kept, and finished afterwards without searching again.
+$fpRs->queries = [];
+$waitId = CompanyResearch::request($fpAgent, 'Slow Pumps GmbH', 'Germany', null, 'chat', null);
+$mock->reset();
+$mock->forceStatus = 'timeout';
+T::equals('paused', CompanyResearch::run((int)$waitId, microtime(true) + 9), 'Reading that runs past the wait pauses the research');
+$searchesBefore = count($fpRs->queries);
+T::equals('queued', (string)db()->value('SELECT status FROM company_research WHERE id = ?', [$waitId]), 'It goes back in the queue');
+$mock->forceStatus = null;
+$mock->push($fpAnalysis);
+T::ok(str_starts_with(CompanyResearch::run((int)$waitId), 'done'), 'And is finished by the next run');
+T::equals($searchesBefore, count($fpRs->queries), 'Without searching (or paying) again');
+T::equals('paused', CompanyResearch::run((int)CompanyResearch::request($fpAgent, 'No Time Ltd', null, null, 'chat', null), microtime(true) + 2),
+    'With no time to search at all, it simply waits in the queue');
+
+// Research that could not tell which company: said plainly, and asked once.
+$poor = CompanyResearch::promptBlock(['findings' => json_encode(['match_level' => 'poor'])]);
+T::ok(str_contains($poor, 'could not tell which company'), 'An unsure match tells the assistant it may ask, once, what they make');
+
+// One repeat research when they later give a website.
+$rrConv = db()->one('SELECT * FROM conversations WHERE id = ?', [(int)$ivSt['conversation']['id']]);
+$rrState = ConversationStore::leadState($rrConv);
+$rrState['website'] = 'https://www.bartels-other.example';
+db()->update('conversations', ['lead_state' => json_encode($rrState)], 'id = ?', [(int)$rrConv['id']]);
+CompanyResearch::considerConversation($fpAgent, (int)$rrConv['id']);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$rrConv['id']]),
+    'A new website they give is researched once more');
+CompanyResearch::considerConversation($fpAgent, (int)$rrConv['id']);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$rrConv['id']]),
+    'But only once');
+
+// The admin can see whether research ran, and why not.
+$st = CompanyResearch::statusForConversation(db()->one('SELECT * FROM conversations WHERE id = ?', [(int)$ivSt['conversation']['id']]));
+T::ok(in_array($st['state'], ['done', 'queued'], true), 'The conversation page shows the research');
+$st = CompanyResearch::statusForConversation(reload_conversation($pkC));
+T::equals('none', $st['state'], 'And when there is none, why');
+ResearchProviderFactory::setTestProvider(null);
+
+T::group('Chat fix plan, step 4: the admin list shows an ended price as Expired');
+$contentSrc = (string)file_get_contents(APP_ROOT . '/public_html/admin/_content.php');
+T::ok(str_contains($contentSrc, 'function content_status_pill') && str_contains($contentSrc, '>Expired</span>'),
+    'A live tier past its end date says "Expired", not "Live" (finding 3)');
+
+db()->exec('DELETE FROM company_research WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM sponsorship_packages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM stall_packages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM knowledge_articles WHERE agent_id = ?', [$fpId]);
+$mock->reset();
 
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');

@@ -80,6 +80,33 @@ if (!$active) {
 }
 echo '</div>';
 
+// Whether their company was researched, what was found, or why not
+// (fix plan step 3, 11 Nov 2026).
+$research = CompanyResearch::statusForConversation($conversation);
+$rRow = $research['row'];
+echo '<div class="card"><h2>Company research</h2><p><span class="pill '
+   . e(match ($research['state']) { 'done' => 'pill-ok', 'failed', 'poor' => 'pill-bad', 'none' => '', default => 'pill-info' })
+   . '">' . e($research['label']) . '</span>'
+   . ($rRow !== null ? ' <span class="muted small">' . e((string)$rRow['company_name'])
+        . ($rRow['company_country'] ? ', ' . e((string)$rRow['company_country']) : '') . '</span>' : '')
+   . '</p>';
+if ($research['detail'] !== '') {
+    echo '<p class="small">' . e($research['detail']) . '</p>';
+}
+if ($rRow !== null && $research['state'] === 'done') {
+    $rf = CompanyResearch::findingsOf($rRow);
+    if (!empty($rf['products'])) {
+        echo '<p class="small"><strong>Makes:</strong> ' . e(implode(', ', array_slice((array)$rf['products'], 0, 8))) . '</p>';
+    }
+    echo '<p class="small muted">Match: ' . e(ucfirst((string)($rRow['match_level'] ?? ''))) . ' · Score '
+       . (int)($rRow['score'] ?? 0) . '/100'
+       . (!empty($rf['best_offer']['label']) ? ' · Best fit: ' . e((string)$rf['best_offer']['label']) : '') . '</p>';
+}
+if ($rRow !== null) {
+    echo '<p class="small"><a href="' . e(url('admin/research.php?view=' . (int)$rRow['id'])) . '">Open the research</a></p>';
+}
+echo '</div>';
+
 if ($geo) {
     echo '<div class="card"><h2>Country checks</h2><table class="table"><tbody>';
     foreach ($geo as $g) {

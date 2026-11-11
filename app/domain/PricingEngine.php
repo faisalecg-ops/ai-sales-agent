@@ -622,6 +622,8 @@ final class PricingEngine
                 'name'      => $card['title'],
                 'details'   => implode(', ', $card['meta']),
                 'price'     => implode(' | ', $priceText),
+                // The whole price on one line, ready to copy (fix plan step 1).
+                'line'      => ChatGuide::quoteLine($card),
                 'includes'  => $card['items'],
                 'tax'       => $card['tax_note'],
                 'quantity'  => $type === self::TYPE_SPONSORSHIP ? ($r['quantity_available'] ?? null) : null,

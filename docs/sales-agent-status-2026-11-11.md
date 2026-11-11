@@ -35,7 +35,25 @@ PHP is `/usr/local/bin/php`. The sales agent code lives in `/home/salesagent/` (
 hourly job had not been running before. The owner was asked to check WhatsApp sending for
 Build Asia before those 200 are contacted.
 
-## Testing in progress — owner's instruction: collect, do not fix yet
+## Chat fix plan — built 11 Nov 2026, owner to install
+
+The owner approved the fix plan (steps 1 to 6) on 11 Nov 2026. The AI Sales Agent chat built it the same day:
+
+- update package: `salesagent-update-2026-11-chat-fixes.zip`;
+- install note: `docs/upgrade-2026-11-chat-fixes.md`;
+- details: the "Done" section of `docs/handover/2026-11-11-chat-review-and-fix-plan.md`.
+
+Findings 2 to 10 below are fixed by it. Finding 3's admin badge now shows "Expired".
+
+Still to do:
+- the owner installs the package, approves the Pharma Asia content, and re-tests with `docs/chat-test-script.md`;
+- the 15 test chats with the real model (`tools/chat-tests/run.php`) need a test copy that can reach OpenAI and Tavily.
+
+Representatives: the owner's screenshot of 11 Nov shows both entered:
+- Local: Farhan Mobeen.
+- International: Rabia Basri, WeChat rabiaecg.
+
+## Testing findings (collected 11 Nov 2026; fixed by the chat fix plan)
 
 The owner and Claude are testing the live Pharma Asia chat together. Findings are logged;
 nothing below is to be changed until testing is finished and the owner decides.

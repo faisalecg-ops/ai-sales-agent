@@ -370,6 +370,7 @@
     '.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}',
 
     // ---- Introduction card (first name, company, country, exhibit or visit) ----
+    '.intro[hidden]{display:none}',
     '.intro{margin:4px 0 6px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}',
     '.intro-lead{margin:0;font-size:13.5px;color:var(--ink-soft)}',
     '.field select{font-family:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);',
@@ -626,7 +627,7 @@
   }
 
   function addVisitorText(text) {
-    addMessage('visitor', [{ type: 'p', spans: [{ t: 'text', v: text }] }], null);
+    return addMessage('visitor', [{ type: 'p', spans: [{ t: 'text', v: text }] }], null);
   }
 
   /**
@@ -691,7 +692,9 @@
   var slowTimer = null;
   // The dots, and — if the answer takes a while because the AI is busy — a
   // short line underneath so the visitor knows nothing has gone wrong.
-  function showTyping(note) {
+  // quiet: only the dots, with no "still working" line however long it takes
+  // (the owner's rule while an exhibitor's company is being researched).
+  function showTyping(note, quiet) {
     hideTyping();
     typingNode = el('div', 'msg from-agent');
     var t = el('div', 'typing');
@@ -706,6 +709,7 @@
     typingNode.appendChild(line);
     log.appendChild(typingNode);
     scrollDown();
+    if (quiet) { return; }
     slowTimer = window.setTimeout(function () {
       if (line.parentNode && line.hidden) {
         line.textContent = 'Still working on your answer\u2026';
@@ -1019,6 +1023,18 @@
       else if (countryName) { said += ' I am based in ' + countryName + '.'; }
       said += interest === 'exhibit' ? ' I am interested in exhibiting.' : ' I am interested in visiting.';
 
+      // The card steps aside and their words appear with the typing dots,
+      // while their company is looked up — nothing else is said.
+      var card = introNode;
+      if (card) { card.hidden = true; }
+      var saidNode = addVisitorText(said);
+      showTyping(null, true);
+      function restoreCard() {
+        hideTyping();
+        if (saidNode && saidNode.parentNode) { saidNode.parentNode.removeChild(saidNode); }
+        if (card) { card.hidden = false; }
+      }
+
       post('intro.php', {
         request_id: 'r' + randomId(23),
         session_id: W.session,
@@ -1031,13 +1047,14 @@
         company_website_hp: ihp.value
       }).then(function (res) {
         if (res && res.ok) {
+          hideTyping();
           closeCard();
-          addVisitorText(said);
           addMessage('agent', res.blocks || [], res.cards || null);
           if (res.contact_form) { showContactForm(null); }
           else { input.focus(); }
           return;
         }
+        restoreCard();
         submit.disabled = false;
         submit.textContent = 'Continue';
         if (res && res.error === 'session_expired') {
@@ -1049,6 +1066,7 @@
           fail((res && res.message) || 'That did not go through. Check the details and try again.');
         }
       }).catch(function () {
+        restoreCard();
         submit.disabled = false;
         submit.textContent = 'Continue';
         fail('That did not go through. Check your connection and try again.');

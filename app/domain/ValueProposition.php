@@ -143,12 +143,26 @@ final class ValueProposition
             return array_slice($rows, 0, $limit);
         }
 
-        // With a sector in hand, prefer the articles that actually mention it.
+        // With a sector in hand, prefer the articles that actually mention it:
+        // the whole phrase, or every distinctive word of it, so "pumps valves
+        // and sensors" is found in an article whose keywords list "pumps
+        // valves sensors" (fix plan step 3, 11 Nov 2026).
         $needle  = strtolower($sector);
+        $words   = array_values(array_filter(
+            preg_split('/[^a-z0-9]+/', $needle) ?: [],
+            static fn(string $w): bool => strlen($w) >= 4 && !in_array($w, ['and', 'with', 'for', 'the', 'other'], true)
+        ));
         $matched = [];
         foreach ($rows as $row) {
             $haystack = strtolower((string)$row['title'] . ' ' . (string)$row['keywords'] . ' ' . (string)$row['body']);
-            if (str_contains($haystack, $needle)) {
+            $all = $words !== [];
+            foreach ($words as $w) {
+                if (!str_contains($haystack, $w)) {
+                    $all = false;
+                    break;
+                }
+            }
+            if (str_contains($haystack, $needle) || $all) {
                 $matched[] = $row;
             }
         }

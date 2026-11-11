@@ -125,6 +125,27 @@ final class ChatOrchestrator
 
         $pricingRequested = self::detectPricingRequest($message, (string)$conversation['state']);
 
+        // ---- Fix plan (11 Nov 2026): what was named, memory, contact rule --
+        $turnNo    = (int)($leadState['visitor_turns'] ?? 0) + 1;
+        $offers    = PricingEngine::catalogueForPrompt($agentId);
+        $offerQ    = ChatGuide::offerQuestion($message, $offers);
+        // Follow-up words alone ("benefits", "which one") count only for a
+        // possible exhibitor; a visitor must name a stand, a tier or
+        // sponsorship before the offer is put in view.
+        $offerTalk = !empty($leadState['offer_discussed']) || $pricingRequested
+            || $offerQ['items'] !== [] || $offerQ['categories'] !== []
+            || self::detectCatalogueRequest($message, false)
+            || (in_array((string)$conversation['intent'], ['exhibitor', 'sponsor', 'partner'], true)
+                && self::detectCatalogueRequest($message));
+        $offerFocus = $offerQ['items'] ?: (array)($leadState['offer_focus'] ?? []);
+        $contactRecord = ChatGuide::noteVisitorAnswer(ChatGuide::contactRecord($leadState), $message);
+        $contactRule   = ChatGuide::mayAsk(
+            $contactRecord,
+            $turnNo,
+            self::hasContactInState($leadState),
+            self::asksForUs($message)
+        );
+
         // ---- 5. Geo gate (Sections 11, 13) --------------------------------
         $geoRan = false;
         $needsLocationClarification = $stated['ambiguous'];
@@ -154,6 +175,7 @@ final class ChatOrchestrator
         // question about a different size still needs the approved facts.
         $pricingInPlay = $pricingRequested
             || (int)($conversation['pricing_shown'] ?? 0) === 1
+            || !empty($leadState['prices_given'])
             || in_array((string)$conversation['state'], [
                 ConversationState::PRICING,
                 ConversationState::SALES_READINESS,
@@ -180,12 +202,14 @@ final class ChatOrchestrator
             }
         }
 
-        // What is on offer, without prices: when the visitor asks about the
-        // packages or sponsorship (or asks a price that cannot be shown to
-        // them) and no price facts were prepared for this turn.
+        // What is on offer, without prices. Once stands or sponsorship have
+        // come up in this chat, it stays in view on every later turn, so a
+        // follow-up such as "what do I get with Silver?" is answered from it
+        // (fix plan step 2). Not needed when price facts, which carry the
+        // same details, were prepared for this turn.
         $catalogue = [];
-        if (!$facts && ($pricingRequested || self::detectCatalogueRequest($message))) {
-            $catalogue = PricingEngine::catalogueForPrompt($agentId);
+        if (!$facts && $offerTalk) {
+            $catalogue = $offers;
         }
 
         // ---- Circuit breaker (Section 45) ---------------------------------
@@ -232,6 +256,10 @@ final class ChatOrchestrator
             'handoff_expected'  => (string)$conversation['state'] === ConversationState::HANDOFF,
             // What research found about their company, when it has run.
             'research'          => self::researchFor($conversation),
+            'offer_question'    => $offerQ,
+            'offer_focus'       => (array)($leadState['offer_focus'] ?? []),
+            'contact_rule'      => $contactRule,
+            'exhibitor_case'    => self::exhibitorCase($agent, $conversation, $leadState),
         ];
 
         if ($requestedSqm !== null && (float)($conversation['requested_sqm'] ?? 0) !== $requestedSqm) {
@@ -346,6 +374,17 @@ final class ChatOrchestrator
             // Details already known from somewhere other than this chat —
             // a WhatsApp registration. Used only to fill blanks on the lead.
             'known_contact'     => is_array($input['known_contact'] ?? null) ? $input['known_contact'] : [],
+            // What the next turn needs to remember (fix plan steps 1 and 2).
+            'memory'            => [
+                'turn'          => $turnNo,
+                'contact'       => $contactRecord,
+                'offers'        => $offers,
+                'offer_talk'    => $offerTalk,
+                'offer_items'   => $offerQ['items'],
+                'offer_focus'   => $offerFocus,
+                'prices_given'  => $pricingAllowed && $facts && $priceViolation === null
+                    && (bool)preg_match('/(?:USD|\$)\s?\d/i', (string)$reply),
+            ],
         ]);
     }
 
@@ -408,6 +447,7 @@ final class ChatOrchestrator
             if (!empty($conversation['disclosed_company_country'])) {
                 $leadState['company_country'] = (string)$conversation['disclosed_company_country'];
             }
+            $leadState = self::remember($leadState, (array)($turn['memory'] ?? []), (string)$turn['reply']);
 
             $contactCaptured = $lead !== null && LeadManager::hasContact($lead);
 
@@ -862,13 +902,109 @@ final class ChatOrchestrator
      * Is the visitor asking what can be bought (packages, stands, sponsorship),
      * as opposed to what it costs?
      */
-    public static function detectCatalogueRequest(string $message): bool
+    public static function detectCatalogueRequest(string $message, bool $followUps = true): bool
     {
-        return (bool)preg_match(
-            '/\b(?:packages?|sponsor(?:s|ship|ships|ing)?|tiers?|stalls?|stands?|booths?|shell\s+scheme|'
-            . 'bare\s+space|raw\s+space|outdoor|participation|participating|exhibit(?:ing)?\s+(?:options?|space))\b/i',
+        // Tier and option names, and the follow-ups people use about them,
+        // count too (fix plan step 2, 11 Nov 2026).
+        if (preg_match(
+            '/\b(?:packages?|sponsor(?:s|ship|ships|ing)?|tiers?|stalls?|stands?|booths?|shell(?:\s+scheme)?|'
+            . 'bare(?:\s+space)?|raw\s+space|outdoor|participation|participating|exhibit(?:ing)?\s+(?:options?|space)|'
+            . 'platinum|gold|silver|bronze|diamond|title\s+(?:sponsor|partner))\b/i',
+            $message
+        )) {
+            return true;
+        }
+        return $followUps && (bool)preg_match(
+            '/\b(?:which\s+one|compare|comparison|difference|what\s+do\s+(?:i|we)\s+get|what(?:\'s|\s+is)\s+included|'
+            . 'included|inclusions|benefits|suggest|recommend)\b/i',
             $message
         );
+    }
+
+    /**
+     * Did the visitor ask the team to get in touch, for a call, a proposal
+     * or a quotation? Then asking for their details is the help they want.
+     */
+    private static function asksForUs(string $message): bool
+    {
+        return PersonRequest::detect($message) !== null
+            || (bool)preg_match('/\b(?:call\s+(?:me|us)|contact\s+(?:me|us)|get\s+in\s+touch|reach\s+(?:me|us)|'
+                . 'e-?mail\s+(?:me|us)|send\s+(?:me|us)\s+(?:a\s+|the\s+)?(?:proposal|quotation|quote|details|brochure|'
+                . 'information|info)|(?:a|the|your)\s+(?:proposal|quotation)|book(?:ing)?\s+(?:a\s+)?(?:stand|stall|space|booth))\b/i',
+                $message);
+    }
+
+    /**
+     * What this turn adds to the conversation's memory: the visitor's turn
+     * count, the contact-asking record, the options that came up, and
+     * whether prices were given.
+     */
+    private static function remember(array $leadState, array $memory, string $reply): array
+    {
+        if (!$memory) {
+            return $leadState;
+        }
+        $turn = (int)($memory['turn'] ?? 0);
+        $leadState['visitor_turns'] = $turn;
+        $leadState['contact_asks']  = ChatGuide::noteReply((array)($memory['contact'] ?? []) + ChatGuide::contactRecord([]), $reply, $turn);
+
+        $offers = (array)($memory['offers'] ?? []);
+        $talked = !empty($memory['offer_talk']) || ($offers && ChatGuide::mentionsOffer($reply, $offers));
+        if ($talked) {
+            $leadState['offer_discussed'] = true;
+        }
+        $named = array_merge(
+            (array)($memory['offer_items'] ?? []),
+            $offers ? ChatGuide::offerQuestion($reply, $offers)['items'] : []
+        );
+        if ($named) {
+            $leadState['offers_mentioned'] = array_slice(array_values(array_unique(array_merge(
+                (array)($leadState['offers_mentioned'] ?? []), $named
+            ))), -10);
+        }
+        if (!empty($memory['offer_focus'])) {
+            $leadState['offer_focus'] = array_slice(array_values((array)$memory['offer_focus']), 0, 4);
+        }
+        if (!empty($memory['prices_given'])) {
+            $leadState['prices_given'] = true;
+        }
+        return $leadState;
+    }
+
+    /**
+     * The case for exhibiting, for someone who may exhibit (fix plan step 3):
+     * what they make (told or researched), the sector it matches, and the
+     * exhibition's own notes on Pakistan's market for that sector.
+     */
+    private static function exhibitorCase(array $agent, array $conversation, array $leadState): ?array
+    {
+        if (!in_array((string)$conversation['intent'], ['exhibitor', 'sponsor', 'partner'], true)) {
+            return null;
+        }
+        try {
+            $about = implode(' ', array_filter([
+                (string)($leadState['company'] ?? ''),
+                (string)($leadState['industry'] ?? ''),
+                (string)($leadState['product_category'] ?? ''),
+                (string)($leadState['requirements'] ?? ''),
+            ]));
+            $row = Migrations::tableExists('company_research') ? CompanyResearch::forConversation($conversation) : null;
+            if ($row !== null) {
+                $f = CompanyResearch::findingsOf($row);
+                if (($f['match_level'] ?? '') !== 'poor') {
+                    $about .= ' ' . implode(' ', (array)($f['products'] ?? [])) . ' ' . (string)($f['summary'] ?? '');
+                }
+            }
+            $profile = VisitorProfile::fromRegistration([
+                'company_name'     => (string)($leadState['company'] ?? ''),
+                'product_solution' => $about,
+            ], $agent);
+            $profile['track'] = 'exhibitor';
+            return ValueProposition::build($agent, $profile, []);
+        } catch (Throwable $ex) {
+            app_log('chat', 'could not build the exhibitor case', ['error' => $ex->getMessage()]);
+            return null;
+        }
     }
 
     private static function pricingFallbackKey(string $classification): string

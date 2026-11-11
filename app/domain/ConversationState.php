@@ -256,9 +256,12 @@ final class ConversationState
                 self::PRICING
             ),
 
+            // Without contact details the conversation may still go back to
+            // the options or to their questions: it is not held in "get
+            // contact" until an email is given (fix plan step 1, 11 Nov 2026).
             self::LEAD_CAPTURE => (bool)($ctx['contact_captured'] ?? false)
                 ? self::suggestedOr($suggested, [self::OBJECTION_HANDLING, self::HANDOFF, self::COMPLETED], self::LEAD_CAPTURE)
-                : self::LEAD_CAPTURE,
+                : self::suggestedOr($suggested, [self::PRICING, self::OBJECTION_HANDLING], self::LEAD_CAPTURE),
 
             self::OBJECTION_HANDLING => self::suggestedOr(
                 $suggested,

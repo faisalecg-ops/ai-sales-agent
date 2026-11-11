@@ -252,20 +252,21 @@ final class ConversationStore
     /**
      * A factual conversation summary, built by PHP from state rather than by
      * asking the model to summarise. It costs nothing, cannot hallucinate,
-     * and keeps the business-critical fields intact when history is trimmed
-     * (Section 31).
+     * and keeps the business-critical facts in view however long the chat
+     * runs (Section 31; fix plan step 2, 11 Nov 2026: given every turn, so
+     * nothing is lost after the recent-message window).
+     *
+     * Who they are, what they make (told and researched), what they want,
+     * what they asked, which options came up, whether prices were given,
+     * and how the asking for contact details has gone.
      */
     public static function buildSummary(array $conversation, array $leadState, array $signals, array $turn): ?string
     {
-        if ((int)$conversation['message_count'] < 8) {
-            return $conversation['summary'] ?? null;
-        }
-
         $parts = [];
 
         $who = [];
-        foreach (['name' => 'Contact', 'company' => 'Company', 'industry' => 'Industry', 'product_category' => 'Products'] as $k => $label) {
-            if (!empty($leadState[$k])) {
+        foreach (['name' => 'Name', 'company' => 'Company', 'industry' => 'Industry', 'product_category' => 'Products'] as $k => $label) {
+            if (!empty($leadState[$k]) && is_string($leadState[$k])) {
                 $who[] = $label . ': ' . $leadState[$k];
             }
         }
@@ -274,8 +275,26 @@ final class ConversationStore
         }
 
         $country = $leadState['company_country'] ?? ($leadState['country'] ?? null);
-        if ($country) {
+        if (is_string($country) && $country !== '') {
             $parts[] = 'Company location: ' . $country . '.';
+        }
+
+        // What research found that they make, when it is about the right company.
+        try {
+            $row = Migrations::tableExists('company_research') ? CompanyResearch::forConversation($conversation) : null;
+            if ($row !== null) {
+                $f = CompanyResearch::findingsOf($row);
+                if (($f['match_level'] ?? '') !== 'poor' && !empty($f['products'])) {
+                    $parts[] = 'Research says they make: ' . implode(', ', array_slice((array)$f['products'], 0, 6)) . '.';
+                }
+            }
+        } catch (Throwable) {
+            // The summary never fails a turn.
+        }
+
+        $intent = (string)($turn['signals']['intent'] ?? ($conversation['intent'] ?? ''));
+        if (in_array($intent, ['exhibitor', 'sponsor', 'partner', 'attendee'], true)) {
+            $parts[] = 'They are here as a possible ' . ($intent === 'attendee' ? 'visitor' : $intent) . '.';
         }
 
         $active = ConversationState::activeSignalLabels($signals);
@@ -283,14 +302,31 @@ final class ConversationStore
             $parts[] = 'So far they have: ' . strtolower(implode(', ', $active)) . '.';
         }
 
-        if (!empty($conversation['pricing_shown']) || !empty($turn['cards'])) {
-            $parts[] = 'Pricing has already been shared with them.';
-        }
-        if (!empty($leadState['requirements'])) {
-            $parts[] = 'Requirements: ' . mb_substr((string)$leadState['requirements'], 0, 300);
+        $mentioned = array_filter((array)($leadState['offers_mentioned'] ?? []), 'is_string');
+        if ($mentioned) {
+            $parts[] = 'Options discussed: ' . implode(', ', $mentioned) . '.';
+        } elseif (!empty($leadState['offer_discussed'])) {
+            $parts[] = 'The stand options and sponsorship have come up.';
         }
 
-        return $parts ? mb_substr(implode(' ', $parts), 0, 2000) : null;
+        if (!empty($conversation['pricing_shown']) || !empty($turn['cards']) || !empty($leadState['prices_given'])) {
+            $parts[] = 'Prices have already been given to them.';
+        }
+        if (!empty($leadState['requirements']) && is_string($leadState['requirements'])) {
+            $parts[] = 'Requirements: ' . mb_substr($leadState['requirements'], 0, 300);
+        }
+
+        $c = is_array($leadState['contact_asks'] ?? null) ? $leadState['contact_asks'] : [];
+        if (!empty($leadState['email']) || !empty($leadState['phone'])) {
+            $parts[] = 'They have given contact details.';
+        } elseif (!empty($c['stopped'])) {
+            $parts[] = 'They chose not to give contact details: do not ask again.';
+        } elseif ((int)($c['asked'] ?? 0) > 0) {
+            $parts[] = 'Contact details were asked for ' . ((int)$c['asked'] === 1 ? 'once' : (int)$c['asked'] . ' times')
+                     . ' and not given yet.';
+        }
+
+        return $parts ? mb_substr(implode(' ', $parts), 0, 2000) : ($conversation['summary'] ?? null);
     }
 
     /** Full transcript for the admin panel. */

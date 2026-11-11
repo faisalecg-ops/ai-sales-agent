@@ -236,7 +236,8 @@ final class LlmContract
         }
 
         Field notes:
-        - "reply" is the only required field. Keep it to 2-4 sentences.
+        - "reply" is the only required field. Normally 2-4 sentences, plus a short
+          list (one item per line, starting with "- ") where the rules ask for one.
         - "pricing_request": true whenever the visitor has asked about price,
           cost, rates or budget in this message, even indirectly.
         - "lead_fields": include a field only when the visitor stated it in
@@ -247,7 +248,7 @@ final class LlmContract
           is where their business is based. If they differ, report both.
         - "location_ambiguous": true when a place they named could belong to
           more than one country and you could not tell which they meant.
-        - "package_reference": only an ID from the pricing facts supplied to
+        - "package_reference": only a Reference from the prices supplied to
           you in this turn. Never invent one.
         TXT;
     }

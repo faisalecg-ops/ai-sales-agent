@@ -154,3 +154,34 @@ The 2026 brochure still carries pre-show estimates, which must never be used: "F
 Biannual", "45 countries expected", "approximately 50,000 trade visitors", and an old tariff of
 400/350 USD. The live tariff (375/325/150) stands. The 2026 knowledge already follows the fact
 sheet.
+
+## Done — built by the AI Sales Agent chat (11 November 2026)
+
+All six steps are built on branch `pharma-asia-2027`. They are **not yet installed**: the owner installs `salesagent-update-2026-11-chat-fixes.zip`. Install note: `docs/upgrade-2026-11-chat-fixes.md`. Re-test script: `docs/chat-test-script.md`.
+
+| Step | Where | Notes |
+|---|---|---|
+| 1 Wording | `PromptBuilder` (headings `PRICES YOU MAY QUOTE`, `WHAT YOU KNOW ABOUT THE EVENT`, section `HOW YOU SOUND`) | Never "approved", "pricing facts", "stage", "system", "records", "database"; no country with a price. |
+| 1 Price layout | `ChatGuide::quoteLine()`, `PricingEngine::factsForPrompt()['line']`, `PromptBuilder::priceScope()` | One line per option. Only the option named. "The rates" with nothing named: ask which first. Stands: each line. Sponsorship: the range, then a tier's line once named. |
+| 1 Outdoor 80 sqm | Data: `tools/pharmaasia-2027/pharmaasia-chat-fixes-2026-11.sql` | `referenceSize()` already used `min_sqm`. The edit arrives awaiting review; the live version keeps serving until approved. |
+| 1 Contact | `ChatGuide::contactRecord/noteVisitorAnswer/mayAsk/noteReply`, `lead_state.contact_asks` (`asked`, `last_turn`, `pending`, `ignored`, `declined`, `stopped`), `lead_state.visitor_turns` | Asks only when it helps. Gap of 5 visitor messages (`ChatGuide::ASK_GAP`). A refusal stops it at once; ignored twice also stops it. Then never asks again and points to `book_stand_url`. They ask for a call, proposal or person: may ask. `LEAD_CAPTURE` is no longer sticky. |
+| 2 Memory | `lead_state.offer_discussed`, `offers_mentioned`, `offer_focus`, `prices_given`; `ConversationStore::buildSummary()` every turn, in the system prompt (no longer a pretend visitor turn) | The catalogue is given on every later turn once the offer came up; prices stay in play once given. The duplicated latest message in the history is fixed. |
+| 2 Names | `ChatOrchestrator::detectCatalogueRequest($msg, $followUps)`, `ChatGuide::offerQuestion()` | Tier and option names are always recognised. Follow-up words ("compare", "which one", "benefits") count only for a possible exhibitor, so visitors are not shown the stand list. |
+| 3 Research first | `ChatIntro::exhibiting()` → `CompanyResearch::beforeFirstReply()` → `run($id, $deadline)` | Wait setting `research.first_reply_wait_seconds` (default 18, Settings → Company research). A run that misses the deadline pauses: status `queued`, pages kept in `sources` as `{"_paused":true,"pages":[...]}`. It is finished after the reply by `runAfterResponse` (or cron), without new searches. `intro.php` sets a 120 s time limit. The widget shows quiet typing dots (`showTyping(null, true)`). |
+| 3 Searches | `CompanyResearch::queries()`, `visitorSaid()`, `industryHint()` | Query 1 adds the products or website the visitor gave. With neither, a second query adds the exhibition's industry word ("pharmaceutical"). The Pakistan query moved up to third. |
+| 3 Re-run | `CompanyResearch::rerunFor()`, `lead_state.research_rerun` | Once per conversation: a new website, or a failed or unsure research and they have since said what they make. |
+| 3 Prompt | `CompanyResearch::promptBlock()` | What they do and make, the facts, "never ask what they make", the best fit with its reason. An unsure match tells the AI it may ask once. |
+| 3 Case | `ChatOrchestrator::exhibitorCase()` → `ValueProposition::build()`; `PromptBuilder::exhibitorCase()` | The four steps, with Market articles matched to their sector (`ValueProposition::articles()` now matches a sector of several words). |
+| 3 Admin | `CompanyResearch::statusForConversation()`, card on `admin/conversation.php` | Done, unsure, failed with the reason, waiting, or not researched with the reason. |
+| 4 Content | `pharmaasia-chat-fixes-2026-11.sql` (Market article draft; outdoor, FAQ and article edits awaiting review); `pharmaasia-sectors-and-tier-guidance.sql` (sectors if empty; guidance appended once) | Both checked on a scratch copy, imported twice. |
+| 4 Expired | `content_status_pill()` in `admin/_content.php` | Applies to Stand pricing and Sponsorship. |
+| 5 Sponsorship | `PromptBuilder::offerGuidance()` | Modes: detail, compare, recommend, list. |
+| 6 Tests | `tests/acceptance.php` groups "Chat fix plan …" (68 new, 1,313 total); `tools/chat-tests/` (`run.php`, `chats.php`, `fixture.php`) | The 15 chats need the real model. This chat's workspace cannot reach OpenAI or Tavily, so they were checked only with a stand-in. |
+
+**Unchanged:**
+- the reply guard;
+- the country order;
+- no prices for Pakistan or an unknown country;
+- `conversations.utm_*` and the widget's `aisa_arrival`.
+
+/social's own tests fail in the same 39 places before and after this change (workspace setup), so /social is unaffected.

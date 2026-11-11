@@ -10,6 +10,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/_api.php';
 
+// Research before the first exhibitor reply waits up to 20 seconds, then
+// the reply itself is written (fix plan step 3, 11 Nov 2026).
+@set_time_limit(120);
+
 $ctx   = api_context();
 $agent = $ctx['agent'];
 $input = $ctx['input'];
