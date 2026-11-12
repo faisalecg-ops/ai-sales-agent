@@ -23,6 +23,9 @@ $to      = Validator::date($_GET['to'] ?? null);
 $where  = ['agent_id = ?', 'merged_into_id IS NULL'];
 $params = [$agentId];
 
+$hasLabels = Migrations::columnExists('leads', 'lead_label');
+$label = $hasLabels ? Validator::inList($_GET['label'] ?? null, ['hot', 'warm', 'nurture', 'low'], null) : null;
+if ($label !== null)  { $where[] = 'lead_label = ?';      $params[] = $label; }
 if ($status !== null) { $where[] = 'status = ?';          $params[] = $status; }
 if ($region !== null) { $where[] = 'pricing_country = ?'; $params[] = $region; }
 if ($flagged)         { $where[] = 'dedup_flag = 1'; }
@@ -54,6 +57,7 @@ if (($_GET['export'] ?? '') === 'csv') {
         'Company country', 'Pricing region', 'How country was known', 'Industry',
         'Products', 'Website', 'Status', 'Pricing discussed', 'Handoff needed',
         'Handoff reason', 'Packages of interest', 'Possible duplicate', 'Source page',
+        'Lead score', 'Score label', 'Qualification complete %',
     ]);
     foreach ($rows as $r) {
         $packages = [];
@@ -71,6 +75,7 @@ if (($_GET['export'] ?? '') === 'csv') {
             $r['handoff_reason'], implode('; ', $packages),
             ((int)$r['dedup_flag'] === 1 ? ($r['dedup_note'] ?: 'Yes') : 'No'),
             $r['source_url'],
+            $r['lead_score'] ?? '', Qualification::labelText($r['lead_label'] ?? null), $r['qual_pct'] ?? '',
         ]);
     }
     fclose($out);
@@ -95,6 +100,7 @@ echo '<form method="get" class="filters">'
    . '<div class="field" style="min-width:210px"><label for="f_q">Search</label>'
    . '<input type="search" id="f_q" name="q" value="' . e((string)$search) . '" placeholder="Name, company, email"></div>'
    . f_select('status', 'Status', ['' => 'Any'] + LeadManager::STATUS_LABELS, (string)$status)
+   . ($hasLabels ? f_select('label', 'Score', ['' => 'Any', 'hot' => 'Hot', 'warm' => 'Warm', 'nurture' => 'Nurture', 'low' => 'Low'], (string)$label) : '')
    . f_select('region', 'Region', [
         '' => 'Any', 'international' => 'International',
         'pakistan' => 'Pakistan', 'undetermined' => 'Not established',
@@ -119,7 +125,7 @@ if (!$leads) {
 } else {
     echo '<div class="card" style="padding:0"><div class="table-wrap"><table class="table" style="margin:0">'
        . '<thead><tr><th style="padding-left:16px">Reference</th><th>Name</th><th>Company</th>'
-       . '<th>Contact</th><th>Region</th><th>Status</th><th>Captured</th><th></th></tr></thead><tbody>';
+       . '<th>Contact</th><th>Region</th><th>Score</th><th>Status</th><th>Captured</th><th></th></tr></thead><tbody>';
 
     foreach ($leads as $l) {
         $contact = trim((string)$l['email']);
@@ -131,6 +137,7 @@ if (!$leads) {
            . '<td>' . e((string)$l['company'] ?: '—') . '</td>'
            . '<td>' . e($contact ?: '—') . '</td>'
            . '<td>' . e(ucfirst((string)$l['pricing_country'])) . '</td>'
+           . '<td>' . (lead_label_pill($l['lead_label'] ?? null, $l['lead_score'] ?? null) ?: '<span class="muted">—</span>') . '</td>'
            . '<td>' . e(LeadManager::STATUS_LABELS[(string)$l['status']] ?? (string)$l['status'])
            . ((int)$l['handoff_required'] === 1 ? ' <span class="pill pill-warn">Handoff</span>' : '')
            . ((int)$l['dedup_flag'] === 1 ? ' <span class="pill">Duplicate?</span>' : '')

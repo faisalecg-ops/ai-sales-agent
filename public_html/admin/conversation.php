@@ -80,6 +80,16 @@ if (!$active) {
 }
 echo '</div>';
 
+// The sales path and the qualification record (plan approved 12 Nov 2026).
+$convState = ConversationStore::leadState($conversation);
+if (!empty($conversation['path_step']) && is_array($convState['qual'] ?? null)) {
+    $stepNo = (int)$conversation['path_step'];
+    echo '<div class="card"><h2>Sales path</h2><p><span class="pill pill-info">Step ' . $stepNo . ' of 8</span> '
+       . e(Qualification::STEPS[$stepNo] ?? '') . '</p></div>';
+    echo qualification_card($convState['qual'], $conversation['qual_pct'] ?? 0, $conversation['lead_label'] ?? null,
+        $conversation['lead_score'] ?? null);
+}
+
 // Whether their company was researched, what was found, or why not
 // (fix plan step 3, 11 Nov 2026).
 $research = CompanyResearch::statusForConversation($conversation);

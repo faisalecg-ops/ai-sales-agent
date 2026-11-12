@@ -179,9 +179,37 @@ final class LeadBriefing
             'Products'       => trim((string)($lead['product_category'] ?? '')),
             'Website'        => trim((string)($lead['website'] ?? '')),
             'Status'         => LeadManager::STATUS_LABELS[(string)$lead['status']] ?? (string)$lead['status'],
+            'Lead score'     => self::scoreLine($lead),
+            'Qualification'  => self::qualificationLine($lead),
             'First seen'     => self::localTime($lead['created_at'] ?? null, $tz),
             'Page'           => trim((string)($lead['source_url'] ?? '')),
         ], static fn($v) => $v !== '' && $v !== null);
+    }
+
+    /** "Warm (72 of 100), 67% complete" — from the guided-selling record, when there is one. */
+    private static function scoreLine(array $lead): string
+    {
+        $label = Qualification::labelText($lead['lead_label'] ?? null);
+        if ($label === '') {
+            return '';
+        }
+        return $label . ' (' . (float)($lead['lead_score'] ?? 0) . ' of 100), ' . (int)($lead['qual_pct'] ?? 0) . '% complete';
+    }
+
+    private static function qualificationLine(array $lead): string
+    {
+        $qual = json_decode((string)($lead['qualification'] ?? ''), true);
+        if (!is_array($qual)) {
+            return '';
+        }
+        $parts = [];
+        foreach (Qualification::FIELDS as $key => $name) {
+            $value = Qualification::display($qual, $key);
+            if ($value !== '') {
+                $parts[] = $name . ': ' . $value;
+            }
+        }
+        return implode('; ', $parts);
     }
 
     private static function packageInterest(array $lead): array

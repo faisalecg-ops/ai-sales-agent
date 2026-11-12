@@ -193,6 +193,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         }
     }
 
+    // Lead score and website reading; saved once that upgrade has run.
+    if (Migrations::columnExists('agents', 'score_weights')) {
+        $weights = [];
+        foreach (Qualification::DEFAULT_WEIGHTS as $wKey => $wDefault) {
+            $weights[$wKey] = max(0, min(100, (int)($_POST['weight_' . $wKey] ?? $wDefault)));
+        }
+        $values['score_weights']    = json_encode($weights);
+        $values['target_countries'] = Validator::paragraph($_POST['target_countries'] ?? null, 3000);
+    }
+    if (Migrations::columnExists('agents', 'site_pages_enabled')) {
+        $values['site_pages_enabled'] = !empty($_POST['site_pages_enabled']) ? 1 : 0;
+        $values['site_sitemap_url']   = Validator::url($_POST['site_sitemap_url'] ?? null);
+    }
+
     // An agent with no model cannot answer anything, so fall back to the
     // provider's usual one rather than saving something unusable.
     if (($values['llm_model'] ?? '') === '' || $values['llm_model'] === null) {
@@ -385,6 +399,31 @@ if ($editId > 0 || $isNew) {
                     . 'Write them as a visitor would describe their business: construction '
                     . 'machinery, building materials, cement, HVAC, sanitary ware.'])
        . admin_card_close()
+       . (Migrations::columnExists('agents', 'score_weights') ? (static function () use ($v, $a): string {
+            $w = Qualification::weights((array)$a);
+            $labels = ['sector_match' => 'Products match the sectors', 'sells_abroad' => 'Sells abroad',
+                       'target_country' => 'From a target country', 'decision_maker' => 'Contact is a decision maker',
+                       'completeness' => 'How complete the record is'];
+            $out = admin_card_open('set-score', 'Lead score', 'How each possible exhibitor is scored: Hot, Warm, Nurture or Low.')
+                 . '<p class="hint">Points for each part. The total is turned into a score out of 100: 90 and above is Hot, '
+                 . '70 to 89 Warm, 50 to 69 Nurture, below 50 Low.</p><div class="field-row">';
+            foreach ($labels as $key => $label) {
+                $out .= f_text('weight_' . $key, $label, (string)$w[$key], ['type' => 'number']);
+            }
+            return $out . '</div>'
+                 . f_area('target_countries', 'Target countries', $v('target_countries'), ['rows' => 6,
+                    'hint' => 'One country per line, as visitors choose it on the chat card (for example China, Germany, '
+                            . 'Türkiye). Add "| 2" after a second-priority country, for example "France | 2"; it then counts '
+                            . 'for 60 per cent. Left empty, any company from outside Pakistan counts for 60 per cent.'])
+                 . admin_card_close();
+         })() : '')
+       . (Migrations::columnExists('agents', 'site_pages_enabled') ? admin_card_open('set-website', 'Website answers',
+                'The assistant reads this exhibition\'s website once a week, to answer questions about it and give the right link.')
+            . f_check('site_pages_enabled', 'Read the website every week', (int)($a['site_pages_enabled'] ?? 1) === 1,
+                'The pages it knows are listed under Content → Website pages.')
+            . f_text('site_sitemap_url', 'Sitemap address', $v('site_sitemap_url'), ['type' => 'url',
+                'hint' => 'Leave empty to use the website address followed by /sitemap.xml.'])
+            . admin_card_close() : '')
        . admin_card_open('set-voice', 'How the assistant talks', 'Who it is, what it is trying to achieve, and how it should sell.')
        . f_area('persona', 'Who the assistant is', $v('persona'), ['rows' => 5])
        . f_area('sales_objectives', 'What it is trying to achieve', $v('sales_objectives'), ['rows' => 7])
@@ -617,7 +656,7 @@ admin_layout_end();
 function admin_settings_nav(array $a): string
 {
     $links = [
-        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
+        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-score' => 'Lead score', 'set-website' => 'Website answers', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
         'set-disclosure' => 'AI notice', 'set-leads' => 'Leads', 'set-reps' => 'Sales reps', 'set-whatsapp' => 'WhatsApp',
     ];
     if (array_key_exists('mail_from_email', $a) || ($a === [] && Migrations::columnExists('agents', 'mail_from_email'))) {

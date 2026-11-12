@@ -78,6 +78,22 @@ try {
 }
 
 // ---------------------------------------------------------------------
+// 0d. The exhibition websites' pages (weekly, continued each run)
+// ---------------------------------------------------------------------
+try {
+    if (SitePages::ready()) {
+        foreach (db()->all("SELECT * FROM agents WHERE status = 'active'") as $siteAgent) {
+            $line = SitePages::cron($siteAgent, 15);
+            if ($line !== null) {
+                echo $line, "\n";
+            }
+        }
+    }
+} catch (Throwable $ex) {
+    app_log('cron', 'website reading failed', ['error' => $ex->getMessage()]);
+}
+
+// ---------------------------------------------------------------------
 // 1. Send queued notifications
 // ---------------------------------------------------------------------
 try {

@@ -35,8 +35,10 @@ final class PromptBuilder
         $sections[] = self::conversationState($ctx);
         $sections[] = self::leadFields($ctx['lead_state'] ?? []);
         $sections[] = self::summary($ctx);
+        $sections[] = SitePages::promptBlock((array)($ctx['site_pages'] ?? []));
         $sections[] = (string)($ctx['research'] ?? '');
         $sections[] = self::exhibitorCase($ctx);
+        $sections[] = (string)($ctx['sales_path'] ?? '');
         $sections[] = self::turnGuidance($ctx);
         $sections[] = LlmContract::instructions();
 
@@ -267,6 +269,12 @@ final class PromptBuilder
             } elseif ($classification === GeoClassifier::UNDETERMINED) {
                 $action = "They have asked about price. Do not give a figure or a range. Ask which country their "
                         . "company is based in.";
+            } elseif ($classification === GeoClassifier::PAKISTAN) {
+                $action = "They have asked about price. Do not give a figure, do not estimate a range, and do not "
+                        . "say what prices 'usually' are. Tell them our sales representative will give them the "
+                        . "correct prices and a proposal, and that the representative's contact details are just "
+                        . "below your message (they are added automatically; do not write them yourself). Do not "
+                        . "ask for their contact details in this reply.";
             } else {
                 $action = "They have asked about price. Do not give a figure, do not estimate a range, and do not "
                         . "say what prices 'usually' are. Tell them the sales team will give them the correct prices"
@@ -506,7 +514,13 @@ final class PromptBuilder
             return '';
         }
 
-        $lines = [
+        // With the sales path in the prompt, its steps lead; this section
+        // then only supplies the market notes.
+        $lines = trim((string)($ctx['sales_path'] ?? '')) !== ''
+            ? ["THE CASE FOR EXHIBITING: WHAT YOU MAY SAY ABOUT THE MARKET",
+               "Claims about Pakistan's market come ONLY from the market notes below. If there are none, make no "
+               . "claim about the market."]
+            : [
             "HOW TO MAKE THE CASE FOR EXHIBITING",
             "Over the conversation, build the argument in four steps, a little at a time, never all in one reply:",
             "1. What they make: from what they told you and what research found. Never ask what they make if you "

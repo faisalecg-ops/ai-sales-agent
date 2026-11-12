@@ -461,6 +461,7 @@ function admin_layout_start(string $title, array $actions = []): void
             'faqs.php'      => ['FAQs', 0, 'manage'],
             'pricing.php'   => ['Stand pricing', 0, 'manage'],
             'sponsorship.php' => ['Sponsorship', 0, 'manage'],
+            'website.php'   => ['Website pages', 0, 'manage'],
         ],
         'Visitors' => [
             'person.php'        => ['Find a person', 0, 'view'],
@@ -719,4 +720,33 @@ function admin_query(array $overrides = []): string
     $params = array_merge($_GET, $overrides);
     $params = array_filter($params, static fn($v) => $v !== '' && $v !== null);
     return $params ? '?' . http_build_query($params) : '';
+}
+
+/** The lead score label as a coloured pill: Hot, Warm, Nurture or Low. */
+function lead_label_pill(?string $label, $score = null): string
+{
+    $text = Qualification::labelText($label);
+    if ($text === '') {
+        return '';
+    }
+    $class = match ($label) { 'hot' => 'pill-bad', 'warm' => 'pill-warn', 'nurture' => 'pill-info', default => '' };
+    $title = $score !== null && $score !== '' ? ' title="Lead score ' . e((string)(float)$score) . ' of 100"' : '';
+    return '<span class="pill ' . $class . '"' . $title . '>' . e($text) . '</span>';
+}
+
+/** The qualification record as table rows, with its completeness. */
+function qualification_card(array $qual, $pct, ?string $label, $score): string
+{
+    $out = '<div class="card"><h2>Qualification</h2><p>' . lead_label_pill($label, $score)
+         . ' <span class="muted small">' . (int)$pct . '% complete'
+         . ($score !== null && $score !== '' ? ' · score ' . e((string)(float)$score) . ' of 100' : '') . '</span></p>'
+         . '<table class="table"><tbody>';
+    foreach (Qualification::FIELDS as $key => $name) {
+        $value = Qualification::display($qual, $key);
+        $out .= '<tr><td style="width:200px;color:var(--ink-soft)">' . e($name) . '</td><td>'
+              . ($value !== '' ? e($value) . ($key === 'products_made' && !empty($qual['_from_research'])
+                    ? ' <span class="muted small">(from research)</span>' : '')
+                 : '<span class="muted">Not known yet</span>') . '</td></tr>';
+    }
+    return $out . '</tbody></table></div>';
 }

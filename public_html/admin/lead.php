@@ -117,6 +117,10 @@ echo '</tbody></table></div>';
 
 // ---- Status and note ----
 echo '<div>';
+$leadQual = json_decode((string)($lead['qualification'] ?? ''), true);
+if (is_array($leadQual) && $leadQual) {
+    echo qualification_card($leadQual, $lead['qual_pct'] ?? 0, $lead['lead_label'] ?? null, $lead['lead_score'] ?? null);
+}
 echo '<div class="card"><h2>Status</h2>'
    . '<form method="post">' . Security::csrfField()
    . '<input type="hidden" name="action" value="status">'

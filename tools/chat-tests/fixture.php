@@ -101,4 +101,18 @@ db()->insert('faq_entries', ['agent_id' => $id, 'question' => 'Do you help with 
     'answer' => 'The team can recommend hotels near the Karachi Expo Centre.',
     'keywords' => 'hotel travel visa accommodation', 'status' => 'approved', 'active' => 1]);
 
+// Website pages, as the weekly reading would store them (Stage A, 12 Nov 2026).
+if (SitePages::ready()) {
+    db()->update('agents', ['site_pages_enabled' => 1], 'id = ?', [$id]);
+    foreach ([
+        ['https://pharmaasia.com.pk/register-to-visit/', 'Register to visit', "Trade visitors register free of charge online. Fill in the form with your name, company and mobile number; your visitor badge is sent by email and is scanned at the entrance."],
+        ['https://pharmaasia.com.pk/book-a-stand/', 'Book a stand', "Companies book a stand by sending the booking form on this page. The team replies with the floor plan and the stands still free."],
+        ['https://pharmaasia.com.pk/floor-plan/', 'Floor plan', "The floor plan of the halls at the Karachi Expo Centre, with the stands already booked. It can be downloaded as a PDF from this page."],
+        ['https://pharmaasia.com.pk/exhibitor-list/', 'Exhibitor list', "The list of companies exhibiting, by country and by product group."],
+    ] as [$u, $t, $b]) {
+        db()->insert('site_pages', ['agent_id' => $id, 'url' => $u, 'url_hash' => sha1($u), 'title' => $t,
+            'body' => $b, 'content_hash' => sha1($b), 'active' => 1, 'fetched_at' => date('Y-m-d H:i:s')]);
+    }
+}
+
 return db()->one('SELECT * FROM agents WHERE id = ?', [$id]) ?? [];

@@ -138,6 +138,19 @@ Read this before any task on this project.
   Read `docs/upgrade-2026-11-chat-fixes.md` and the "Done" section of `docs/handover/2026-11-11-chat-review-and-fix-plan.md`.
   Acceptance tests 1,319. The 15 real-model test chats: `tools/chat-tests/run.php` (test copy only) — 31/31 pass
   with GPT-6 Luna + Tavily on 12 Nov 2026; research wait default 14 s (research ~9 s while waiting).
+- **Guided selling plan (owner approved 12 Nov 2026):** Claude doc "AI Sales Agent — Guided selling,
+  quotations and email replies: plan" (https://claude.ai/artifact/TVpaToSMHxL91yjL3SDpVC). Three stages.
+  **Stage A BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-a.zip` (26 files; it
+  contains the chat fixes too and replaces that zip), Database upgrade steps `2026_11_qualification` and
+  `2026_11_site_pages`. Read `docs/upgrade-2026-11-guided-selling-a.md`. Code: `Qualification` (nine facts, score,
+  Hot/Warm/Nurture/Low, the eight-step path; weights and target countries per exhibition), `SitePages` (weekly
+  sitemap reading into `site_pages`, answers with links, only known links, never prices from the website),
+  admin `website.php`. Pakistan price or quotation ask: no price, the local rep's details are added.
+  Acceptance tests 1,379. Real-AI test chats 16 to 18 are written but NOT yet run (keys were deleted).
+  **Stage B (not built):** quotation PDF, sent automatically, international only, valid 30 days, no payment
+  details, no BCC (the team notification carries the PDF), Ecommerce Gateway logo in the footer, max 3 per
+  conversation. **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in
+  the admin; prospect-campaign replies left out for now. Each stage waits for the owner to try the one before.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links
   saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
   texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter

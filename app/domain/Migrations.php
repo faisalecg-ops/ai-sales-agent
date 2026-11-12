@@ -758,6 +758,63 @@ final class Migrations
                         MODIFY COLUMN package_type ENUM('shell','bare','outdoor') NOT NULL DEFAULT 'shell'",
                 ],
             ],
+
+            // ---- 12 November 2026: guided selling, stage A -----------
+            // Owner's plan "Guided selling, quotations and email replies":
+            // the qualification record and lead score (parts 1 and 2) and
+            // the website's pages for answers with links (part 5).
+            [
+                'key'   => '2026_11_qualification',
+                'label' => 'Qualification record, lead score and sales path step for each chat and lead',
+                'check' => static fn(): bool => self::columnExists('conversations', 'lead_label')
+                    && self::columnExists('leads', 'lead_label') && self::columnExists('agents', 'score_weights'),
+                'sql'   => array_values(array_filter([
+                    self::columnExists('conversations', 'lead_label') ? null :
+                        "ALTER TABLE conversations
+                            ADD COLUMN qual_pct TINYINT UNSIGNED NULL,
+                            ADD COLUMN lead_score DECIMAL(5,2) NULL,
+                            ADD COLUMN lead_label VARCHAR(16) NULL,
+                            ADD COLUMN path_step TINYINT UNSIGNED NULL",
+                    self::columnExists('leads', 'lead_label') ? null :
+                        "ALTER TABLE leads
+                            ADD COLUMN qualification TEXT NULL,
+                            ADD COLUMN qual_pct TINYINT UNSIGNED NULL,
+                            ADD COLUMN lead_score DECIMAL(5,2) NULL,
+                            ADD COLUMN lead_label VARCHAR(16) NULL,
+                            ADD KEY idx_lead_label (agent_id, lead_label)",
+                    self::columnExists('agents', 'score_weights') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN score_weights VARCHAR(500) NULL,
+                            ADD COLUMN target_countries TEXT NULL",
+                ])),
+            ],
+            [
+                'key'   => '2026_11_site_pages',
+                'label' => 'The exhibition website\'s pages, for answers with links',
+                'check' => static fn(): bool => self::tableExists('site_pages') && self::columnExists('agents', 'site_pages_enabled'),
+                'sql'   => array_values(array_filter([
+                    "CREATE TABLE IF NOT EXISTS site_pages (
+                        id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        agent_id      INT UNSIGNED NOT NULL,
+                        url           VARCHAR(500) NOT NULL,
+                        url_hash      CHAR(40) NOT NULL,
+                        title         VARCHAR(250) NOT NULL DEFAULT '',
+                        body          MEDIUMTEXT NULL,
+                        content_hash  CHAR(40) NULL,
+                        active        TINYINT(1) NOT NULL DEFAULT 1,
+                        note          VARCHAR(255) NULL,
+                        fetched_at    DATETIME NULL,
+                        created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_site_page (agent_id, url_hash),
+                        KEY idx_site_agent (agent_id, active)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                    self::columnExists('agents', 'site_pages_enabled') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN site_pages_enabled TINYINT(1) NOT NULL DEFAULT 1,
+                            ADD COLUMN site_sitemap_url VARCHAR(255) NULL",
+                ])),
+            ],
         ];
     }
 

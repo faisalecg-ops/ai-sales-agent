@@ -234,7 +234,31 @@ final class ChatOrchestrator
 
         $recent = ConversationStore::recentMessages($conversation, (int)$agent['max_recent_messages']);
 
+        // ---- Guided selling (plan approved 12 Nov 2026) --------------------
+        // For a possible exhibitor: the qualification record, and the step
+        // of the sales path PHP has worked out from it. Visitors are not put
+        // on the path.
+        $onPath   = self::qualificationReady()
+            && in_array((string)$conversation['intent'], ['exhibitor', 'sponsor', 'partner'], true);
+        $qual     = is_array($leadState['qual'] ?? null) ? $leadState['qual'] : [];
+        $pathFlags = is_array($leadState['path'] ?? null) ? $leadState['path'] : [];
+        $knownProducts = self::knownProducts($conversation, $leadState);
+        $pathStep = null;
+        $salesPath = '';
+        if ($onPath) {
+            $qual = Qualification::withResearch($qual, self::researchProducts($conversation));
+            if (Qualification::asksNextStep($message)) {
+                $pathFlags['next_step'] = true;
+            }
+            $pathStep  = Qualification::step($qual, $pathFlags);
+            $salesPath = Qualification::promptBlock($qual, $pathStep, $classification === GeoClassifier::INTERNATIONAL);
+        }
+        // What the exhibition's website says about what they asked (part 5).
+        $sitePages = SitePages::match($agentId, $message, 3);
+
         $promptCtx = [
+            'sales_path'        => $salesPath,
+            'site_pages'        => $sitePages,
             'agent'             => $agent,
             'message'           => $message,
             'state'             => (string)$conversation['state'],
@@ -347,7 +371,10 @@ final class ChatOrchestrator
             }
         }
 
-        $reply = $signals['reply'];
+        $reply = SitePages::onlyKnownLinks($agent, (string)$signals['reply'], [
+            (string)($agent['book_stand_url'] ?? ''), (string)($agent['register_url'] ?? ''),
+            (string)($agent['website_url'] ?? ''),
+        ]);
         $priceViolation = null;
 
         if (!$pricingAllowed) {
@@ -389,6 +416,15 @@ final class ChatOrchestrator
             'known_contact'     => is_array($input['known_contact'] ?? null) ? $input['known_contact'] : [],
             // What the next turn needs to remember (fix plan steps 1 and 2).
             'memory'            => [
+                'on_path'       => $onPath,
+                'qual'          => $qual,
+                'qual_update'   => $onPath ? Qualification::supported(
+                    Qualification::fromModel($signals['qualification'] ?? null),
+                    self::visitorWords($conversation, $message),
+                    implode(' ', self::researchProducts($conversation))
+                ) : [],
+                'path'          => $pathFlags,
+                'path_step'     => $pathStep,
                 'turn'          => $turnNo,
                 'contact'       => $contactRecord,
                 'offers'        => $offers,
@@ -461,6 +497,9 @@ final class ChatOrchestrator
                 $leadState['company_country'] = (string)$conversation['disclosed_company_country'];
             }
             $leadState = self::remember($leadState, (array)($turn['memory'] ?? []), (string)$turn['reply']);
+            $qualified = self::qualify($agent, $leadState, (array)($turn['memory'] ?? []), (string)$turn['reply'],
+                $lead !== null ? (int)$lead['id'] : (!empty($conversation['lead_id']) ? (int)$conversation['lead_id'] : null));
+            $leadState = $qualified['lead_state'];
 
             $contactCaptured = $lead !== null && LeadManager::hasContact($lead);
 
@@ -521,11 +560,17 @@ final class ChatOrchestrator
             // directly. Added after the price guard has run on the model's
             // words, and taken from the approved rep records, never from the
             // model. WhatsApp does this itself when it hands over.
+            // A company in Pakistan asking for prices, a quotation or the next
+            // step is given the local representative's details (owner,
+            // 12 Nov 2026): the chat itself never quotes Pakistan.
+            $pakistanAsk = (string)($conversation['pricing_country'] ?? '') === GeoClassifier::PAKISTAN
+                && ($turn['pricing_requested'] || Qualification::asksNextStep((string)$turn['message']));
             if ((string)($conversation['channel'] ?? 'web') !== 'whatsapp'
-                && PersonRequest::detect((string)$turn['message']) !== null) {
+                && (PersonRequest::detect((string)$turn['message']) !== null || $pakistanAsk)) {
                 $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web');
                 if ($repText !== '') {
                     $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . $repText;
+                    $leadState['rep_given'] = true;
                 }
             }
 
@@ -557,6 +602,7 @@ final class ChatOrchestrator
                 'handoff_triggered' => $handoffReason !== null ? 1 : (int)$conversation['handoff_triggered'],
                 'handoff_reason'    => $handoffReason !== null ? mb_substr($handoffReason, 0, 255) : $conversation['handoff_reason'],
                 'summary'           => ConversationStore::buildSummary($conversation, $leadState, $signalsMap, $turn),
+            ] + $qualified['columns'] + [
                 'status'            => $nextState === ConversationState::COMPLETED ? 'completed' : 'open',
             ]);
 
@@ -807,6 +853,75 @@ final class ChatOrchestrator
      * Persist a disclosed location. A disclosed country always overrides an
      * earlier IP result, and the IP result is retained (Section 12).
      */
+    /** The guided-selling columns exist (the 12 Nov 2026 database upgrade has run). */
+    private static function qualificationReady(): bool
+    {
+        static $ready = null;
+        return $ready ??= Migrations::columnExists('conversations', 'lead_label');
+    }
+
+    /** What research is sure the company makes. @return string[] */
+    private static function researchProducts(array $conversation): array
+    {
+        try {
+            $row = Migrations::tableExists('company_research') ? CompanyResearch::forConversation($conversation) : null;
+            return $row !== null ? CompanyResearch::knownProducts($row) : [];
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /** Everything the visitor has written in this conversation, plus this message. */
+    private static function visitorWords(array $conversation, string $message): string
+    {
+        $rows = db()->all(
+            "SELECT content FROM messages WHERE conversation_id = ? AND role = 'visitor' ORDER BY id DESC LIMIT 60",
+            [(int)$conversation['id']]
+        );
+        return implode("\n", array_column($rows, 'content')) . "\n" . $message;
+    }
+
+    /**
+     * After the reply: add what the visitor told us to the qualification
+     * record, move along the sales path, and score the lead.
+     *
+     * @return array{lead_state:array,columns:array}
+     */
+    private static function qualify(array $agent, array $leadState, array $memory, string $reply, ?int $leadId): array
+    {
+        if (empty($memory['on_path'])) {
+            return ['lead_state' => $leadState, 'columns' => []];
+        }
+        $qual = Qualification::merge((array)($memory['qual'] ?? []), (array)($memory['qual_update'] ?? []));
+        if (!empty($memory['qual_update']['products_made'])) {
+            unset($qual['_from_research']);
+        }
+        $offers = (array)($memory['offers'] ?? []);
+        $named  = $offers ? ChatGuide::offerQuestion($reply, $offers)['items'] !== [] : false;
+        $path   = Qualification::advance((array)($memory['path'] ?? []), (int)($memory['path_step'] ?? 1), $named, false);
+        $step   = Qualification::step($qual, $path);
+        $score  = Qualification::score($agent, $qual, (string)($leadState['company_country'] ?? '') ?: null);
+
+        $leadState['qual'] = $qual;
+        $leadState['path'] = $path;
+
+        $columns = [
+            'qual_pct'   => Qualification::completeness($qual),
+            'lead_score' => $score['score'],
+            'lead_label' => $score['label'],
+            'path_step'  => $step,
+        ];
+        if ($leadId !== null) {
+            db()->update('leads', [
+                'qualification' => json_encode($qual, JSON_UNESCAPED_UNICODE),
+                'qual_pct'      => $columns['qual_pct'],
+                'lead_score'    => $columns['lead_score'],
+                'lead_label'    => $columns['lead_label'],
+            ], 'id = ?', [$leadId]);
+        }
+        return ['lead_state' => $leadState, 'columns' => $columns];
+    }
+
     /** What they make, from research or from what they told us: never asked again. */
     private static function knownProducts(array $conversation, array $leadState): array
     {

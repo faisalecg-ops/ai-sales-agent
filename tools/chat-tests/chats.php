@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 /**
- * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026).
+ * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
+ * and chats 16 to 18 for guided selling, Stage A (12 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -167,6 +168,44 @@ return [
         'intro' => ['first_name' => 'Fatima', 'company' => 'Dubai Pharma Logistics', 'country' => 'AE', 'interest' => 'exhibit'],
         'turns' => [
             ['say' => "What's included in the shell scheme stall?", 'must' => ['a list' => '/^- .*\n- /m']],
+        ],
+    ],
+    // ---- Guided selling, Stage A (plan approved 12 Nov 2026) ----
+    [
+        'name'  => '16. The guided path: one question at a time, to a next step',
+        'intro' => ['first_name' => 'Klaus', 'company' => 'Sensorik Pumps GmbH', 'country' => 'DE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null, 'must' => ['one question' => '/\?/'], 'must_not' => ['a price' => ANY_PRICE]],
+            ['say' => 'We make dosing pumps and flow sensors for pharma filling lines. I am the export manager.',
+                'must' => ['one question' => '/\?/'], 'must_not' => ['asks what they make again' => '/what\s+(?:does|do)\s+(?:your company|you)\s+(?:make|manufacture|produce)/']],
+            ['say' => 'We sell in Europe and the Gulf. Nothing in Pakistan yet. We want to find a distributor.',
+                'must' => ['the market or the fit' => '/distribut|pakistan|manufactur|plant|factor/'],
+                'must_not' => ['asks the markets again' => '/which\s+(?:countries|markets)\s+do\s+you\s+(?:sell|export)/']],
+            ['say' => 'What stand would suit us, and what does it cost?',
+                'must' => ['one option' => '/shell|bare/', 'its price' => ANY_PRICE]],
+            ['say' => 'Good. What is the next step?',
+                'must' => ['a next step' => '/book|proposal|team|call|form/']],
+        ],
+    ],
+    [
+        'name'  => '17. A company in Pakistan asks for a quotation: the local rep, no price',
+        'intro' => ['first_name' => 'Bilal', 'company' => 'Lahore Packaging Works', 'country' => 'PK', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Please send me a quotation for a 9 sqm shell scheme stall.',
+                'must' => ['the local rep' => '/farhan|sales|team|colleague/'],
+                'must_not' => ['a price' => ANY_PRICE]],
+        ],
+    ],
+    [
+        'name'  => '18. A question about the website: the answer and the right link',
+        'intro' => ['first_name' => 'Sana', 'company' => 'City Hospital Pharmacy', 'country' => 'PK', 'interest' => 'visit'],
+        'turns' => [
+            ['say' => 'How do I register as a visitor? Is it free?',
+                'must' => ['the page' => '~pharmaasia\.com\.pk/register-to-visit~', 'free' => '/free/'],
+                'must_not' => ['a price' => ANY_PRICE]],
+            ['say' => 'Where can I see the floor plan?',
+                'must' => ['the page' => '~pharmaasia\.com\.pk/floor-plan~'],
+                'must_not' => ['an invented page' => '~pharmaasia\.com\.pk/(?!floor-plan|register-to-visit|book-a-stand|exhibitor-list)[a-z]~']],
         ],
     ],
 ];

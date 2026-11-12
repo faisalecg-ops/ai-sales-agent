@@ -1,5 +1,7 @@
 # Sales agent update — 11 November 2026: the website chat talks like a sales person
 
+**Superseded package:** install `salesagent-update-2026-11-guided-selling-a.zip` instead (it contains these files). The steps below still apply.
+
 Approved by the owner on 11 November 2026 (Claude doc "AI Sales Agent chat — review
 and fix plan", steps 1 to 6). Build brief: `docs/handover/2026-11-11-chat-review-and-fix-plan.md`.
 Built by the AI Sales Agent chat on branch `pharma-asia-2027`.

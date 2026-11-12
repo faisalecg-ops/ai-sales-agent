@@ -5285,8 +5285,8 @@ $p = $mock->lastSystemPrompt();
 T::ok(str_contains($p, 'WHAT RESEARCH FOUND ABOUT THEIR COMPANY') && str_contains($p, 'micropumps'),
     'So the first reply already knows what they make');
 T::ok(str_contains($p, 'never ask them'), 'And is told never to ask what they make');
-T::ok(str_contains($p, 'HOW TO MAKE THE CASE FOR EXHIBITING') && str_contains($p, "PAKISTAN'S PHARMACEUTICAL MARKET"),
-    'The four-step case, with the market note for their sector (pumps)');
+T::ok(str_contains($p, 'THE SALES PATH') && str_contains($p, "PAKISTAN'S PHARMACEUTICAL MARKET"),
+    'The sales path, with the market note for their sector (pumps)');
 T::ok(str_contains($fpRs->queries[0]['query'], 'Germany') && str_contains($fpRs->queries[1]['query'] ?? '', 'pharmaceutical'),
     'A short name is searched with their country and the exhibition\'s industry, to find the right Bartels');
 
@@ -5342,6 +5342,193 @@ T::group('Chat fix plan, step 4: the admin list shows an ended price as Expired'
 $contentSrc = (string)file_get_contents(APP_ROOT . '/public_html/admin/_content.php');
 T::ok(str_contains($contentSrc, 'function content_status_pill') && str_contains($contentSrc, '>Expired</span>'),
     'A live tier past its end date says "Expired", not "Live" (finding 3)');
+
+// =====================================================================
+// Guided selling, stage A (owner's plan approved 12 Nov 2026)
+// =====================================================================
+T::group('Guided selling: the qualification record');
+
+$q = Qualification::fromModel([
+    'products_made' => ['dosing pumps', 'sensors', 'null'], 'sells_abroad' => true, 'main_markets' => 'Europe, Middle East',
+    'south_asia' => 'none', 'seeking' => 'market_expansion', 'main_aim' => 'distributor_search',
+    'stand_interest' => 'SMALL', 'stand_sqm' => 18, 'contact_role' => 'Export Manager', 'budget' => 'a lot',
+]);
+T::equals(['dosing pumps', 'sensors'], $q['products_made'], 'Lists are cleaned; a placeholder such as "null" is dropped');
+T::ok(!isset($q['seeking']), 'A value outside the fixed choices is dropped');
+T::equals('small', $q['stand_interest'], 'A fixed choice is accepted whatever its capitals');
+T::ok(!isset($q['budget']), 'An unknown fact is ignored');
+$sup = Qualification::supported($q, 'We make dosing pumps. I am the export manager. We sell in Europe. About 18 sqm.', '');
+T::equals(['dosing pumps'], $sup['products_made'], 'Only what the visitor actually said is kept ("sensors" was never said)');
+T::equals(['Europe'], $sup['main_markets'], 'The same for markets');
+T::ok(isset($sup['contact_role']), 'A role they stated is kept');
+T::ok(!isset(Qualification::supported(['contact_role' => 'CEO'], 'hello there', '')['contact_role']), 'A role they never stated is not');
+T::ok(isset(Qualification::supported(['products_made' => ['micropumps']], 'hello', 'micropumps valves')['products_made']),
+    'Research may support what they make');
+T::equals(0, Qualification::completeness([]), 'An empty record is 0% complete');
+T::equals(33, Qualification::completeness(['products_made' => ['x'], 'sells_abroad' => false, 'seeking' => 'both']),
+    'Three of nine facts is 33% ("No" counts as known)');
+T::equals('Small stand, about 18 sqm', Qualification::display(['stand_interest' => 'small', 'stand_sqm' => 18], 'stand_interest'),
+    'Staff see plain words');
+
+T::group('Guided selling: the lead score');
+$scAgent = array_merge($fpAgent, ['score_weights' => null, 'target_countries' => "Germany\nFrance | 2"]);
+$full = ['products_made' => ['dosing pumps'], 'products_to_show' => ['pumps'], 'sells_abroad' => true, 'main_markets' => ['Europe'],
+    'south_asia' => 'none', 'seeking' => 'distributors', 'main_aim' => 'distributor_search', 'stand_interest' => 'small',
+    'contact_role' => 'Export Manager'];
+$sc = Qualification::score($scAgent, $full, 'Germany');
+T::equals(100.0, $sc['score'], 'A complete record, matching sector, exporter, target country, decision maker: 100');
+T::equals('hot', $sc['label'], 'That is Hot');
+T::equals(94.0, Qualification::score($scAgent, $full, 'France')['score'], 'A second-priority country counts for 60 per cent');
+T::equals(85.0, Qualification::score($scAgent, $full, 'Brazil')['score'], 'A country not on the list scores nothing for country');
+T::equals('warm', Qualification::label(85.0), '70 to 89 is Warm');
+T::equals('nurture', Qualification::label(50.0), '50 to 69 is Nurture');
+T::equals('low', Qualification::label(49.9), 'Below 50 is Low');
+T::equals(0.0, Qualification::score($scAgent, $full, 'Pakistan')['parts']['target_country'], 'Pakistan is never a target country');
+T::ok(Qualification::isDecisionMaker('Export Manager') && Qualification::isDecisionMaker('CEO')
+    && !Qualification::isDecisionMaker('Intern'), 'Decision makers are recognised by role');
+
+T::group('Guided selling: the sales path');
+T::equals(1, Qualification::step([], []), 'Nothing known: step 1, their company');
+T::equals(2, Qualification::step(['products_made' => ['pumps']], []), 'Products known: step 2, what they would show');
+T::equals(3, Qualification::step(['products_made' => ['p'], 'products_to_show' => ['p']], []), 'Then their markets');
+T::equals(4, Qualification::step(['products_made' => ['p'], 'products_to_show' => ['p'], 'sells_abroad' => true, 'south_asia' => 'none'], []), 'Then their aim');
+$to5 = ['products_made' => ['p'], 'products_to_show' => ['p'], 'sells_abroad' => true, 'south_asia' => 'none', 'seeking' => 'both'];
+T::equals(5, Qualification::step($to5, []), 'Then the opportunity');
+T::equals(6, Qualification::step($to5, Qualification::advance([], 5, false, false)), 'Once presented, the recommendation');
+T::equals(7, Qualification::step($to5, Qualification::advance(['opportunity' => true], 6, true, false)), 'Once an option is recommended, their questions');
+T::equals(8, Qualification::step([], ['next_step' => true]), 'Asking for a quotation or a call jumps to the next step');
+T::ok(Qualification::asksNextStep('Can you send me a quotation?') && !Qualification::asksNextStep('What is the venue?'),
+    'A request for the next step is recognised');
+
+// In a real chat turn.
+db()->insert('agent_sales_reps', ['agent_id' => $fpId, 'region' => 'local', 'name' => 'Farhan Mobeen',
+    'designation' => 'Senior Manager Sales', 'email' => 'farhan@example.net', 'mobile' => '+923152228225']);
+$mock->reset();
+[$gc, $gs] = $fpStart();
+$mock->push(['reply' => 'Thanks. Which products would you show?', 'intent' => 'exhibitor',
+    'qualification' => ['products_made' => ['dosing pumps', 'rockets'], 'contact_role' => 'Export Manager', 'seeking' => 'whatever']]);
+say($fpAgent, $gc, $gs, 'We make dosing pumps and I am the export manager.');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'THE SALES PATH') && str_contains($p, 'You are at step 1 of 8: Their company'),
+    'A possible exhibitor is put on the sales path, at the step PHP worked out');
+T::ok(str_contains($p, '"qualification"'), 'The assistant is asked to report what it learns');
+$gRow = reload_conversation($gc);
+$gState = ConversationStore::leadState($gRow);
+T::equals(['dosing pumps'], $gState['qual']['products_made'] ?? null, 'What they said is saved; what they did not say ("rockets") is not');
+T::equals(2, (int)$gRow['path_step'], 'The chat moves to step 2');
+T::equals(22, (int)$gRow['qual_pct'], 'Two of nine facts: 22% complete');
+T::ok($gRow['lead_label'] !== null && (float)$gRow['lead_score'] > 0, 'The lead is scored');
+$mock->push(['reply' => 'Understood.', 'intent' => 'exhibitor']);
+say($fpAgent, $gRow, $gs, 'Mostly the pumps.');
+T::ok(str_contains($mock->lastSystemPrompt(), 'You are at step 2 of 8') && str_contains($mock->lastSystemPrompt(), '- Products they make: dosing pumps'),
+    'The next reply knows the step and what is already known');
+$mock->push(['reply' => 'I will ask the team.', 'intent' => 'exhibitor', 'lead_fields' => ['email' => 'anna@pumps-example.de']]);
+say($fpAgent, reload_conversation($gc), $gs, 'My email is anna@pumps-example.de, please send a quotation.');
+$gLead = db()->one('SELECT * FROM leads WHERE id = ?', [(int)reload_conversation($gc)['lead_id']]);
+T::ok($gLead !== null && $gLead['lead_label'] !== null && str_contains((string)$gLead['qualification'], 'dosing pumps'),
+    'The lead carries the record, the percentage and the label');
+T::equals(8, (int)reload_conversation($gc)['path_step'], 'Asking for a quotation moves the chat to the next step');
+$brief = LeadBriefing::build($fpAgent, $gLead, 'contact', false);
+T::ok(str_contains($brief['text'], 'Lead score') && str_contains($brief['text'], 'Products they make: dosing pumps'),
+    'The notification email to the team shows the score and the record');
+
+// A visitor is not put on the path.
+$mock->reset();
+$vp = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'attendee'], 'id = ?', [(int)$vp['conversation']['id']]);
+$mock->push(['reply' => 'Welcome.', 'intent' => 'attendee', 'qualification' => ['products_made' => ['x']]]);
+say($fpAgent, reload_conversation($vp['conversation']), $vp['session_secret'], 'I want to visit');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'THE SALES PATH'), 'A visitor is not put on the sales path');
+T::ok(reload_conversation($vp['conversation'])['path_step'] === null, 'And gets no step or score');
+
+// A company in Pakistan asking the price gets the local representative's details.
+$mock->reset();
+$pk2 = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$pk2c = ChatOrchestrator::applyFormCountry($fpAgent, $pk2['conversation'], 'PK');
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['company' => 'Lahore Labs', 'company_country' => 'Pakistan'])], 'id = ?', [(int)$pk2c['id']]);
+$mock->push(['reply' => 'Our sales representative will give you the correct prices. The details are below.', 'intent' => 'exhibitor']);
+$pkReply = say($fpAgent, reload_conversation($pk2c), $pk2['session_secret'], 'Please send me a quotation with your stand rates');
+$pkText = json_encode($pkReply['blocks']);
+T::ok(str_contains($pkText, 'Farhan Mobeen'), 'A company in Pakistan asking for rates is given the local representative\'s details (owner, 12 Nov 2026)');
+T::ok(!preg_match('/USD\s?\d/', $pkText), 'And still no price');
+T::ok(str_contains($mock->lastSystemPrompt(), "the representative's contact details are just"),
+    'The assistant is told the details are added, and not to ask for theirs');
+
+T::group('Guided selling: website answers with links');
+
+$siteDir = sys_get_temp_dir() . '/aisa-site-' . bin2hex(random_bytes(4));
+mkdir($siteDir . '/admin', 0700, true);
+$sitePort = 8191;
+$siteBase = 'http://127.0.0.1:' . $sitePort;
+$pageHtml = static fn(string $title, string $body): string =>
+    '<!doctype html><html><head><title>' . $title . '</title><style>p{color:red}</style></head><body><nav>Menu Home About</nav>'
+    . $body . '<footer>Copyright</footer><script>var x = "secret script";</script></body></html>';
+file_put_contents($siteDir . '/sitemap.xml', '<?xml version="1.0"?><urlset>'
+    . '<url><loc>' . $siteBase . '/register-to-visit.html</loc></url><url><loc>' . $siteBase . '/exhibitor-list.html</loc></url>'
+    . '<url><loc>' . $siteBase . '/tariff.html</loc></url><url><loc>' . $siteBase . '/admin/login.html</loc></url>'
+    . '<url><loc>https://other-site.example/page.html</loc></url><url><loc>' . $siteBase . '/brochure.pdf</loc></url></urlset>');
+file_put_contents($siteDir . '/register-to-visit.html', $pageHtml('Register to visit | Pharma Asia',
+    '<h1>Visitor registration</h1><p>Fill in the visitor registration form to get your free entry badge.</p>'));
+file_put_contents($siteDir . '/exhibitor-list.html', $pageHtml('Exhibitor list',
+    '<h1>Exhibitor list</h1><p>Browse the companies exhibiting. The show was held 20-22 October 2026.</p>'));
+file_put_contents($siteDir . '/tariff.html', $pageHtml('Participation tariff',
+    '<h1>Tariff</h1><p>Shell scheme costs US$ 999 per sqm.</p><p>Stands are built in modules of 9 sqm.</p>'));
+file_put_contents($siteDir . '/admin/login.html', $pageHtml('Login', '<p>Password</p>'));
+$siteProc = proc_open([PHP_BINARY, '-S', '127.0.0.1:' . $sitePort, '-t', $siteDir], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $sitePipes);
+for ($i = 0; $i < 40; $i++) { if (@fsockopen('127.0.0.1', $sitePort)) { break; } usleep(100000); }
+
+db()->update('agents', ['website_url' => $siteBase, 'event_starts_on' => '2027-12-07', 'register_url' => $siteBase . '/register-to-visit.html'], 'id = ?', [$fpId]);
+$siteAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$fpId]);
+$begun = SitePages::begin($siteAgent);
+T::ok($begun['ok'] && $begun['queued'] === 3, 'The sitemap is read: 3 pages queued (not the admin page, the PDF or another website)');
+$worked = SitePages::work($siteAgent, 20);
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM site_pages WHERE agent_id = ?', [$fpId]), 'The three pages are stored');
+$reg = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%register%'", [$fpId]);
+T::ok(str_contains((string)$reg['body'], 'free entry badge') && !str_contains((string)$reg['body'], 'secret script')
+    && !str_contains((string)$reg['body'], 'Menu Home'), 'A page\'s readable text is kept; scripts and menus are not');
+$tariff = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%tariff%'", [$fpId]);
+T::ok(!str_contains((string)$tariff['body'], '999') && str_contains((string)$tariff['body'], 'modules of 9 sqm'),
+    'A price written on the website is removed before the text is stored');
+$exl = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%exhibitor%'", [$fpId]);
+T::ok(str_contains((string)$exl['note'], '2026'), 'A page showing other event dates than Dates & venue is marked for checking');
+
+$found = SitePages::match($fpId, 'Where do I register to visit?');
+T::equals($siteBase . '/register-to-visit.html', $found[0]['url'] ?? '', 'A question about registering finds the registration page');
+T::equals([], SitePages::match($fpId, 'Tell me about quantum physics'), 'An unrelated question finds no page');
+
+$mock->reset();
+$wv = ConversationStore::start($siteAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => '127.0.0.1', 'page_url' => null]);
+$mock->push(['reply' => 'You can register here: ' . $siteBase . '/register-to-visit.html and also ' . $siteBase . '/made-up-page.html',
+    'intent' => 'attendee']);
+$wr = say($siteAgent, $wv['conversation'], $wv['session_secret'], 'Where do I register to visit?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, "PAGES ON THE EXHIBITION'S WEBSITE") && str_contains($p, 'Address: ' . $siteBase . '/register-to-visit.html'),
+    'The assistant is given the matching page and its address');
+$stored = (string)db()->value("SELECT content FROM messages WHERE conversation_id = ? AND role = 'agent' ORDER BY id DESC LIMIT 1", [(int)$wv['conversation']['id']]);
+T::ok(str_contains($stored, '/register-to-visit.html'), 'A real page\'s link stays in the reply');
+T::ok(!str_contains($stored, 'made-up-page'), 'An address that was never found on the website is taken out');
+
+db()->update('site_pages', ['active' => 0], 'id = ?', [(int)$reg['id']]);
+T::equals([], SitePages::match($fpId, 'Where do I register to visit?'), 'A page switched off in the admin is ignored');
+
+unlink($siteDir . '/exhibitor-list.html');
+file_put_contents($siteDir . '/sitemap.xml', '<?xml version="1.0"?><urlset><url><loc>' . $siteBase . '/register-to-visit.html</loc></url>'
+    . '<url><loc>' . $siteBase . '/tariff.html</loc></url></urlset>');
+SitePages::begin($siteAgent);
+SitePages::work($siteAgent, 20);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM site_pages WHERE agent_id = ?', [$fpId]), 'A page removed from the website is forgotten at the next reading');
+T::equals(0, (int)db()->value('SELECT active FROM site_pages WHERE id = ?', [(int)$reg['id']]), 'A page that was switched off stays off');
+Settings::set('site.read.' . $fpId, gmdate('Y-m-d H:i:s'));
+T::ok(SitePages::cron($siteAgent) === null, 'The scheduled task does nothing until a week has passed');
+Settings::set('site.read.' . $fpId, gmdate('Y-m-d H:i:s', time() - 8 * 86400));
+Settings::set('site.started.' . $fpId, gmdate('Y-m-d H:i:s', time() - 8 * 86400));
+T::ok(str_contains((string)SitePages::cron($siteAgent), 'website page'), 'After a week it reads the website again');
+
+proc_terminate($siteProc);
+array_map('unlink', glob($siteDir . '/admin/*') ?: []); @rmdir($siteDir . '/admin');
+array_map('unlink', glob($siteDir . '/*') ?: []); @rmdir($siteDir);
+db()->exec('DELETE FROM site_pages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM agent_sales_reps WHERE agent_id = ?', [$fpId]);
 
 db()->exec('DELETE FROM company_research WHERE agent_id = ?', [$fpId]);
 db()->exec('DELETE FROM sponsorship_packages WHERE agent_id = ?', [$fpId]);

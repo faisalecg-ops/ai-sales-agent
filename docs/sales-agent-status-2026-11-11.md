@@ -75,3 +75,12 @@ nothing below is to be changed until testing is finished and the owner decides.
 Other open items: five more Pulse articles; UAE Consul General home page tile (owner's photo);
 2027 sponsorship document; 2027 E-Pass form; final 378-company exhibitor list; Social Media
 Expert not yet connected to Pulse.
+
+## 12 November 2026 — guided selling, Stage A built
+
+- Plan approved by the owner (Claude doc "AI Sales Agent — Guided selling, quotations and email replies: plan").
+- Stage A (guided path, qualification record and lead score, website answers) is built and waits for the owner
+  to install: `docs/upgrade-2026-11-guided-selling-a.md`. The package also carries the chat fixes.
+- Tests: 1,379 acceptance, 82 access-http. Real-AI chats 16 to 18 not yet run (no keys in the workspace).
+- /social and the Backup Manager are not affected (one new table `site_pages`, new columns only).
+- Next: Stage B (quotation PDF), after the owner has tried Stage A.

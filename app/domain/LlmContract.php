@@ -61,6 +61,8 @@ final class LlmContract
             'package_reference' => self::str($decoded['package_reference'] ?? null, 64),
             'location_ambiguous' => self::bool($decoded['location_ambiguous'] ?? null),
             'lead_fields'       => self::leadFields($decoded['lead_fields'] ?? null),
+            // Validated by Qualification::fromModel before any of it is kept.
+            'qualification'     => is_array($decoded['qualification'] ?? null) ? $decoded['qualification'] : null,
         ];
 
         return ['ok' => true, 'reason' => null, 'data' => $data];
@@ -229,6 +231,15 @@ final class LlmContract
             "country_disclosed": string or null,
             "company_country_disclosed": string or null
           },
+          "qualification": {
+            "products_made": [strings], "products_to_show": [strings],
+            "sells_abroad": true or false, "main_markets": [strings],
+            "south_asia": "none | sells | exhibited | both",
+            "seeking": "distributors | direct_customers | both",
+            "main_aim": "brand_awareness | distributor_search | direct_sales | partnerships",
+            "stand_interest": "small | medium | large | sponsorship",
+            "stand_sqm": number, "contact_role": string
+          },
           "package_reference": "stall:ID or sponsorship:ID, or null",
           "handoff_required": true or false,
           "handoff_reason": string or null,
@@ -244,6 +255,9 @@ final class LlmContract
           this conversation. Never guess, never fill from assumption, and
           never repeat a value you were given as context unless the visitor
           has just restated or corrected it.
+        - "qualification": only for a company that may exhibit. Include a key
+          only when the visitor said it in this conversation, in their own
+          words; leave every other key out. Never infer or guess a value.
         - "country_disclosed" is where the person is. "company_country_disclosed"
           is where their business is based. If they differ, report both.
         - "location_ambiguous": true when a place they named could belong to
