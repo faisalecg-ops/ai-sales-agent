@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Run the 15 written test chats (chat fix plan, step 6) with the REAL AI model.
  *
- *   php tools/chat-tests/run.php [--model=gpt-6-luna] [--provider=openai] [--only=4] [--agent=slug]
+ *   php tools/chat-tests/run.php [--model=gpt-6-luna] [--provider=openai] [--only=4] [--agent=slug] [--pause=65]
  *
  * Runs on a TEST copy only: it refuses an installation whose config says
  * 'production'. Without --agent it builds its own exhibition, "Pharma Asia
@@ -28,7 +28,11 @@ if (APP_ENV === 'production') {
     exit(1);
 }
 
-$opt      = getopt('', ['model::', 'provider::', 'only::', 'agent::', 'keep']);
+$opt      = getopt('', ['model::', 'provider::', 'only::', 'agent::', 'keep', 'pause::']);
+// Seconds to wait between visitor messages: for an AI account with a small
+// tokens-per-minute limit (a new OpenAI account allows 10,000 a minute, about
+// one chat reply), e.g. --pause=65.
+$pause    = max(0, (int)($opt['pause'] ?? 0));
 $provider = (string)($opt['provider'] ?? 'openai');
 $model    = (string)($opt['model'] ?? 'gpt-6-luna');
 $only     = isset($opt['only']) ? (int)$opt['only'] : null;
@@ -113,6 +117,9 @@ foreach ($chats as $i => $chat) {
 
     foreach ($turns as $turn) {
         if ($turn['say'] !== null) {
+            if ($pause > 0) {
+                sleep($pause);
+            }
             $say('  VISITOR: ' . $turn['say']);
             $response = ChatOrchestrator::handle($agent, [
                 'request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$conv['session_id'],
