@@ -61,6 +61,9 @@ final class CompanyResearch
 
     private const MAX_SOURCES      = 14;
     private const SOURCE_TEXT_CHARS = 1800;
+    /** Pages read while a visitor waits for the first reply. */
+    private const QUICK_SOURCES      = 10;
+    private const QUICK_SOURCE_CHARS = 1000;
 
     // -----------------------------------------------------------------
     // Asking for research
@@ -325,24 +328,30 @@ final class CompanyResearch
             return self::pause($id, $sources);
         }
 
-        // Numbered, tiered, and trimmed to what the AI needs to read.
+        // Numbered, tiered, and trimmed to what the AI needs to read. Before
+        // the first reply the visitor is waiting, so fewer and shorter pages
+        // are read: the first searches (the company's own site, its products
+        // and industry) come first, and the reading finishes in about half
+        // the time (measured 12 Nov 2026 with GPT-6 Luna).
+        $readCount = $deadline === null ? self::MAX_SOURCES : self::QUICK_SOURCES;
+        $readChars = $deadline === null ? self::SOURCE_TEXT_CHARS : self::QUICK_SOURCE_CHARS;
         $numbered = [];
         $n = 0;
-        foreach ($sources as $src) {
+        foreach (array_slice($sources, 0, $readCount, true) as $src) {
             $n++;
             $numbered['S' . $n] = [
                 'id'      => 'S' . $n,
                 'title'   => (string)$src['title'],
                 'url'     => (string)$src['url'],
                 'tier'    => self::tier((string)$src['url'], null, $agent),
-                'content' => mb_substr((string)$src['content'], 0, self::SOURCE_TEXT_CHARS),
+                'content' => mb_substr((string)$src['content'], 0, $readChars),
             ];
         }
 
         // ---- 2. Read ------------------------------------------------
         $offers   = self::offers($agentId);
         $analysis = self::analyse($agent, $job, $numbered, $offers,
-            $deadline === null ? 60 : (int)max(3, floor($left())));
+            $deadline === null ? 60 : (int)max(3, floor($left())), $deadline !== null);
         if ($analysis === null) {
             // Not read in time for the first reply: kept, and finished
             // straight after it.
@@ -661,17 +670,25 @@ final class CompanyResearch
         return $out;
     }
 
-    private static function analyse(array $agent, array $job, array $sources, array $offers, int $timeout = 60): ?array
+    private static function analyse(array $agent, array $job, array $sources, array $offers, int $timeout = 60, bool $quick = false): ?array
     {
         $provider = LlmProviderFactory::make(AiModels::background($agent)['provider']);
 
+        $user = self::userPrompt($agent, $job, $sources, $offers);
+        if ($quick) {
+            // A visitor is waiting for the first reply: the same answer, kept
+            // short, so it is written in time.
+            $user .= "\n\nBE BRIEF: a visitor is waiting. Same JSON shape, but at most 4 facts, 2 inferences, "
+                   . "3 unknowns, 2 objectives and 1 objection; every reason and the summary in one short sentence.";
+        }
+
         $result = $provider->complete(
             self::systemPrompt($agent),
-            [['role' => 'user', 'content' => self::userPrompt($agent, $job, $sources, $offers)]],
+            [['role' => 'user', 'content' => $user]],
             [
                 'model'       => AiModels::background($agent)['model'],
                 'temperature' => 0.2,
-                'max_tokens'  => 2200,
+                'max_tokens'  => $quick ? 1400 : 2200,
                 'timeout'     => $timeout,
             ]
         );

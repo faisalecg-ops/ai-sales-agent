@@ -253,8 +253,8 @@ final class PromptBuilder
         if (!$allowed) {
             $reason = match ($classification) {
                 GeoClassifier::PAKISTAN =>
-                    "Prices for companies in Pakistan are given by the local sales team, not in this chat. "
-                    . "You have NO prices to give them.",
+                    "Their prices are given by the sales team directly, not in this chat. You have NO prices to "
+                    . "give them. Do not mention their country or say that prices depend on where they are based.",
                 GeoClassifier::INTERNATIONAL =>
                     "No price is published for this yet. You have NO prices to give.",
                 default =>
@@ -323,8 +323,9 @@ final class PromptBuilder
         }
 
         $lines[] = "Quote only the option or options they are asking about, never the whole list unprompted. When "
-                 . "they ask what is included, list the inclusions, one per line. When you quote one specific "
-                 . "option, set package_reference to its Reference value.";
+                 . "they ask what is included, list the inclusions, one per line; for an option with no Includes "
+                 . "line, say nothing about inclusions. When you quote one specific option, set package_reference "
+                 . "to its Reference value.";
 
         $scope = self::priceScope($ctx);
         if ($scope !== '') {

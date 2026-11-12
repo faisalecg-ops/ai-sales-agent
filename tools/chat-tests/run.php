@@ -141,6 +141,12 @@ foreach ($chats as $i => $chat) {
         if (!empty($response['fallback'])) {
             $problems[] = 'a standard reply was used (' . $response['fallback'] . ')';
         }
+        // What the live server does straight after a reply: finish research
+        // that did not finish before it (fastcgi_finish_request has no
+        // equivalent on the command line).
+        foreach (db()->all("SELECT id FROM company_research WHERE conversation_id = ? AND status = 'queued'", [(int)$conv['id']]) as $q) {
+            CompanyResearch::run((int)$q['id']);
+        }
         if ($problems) {
             $failed++;
             $say('  FAIL: ' . implode('; ', $problems));
