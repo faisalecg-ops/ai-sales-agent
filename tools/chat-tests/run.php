@@ -65,6 +65,13 @@ if (!empty($opt['agent'])) {
 $agent = db()->one('SELECT * FROM agents WHERE id = ?', [(int)$agent['id']]);
 
 // ---- The chats --------------------------------------------------------------
+// No email leaves a test: quotations are "sent" into this list.
+$GLOBALS['test_mail'] = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html = null, array $headers = [], array $attachments = []): array {
+    $GLOBALS['test_mail'][] = ['to' => $to, 'subject' => $subject, 'attachments' => array_column($attachments, 'name')];
+    return ['ok' => true];
+};
+
 $chats   = require __DIR__ . '/chats.php';
 $out     = [];
 $passed  = 0;

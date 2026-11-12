@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A (12 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, and 20 to 22 for quotations, Stage B (12 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -216,6 +216,45 @@ return [
         'turns' => [
             ['say' => null, 'must' => ['knows what they make' => '/micro|pump|sensor|valve|fluid/'],
                 'must_not' => ['the other Bartels' => '/rack|shelving|warehouse/', 'a price' => ANY_PRICE]],
+        ],
+    ],
+    // ---- Quotations, Stage B (12 Nov 2026) ----
+    [
+        'name'  => '20. A quotation asked in one message, the email given in the next',
+        'intro' => ['first_name' => 'Klaus', 'company' => 'Sensorik Pumps GmbH', 'country' => 'DE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null],
+            ['say' => 'Please send me a quotation for an 18 sqm shell scheme stall.',
+                'must' => ['asks for the email' => '/e-?mail/'],
+                'must_not' => ['says it is booked' => '/\b(?:booked|reserved)\b/', 'claims it was sent' => '/Quotation PA27-Q-/']],
+            ['say' => 'klaus.meyer@sensorik-pumps.example',
+                'must' => ['the quotation is on its way' => '/Quotation PA27-Q-\d{4} is on its way to klaus\.meyer@sensorik-pumps\.example/'],
+                'must_not' => ['says it is booked' => '/\b(?:booked|reserved)\b/']],
+            ['say' => 'Thanks. Is the stand reserved for me now?',
+                'must' => ['explains it is an offer' => '/contract|payment|not\s+(?:yet\s+)?(?:booked|reserved)|offer|confirm/'],
+                'must_not' => ['a second quotation' => '/Quotation PA27-Q-\d{4} is on its way/']],
+        ],
+    ],
+    [
+        'name'  => '21. A size that cannot be booked, then a quotation for the size they choose',
+        'intro' => ['first_name' => 'Marta', 'company' => 'Iberia Blister SL', 'country' => 'ES', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null],
+            ['say' => 'Send a quotation for a 20 sqm shell scheme stall to marta@iberia-blister.example please.',
+                'must' => ['the nearest sizes' => '/18|27/'],
+                'must_not' => ['a quotation for a size that does not exist' => '/Quotation PA27-Q-/']],
+            ['say' => '27 sqm is fine.',
+                'must' => ['the quotation is on its way' => '/Quotation PA27-Q-\d{4} is on its way to marta@iberia-blister\.example/']],
+        ],
+    ],
+    [
+        'name'  => '22. Saying yes when the assistant offers a quotation for a sponsorship tier',
+        'intro' => ['first_name' => 'Wei', 'company' => 'Shanghai Tablet Machinery Co', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null],
+            ['say' => 'We are interested in the Gold Partner sponsorship. My email is wei.zhang@shtablet.example. Can I have a quotation?',
+                'must' => ['the quotation is on its way' => '/Quotation PA27-Q-\d{4} is on its way to wei\.zhang@shtablet\.example/'],
+                'must_not' => ['says it is booked' => '/\b(?:booked|reserved)\b/']],
         ],
     ],
 ];

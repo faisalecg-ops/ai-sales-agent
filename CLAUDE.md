@@ -157,10 +157,20 @@ Read this before any task on this project.
   choice). The Pharma Asia website has its own list (Admin → Forms → Blocked countries, `form_blocked_countries`).
   Any new way of contacting people must pass `WhatsAppEngine::blockedReason`; any new chat entry point must
   check `BlockedCountries::blocksConversation`.
-  **Stage B (not built):** quotation PDF, sent automatically, international only, valid 30 days, no payment
-  details, no BCC (the team notification carries the PDF), Ecommerce Gateway logo in the footer, max 3 per
-  conversation. **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in
-  the admin; prospect-campaign replies left out for now. Each stage waits for the owner to try the one before.
+  **Stage B BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-b.zip` (41 files; it
+  contains the chat fixes and Stage A too and replaces every earlier November zip), Database upgrade steps
+  `2026_11_qualification`, `2026_11_site_pages`, `2026_11_quotations`. Read `docs/upgrade-2026-11-guided-selling-b.md`.
+  Code: `Quotation` (assess → prepare → dispatch; `staffProblem` for the lead page; settings per exhibition
+  `agents.quote_*`, off by default), `app/lib/PdfWriter.php` (pure PHP, Helvetica, PNG/JPEG; no CJK), table
+  `quotations`, PDFs in `storage/quotations/<agent id>/`, logos in `storage/uploads/quotation-logos/`, organiser
+  logo `app/assets/ecommerce-gateway-logo.png`, `Mailer` attachments (`email_outbox.attachment_path`), admin
+  `quotation.php` (opens a PDF), lead page Quotations card. Rules: international only and country from the
+  visitor's own words (never IP), never Pakistan, approved live prices only, 3 per conversation, 5 per address
+  per day, no payment details, no BCC (team notification `quotation` carries the PDF), the reply line
+  "Quotation N is on its way to …" is written by PHP. Acceptance tests 1,517. Real-AI chats 20 to 22.
+  The quotation email's Message-ID is kept in `quotations.message_id` for Stage C.
+  **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
+  prospect-campaign replies left out for now. It waits for the owner to try Stage B.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links
   saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
   texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter

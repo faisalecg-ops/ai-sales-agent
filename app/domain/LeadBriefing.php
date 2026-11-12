@@ -31,6 +31,7 @@ final class LeadBriefing
         $research = self::research($lead);
         $headline = match (true) {
             $trigger === 'handoff'                       => $region . ' handoff — ' . self::personLabel($lead),
+            $trigger === 'quotation'                     => 'Quotation sent — ' . self::personLabel($lead),
             $trigger === 'researched' && $research !== null
                 => $region . ' exhibitor researched — ' . self::personLabel($lead)
                    . ' (' . $research['score'] . '/100, ' . $research['priority'] . ')',
@@ -179,11 +180,24 @@ final class LeadBriefing
             'Products'       => trim((string)($lead['product_category'] ?? '')),
             'Website'        => trim((string)($lead['website'] ?? '')),
             'Status'         => LeadManager::STATUS_LABELS[(string)$lead['status']] ?? (string)$lead['status'],
+            'Quotations'     => self::quotationLine($lead),
             'Lead score'     => self::scoreLine($lead),
             'Qualification'  => self::qualificationLine($lead),
             'First seen'     => self::localTime($lead['created_at'] ?? null, $tz),
             'Page'           => trim((string)($lead['source_url'] ?? '')),
         ], static fn($v) => $v !== '' && $v !== null);
+    }
+
+    /** "PA27-Q-0003: Shell Scheme Stall, 18 sqm, USD 7,762.50, emailed 12 Nov (PDF attached)". */
+    private static function quotationLine(array $lead): string
+    {
+        $out = [];
+        foreach (array_slice(Quotation::forLead((int)$lead['agent_id'], (int)$lead['id']), 0, 3) as $q) {
+            $out[] = $q['number'] . ': ' . $q['title']
+                . ($q['sqm'] ? ', ' . rtrim(rtrim(number_format((float)$q['sqm'], 2), '0'), '.') . ' sqm' : '')
+                . ', ' . $q['total_text'] . ' — ' . strtolower(Quotation::statusLabel($q)) . ' to ' . $q['to_email'];
+        }
+        return implode('; ', $out);
     }
 
     /** "Warm (72 of 100), 67% complete" — from the guided-selling record, when there is one. */

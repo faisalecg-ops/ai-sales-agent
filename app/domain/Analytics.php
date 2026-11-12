@@ -368,7 +368,9 @@ final class Analytics
                   WHERE l.agent_id = ? AND l.created_at >= ? AND l.created_at < ?"), 'note' => null],
             ['label' => 'Passed to sales', 'count' => $v(
                 "SELECT COUNT(*) FROM conversations WHERE agent_id = ? AND channel <> 'whatsapp' AND handoff_triggered = 1 AND created_at >= ? AND created_at < ?"), 'note' => null],
-        ];
+        ] + (Quotation::ready() ? [6 => ['label' => 'Quotations emailed', 'count' => $v(
+                "SELECT COUNT(*) FROM quotations WHERE agent_id = ? AND status = 'sent' AND created_at >= ? AND created_at < ?"),
+                'note' => 'By the chat and by your team, from the lead page']] : []);
     }
 
     // -----------------------------------------------------------------

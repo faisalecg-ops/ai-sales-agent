@@ -382,7 +382,7 @@ final class Qualification
     }
 
     /** The guidance the assistant is given for this turn. */
-    public static function promptBlock(array $qual, int $step, bool $pricesAllowed): string
+    public static function promptBlock(array $qual, int $step, bool $pricesAllowed, bool $quotations = false): string
     {
         $known = [];
         $unknown = [];
@@ -406,10 +406,15 @@ final class Qualification
             6 => "Recommend ONE stand option or sponsorship tier that fits what you now know about them, with one reason. "
                . "Then ask if they would like the details.",
             7 => "Answer their questions about sizes, what is included, " . ($pricesAllowed ? "prices, " : "") . "dates and "
-               . "logistics. When they seem satisfied, offer the next step.",
+               . "logistics. When they seem satisfied, offer the next step"
+               . ($pricesAllowed && $quotations ? ": a quotation by email for the option you discussed." : "."),
             default => $pricesAllowed
-                ? "Help them take the next step they chose: a call with the representative, a proposal from the team, or "
-                  . "the Book a stand page."
+                ? ($quotations
+                    ? "Help them take the next step. Offer ONE of these, the first that fits: a quotation by email for the "
+                      . "option you discussed (ask \"Would you like a quotation by email?\"), a call with the representative, "
+                      . "or the Book a stand page."
+                    : "Help them take the next step they chose: a call with the representative, a proposal from the team, or "
+                      . "the Book a stand page.")
                 : "Help them take the next step: the sales representative, whose details are added to your reply, will "
                   . "give them prices and a proposal. Do not promise a quotation from this chat.",
         };

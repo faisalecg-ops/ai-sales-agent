@@ -24,3 +24,4 @@ public_html/social/uploads/*
 !public_html/social/uploads/index.html
 # Test-chat transcripts written by tools/chat-tests/run.php
 storage/chat-tests-*.txt
+storage/quotations/*

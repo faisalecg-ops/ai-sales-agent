@@ -78,6 +78,18 @@ try {
 }
 
 // ---------------------------------------------------------------------
+// 0c. Quotations whose email did not go out the first time
+// ---------------------------------------------------------------------
+try {
+    $requoted = Quotation::sendDue(10);
+    if ($requoted > 0) {
+        echo "Quotations emailed on a later try: {$requoted}\n";
+    }
+} catch (Throwable $ex) {
+    app_log('cron', 'quotation retry failed', ['error' => $ex->getMessage()]);
+}
+
+// ---------------------------------------------------------------------
 // 0d. The exhibition websites' pages (weekly, continued each run)
 // ---------------------------------------------------------------------
 try {

@@ -431,7 +431,8 @@ final class LeadManager
      * repeats — a second, separate handover on the same lead. Without it,
      * the email queue treats it as already sent.
      */
-    public static function notifyNewLead(array $agent, array $lead, string $trigger, ?string $occasion = null): void
+    public static function notifyNewLead(array $agent, array $lead, string $trigger, ?string $occasion = null,
+                                         ?array $attachment = null): void
     {
         // Local enquiries go to the people who handle Pakistan business;
         // everything else goes to the international list. A visitor whose
@@ -462,7 +463,8 @@ final class LeadManager
                 (int)$agent['id'],
                 'lead-' . (int)$lead['id'] . '-' . $trigger
                     . ($occasion !== null ? '-' . substr(md5($occasion), 0, 10) : '') . '-' . md5($to),
-                $briefing['html']
+                $briefing['html'],
+                $attachment
             );
         }
     }

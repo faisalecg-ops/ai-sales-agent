@@ -115,4 +115,11 @@ if (SitePages::ready()) {
     }
 }
 
+// Quotations (Stage B, 12 Nov 2026): switched on, with a mail account. The
+// runner replaces the mail transport, so nothing is really sent.
+if (Quotation::ready()) {
+    db()->update('agents', ['quote_enabled' => 1, 'quote_prefix' => 'PA27', 'mail_from_email' => 'info@pharmaasia.example',
+        'mail_from_name' => 'Pharma Asia Secretariat', 'mail_smtp_host' => 'mail.pharmaasia.example'], 'id = ?', [$id]);
+}
+
 return db()->one('SELECT * FROM agents WHERE id = ?', [$id]) ?? [];

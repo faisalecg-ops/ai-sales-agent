@@ -40,6 +40,8 @@ final class PromptBuilder
         $sections[] = self::exhibitorCase($ctx);
         $sections[] = (string)($ctx['sales_path'] ?? '');
         $sections[] = self::turnGuidance($ctx);
+        // A quotation request: what the system still needs, or that it is being sent.
+        $sections[] = (string)($ctx['quotation'] ?? '');
         $sections[] = LlmContract::instructions();
 
         $system = implode("\n\n", array_filter($sections, static fn($s) => trim((string)$s) !== ''));

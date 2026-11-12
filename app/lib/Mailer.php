@@ -18,7 +18,8 @@ final class Mailer
         string $body,
         ?int $agentId = null,
         ?string $dedupeKey = null,
-        ?string $bodyHtml = null
+        ?string $bodyHtml = null,
+        ?array $attachment = null
     ): bool {
         $to = trim($to);
         if (Validator::email($to) === null) {
@@ -33,7 +34,11 @@ final class Mailer
                 'body'       => $body,
                 'dedupe_key' => $dedupeKey !== null ? mb_substr($dedupeKey, 0, 96) : null,
                 'status'     => 'queued',
-            ]);
+            ] + ($attachment !== null && !empty($attachment['path']) ? [
+                // A file under the storage folder, sent with the message (a quotation's PDF).
+                'attachment_path' => mb_substr((string)$attachment['path'], 0, 255),
+                'attachment_name' => mb_substr((string)($attachment['name'] ?? basename((string)$attachment['path'])), 0, 120),
+            ] : []));
             return true;
         } catch (Throwable $ex) {
             // Duplicate dedupe_key means the notification is already queued — not an error.
@@ -62,7 +67,8 @@ final class Mailer
                 (string)$row['to_email'],
                 (string)$row['subject'],
                 (string)$row['body'],
-                $row['body_html'] !== null && $row['body_html'] !== '' ? (string)$row['body_html'] : null
+                $row['body_html'] !== null && $row['body_html'] !== '' ? (string)$row['body_html'] : null,
+                self::storedAttachment($row)
             );
             if ($ok) {
                 db()->update('email_outbox', [
@@ -80,6 +86,22 @@ final class Mailer
             }
         }
         return $sent;
+    }
+
+    /** The file queued with a message, read from the storage folder. A missing file never stops the message. */
+    private static function storedAttachment(array $row): array
+    {
+        $rel = (string)($row['attachment_path'] ?? '');
+        if ($rel === '' || str_contains($rel, '..')) {
+            return [];
+        }
+        $file = STORAGE_PATH . '/' . ltrim($rel, '/');
+        if (!is_file($file) || filesize($file) > 8 * 1024 * 1024) {
+            return [];
+        }
+        $name = (string)($row['attachment_name'] ?? '') ?: basename($file);
+        return [['name' => $name, 'type' => str_ends_with(strtolower($name), '.pdf') ? 'application/pdf' : 'application/octet-stream',
+                 'data' => (string)file_get_contents($file)]];
     }
 
     private static ?string $lastError = null;
@@ -102,23 +124,24 @@ final class Mailer
      * @param array{from_name:string,from_email:string,reply_to:?string,host:string,port:int,
      *              encryption:string,username:string,password:string} $profile
      * @param array<string,string> $headers extra headers, e.g. List-Unsubscribe
+     * @param array<int,array{name:string,type:string,data:string}> $attachments files sent with the message
      * @return array{ok: bool, error: ?string, message_id: string, permanent: bool}
      */
     public static function sendWith(array $profile, string $to, string $subject, string $body,
-                                    ?string $bodyHtml = null, array $headers = []): array
+                                    ?string $bodyHtml = null, array $headers = [], array $attachments = []): array
     {
         $domain = substr(strrchr((string)$profile['from_email'], '@') ?: '@localhost', 1);
         $messageId = '<' . bin2hex(random_bytes(12)) . '@' . $domain . '>';
         $headers = ['Message-ID' => $messageId] + $headers;
 
         if (self::$testTransport !== null) {
-            $result = (self::$testTransport)($profile, $to, $subject, $body, $bodyHtml, $headers);
+            $result = (self::$testTransport)($profile, $to, $subject, $body, $bodyHtml, $headers, $attachments);
             return ($result + ['ok' => false, 'error' => null, 'permanent' => false, 'uncertain' => false]) + ['message_id' => $messageId];
         }
 
         self::$lastError = null;
         self::$lastUncertain = false;
-        $ok = self::sendSmtp($to, $subject, $body, $bodyHtml, $profile, $headers);
+        $ok = self::sendSmtp($to, $subject, $body, $bodyHtml, $profile, $headers, $attachments);
         $error = $ok ? null : (string)self::$lastError;
         return [
             'ok'         => $ok,
@@ -134,12 +157,13 @@ final class Mailer
     }
 
     /** Deliver one message using the configured transport. */
-    public static function deliver(string $to, string $subject, string $body, ?string $bodyHtml = null): bool
+    public static function deliver(string $to, string $subject, string $body, ?string $bodyHtml = null,
+                                   array $attachments = []): bool
     {
         $transport = Settings::get('mail.transport', (string)cfg('mail_transport', 'mail'));
         return $transport === 'smtp'
-            ? self::sendSmtp($to, $subject, $body, $bodyHtml)
-            : self::sendMail($to, $subject, $body, $bodyHtml);
+            ? self::sendSmtp($to, $subject, $body, $bodyHtml, null, [], $attachments)
+            : self::sendMail($to, $subject, $body, $bodyHtml, $attachments);
     }
 
     /**
@@ -150,8 +174,39 @@ final class Mailer
      * @return array{headers:string,body:string}
      */
     private static function compose(string $body, ?string $bodyHtml, string $fromAddr, string $fromName,
-                                    ?string $replyTo = null, array $extra = []): array
+                                    ?string $replyTo = null, array $extra = [], array $attachments = []): array
     {
+        if ($attachments) {
+            // The message as usual, wrapped together with its files.
+            $inner = self::compose($body, $bodyHtml, $fromAddr, $fromName, $replyTo, $extra);
+            $head = [];
+            $innerType = [];
+            foreach (explode("\r\n", $inner['headers']) as $h) {
+                if (stripos($h, 'Content-Type:') === 0 || stripos($h, 'Content-Transfer-Encoding:') === 0) {
+                    $innerType[] = $h;
+                } else {
+                    $head[] = $h;
+                }
+            }
+            $boundary = 'aisa-mix-' . bin2hex(random_bytes(12));
+            $head[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+            $parts = ['--' . $boundary, implode("\r\n", $innerType), '', $inner['body'], ''];
+            foreach ($attachments as $file) {
+                $name = preg_replace('/[^A-Za-z0-9._-]/', '_', (string)($file['name'] ?? 'attachment')) ?: 'attachment';
+                $type = preg_match('~^[a-z0-9.+-]+/[a-z0-9.+-]+$~i', (string)($file['type'] ?? '')) ? (string)$file['type'] : 'application/octet-stream';
+                $parts[] = '--' . $boundary;
+                $parts[] = 'Content-Type: ' . $type . '; name="' . $name . '"';
+                $parts[] = 'Content-Transfer-Encoding: base64';
+                $parts[] = 'Content-Disposition: attachment; filename="' . $name . '"';
+                $parts[] = '';
+                $parts[] = rtrim(chunk_split(base64_encode((string)($file['data'] ?? '')), 76, "\r\n"));
+                $parts[] = '';
+            }
+            $parts[] = '--' . $boundary . '--';
+            $parts[] = '';
+            return ['headers' => implode("\r\n", $head), 'body' => implode("\r\n", $parts)];
+        }
+
         $common = [
             'From: ' . self::encodeName($fromName) . ' <' . $fromAddr . '>',
             'Reply-To: ' . ($replyTo !== null && $replyTo !== '' ? $replyTo : $fromAddr),
@@ -204,10 +259,11 @@ final class Mailer
         ];
     }
 
-    private static function sendMail(string $to, string $subject, string $body, ?string $bodyHtml = null): bool
+    private static function sendMail(string $to, string $subject, string $body, ?string $bodyHtml = null,
+                                     array $attachments = []): bool
     {
         [$fromAddr, $fromName] = self::fromAddress();
-        $message = self::compose($body, $bodyHtml, (string)$fromAddr, (string)$fromName);
+        $message = self::compose($body, $bodyHtml, (string)$fromAddr, (string)$fromName, null, [], $attachments);
         $ok = @mail($to, self::encodeSubject($subject), $message['body'], $message['headers']);
         if (!$ok) {
             self::$lastError = 'php_mail_returned_false';
@@ -219,7 +275,7 @@ final class Mailer
      * Minimal SMTP client (AUTH LOGIN over TLS). No external library.
      */
     private static function sendSmtp(string $to, string $subject, string $body, ?string $bodyHtml = null,
-                                     ?array $profile = null, array $extraHeaders = []): bool
+                                     ?array $profile = null, array $extraHeaders = [], array $attachments = []): bool
     {
         if ($profile !== null) {
             $host     = (string)$profile['host'];
@@ -317,7 +373,7 @@ final class Mailer
                 throw new RuntimeException('data');
             }
 
-            $composed = self::compose($body, $bodyHtml, (string)$fromAddr, (string)$fromName, $replyTo, $extraHeaders);
+            $composed = self::compose($body, $bodyHtml, (string)$fromAddr, (string)$fromName, $replyTo, $extraHeaders, $attachments);
             $message  = implode("\r\n", [
                 'To: <' . $to . '>',
                 'Subject: ' . self::encodeSubject($subject),

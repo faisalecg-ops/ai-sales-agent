@@ -206,6 +206,59 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $values['site_pages_enabled'] = !empty($_POST['site_pages_enabled']) ? 1 : 0;
         $values['site_sitemap_url']   = Validator::url($_POST['site_sitemap_url'] ?? null);
     }
+    // Quotations (plan part 3); saved once that upgrade has run.
+    $quoteLogoNote = null;
+    if (Migrations::columnExists('agents', 'quote_enabled')) {
+        $values['quote_enabled']    = !empty($_POST['quote_enabled']) ? 1 : 0;
+        $values['quote_prefix']     = mb_substr(strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string)($_POST['quote_prefix'] ?? '')) ?? ''), 0, 12) ?: null;
+        $values['quote_valid_days'] = max(1, min(365, (int)($_POST['quote_valid_days'] ?? 30)));
+        $values['quote_terms']      = Validator::paragraph($_POST['quote_terms'] ?? null, 2000);
+        $values['quote_footer']     = Validator::paragraph($_POST['quote_footer'] ?? null, 500);
+
+        $logoAgent = (int)($_POST['id'] ?? 0);
+        $upload = $_FILES['quote_logo_file'] ?? null;
+        if ($logoAgent > 0 && !empty($_POST['quote_logo_remove'])) {
+            $values['quote_logo'] = null;
+        }
+        if (is_array($upload) && (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $tmp  = (string)($upload['tmp_name'] ?? '');
+            $info = (int)$upload['error'] === UPLOAD_ERR_OK && is_uploaded_file($tmp) ? @getimagesize($tmp) : false;
+            if ($logoAgent <= 0) {
+                $quoteLogoNote = 'Save the exhibition first, then add the quotation logo.';
+            } elseif ($info === false || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) {
+                $quoteLogoNote = 'The quotation logo was not saved: it must be a PNG or JPG picture.';
+            } elseif ((int)$upload['size'] > 1024 * 1024) {
+                $quoteLogoNote = 'The quotation logo was not saved: it is larger than 1 MB.';
+            } else {
+                $dir = Quotation::logoDir();
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0750, true);
+                }
+                $name = 'agent-' . $logoAgent . ($info[2] === IMAGETYPE_PNG ? '.png' : '.jpg');
+                $dest = $dir . '/' . $name;
+                // A PNG saved in a way the PDF cannot place (interlaced, 16-bit)
+                // is re-saved plainly when the server can do it.
+                if (@move_uploaded_file($tmp, $dest)) {
+                    if (!PdfWriter::canPlace($dest) && function_exists('imagecreatefromstring')) {
+                        $im = @imagecreatefromstring((string)file_get_contents($dest));
+                        if ($im !== false) {
+                            imagesavealpha($im, true);
+                            imageinterlace($im, false);
+                            $info[2] === IMAGETYPE_PNG ? imagepng($im, $dest) : imagejpeg($im, $dest, 90);
+                        }
+                    }
+                    if (PdfWriter::canPlace($dest)) {
+                        $values['quote_logo'] = $name;
+                    } else {
+                        @unlink($dest);
+                        $quoteLogoNote = 'The quotation logo was not saved: please save it as an ordinary PNG or JPG and try again.';
+                    }
+                } else {
+                    $quoteLogoNote = 'The quotation logo could not be stored. Check the storage folder is writable.';
+                }
+            }
+        }
+    }
 
     // An agent with no model cannot answer anything, so fall back to the
     // provider's usual one rather than saving something unusable.
@@ -224,6 +277,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $providerProblem . ' Add it under Settings, or the assistant will show its offline message.',
             'warn'
         );
+    }
+
+    if ($quoteLogoNote !== null) {
+        admin_flash($quoteLogoNote, 'warn');
     }
 
     if ($errors) {
@@ -358,7 +415,7 @@ if ($editId > 0 || $isNew) {
            . '<code>data-auto-open="true"</code> to open it automatically.</p></div>';
     }
 
-    echo '<form method="post" class="settings-form">' . Security::csrfField()
+    echo '<form method="post" class="settings-form" enctype="multipart/form-data">' . Security::csrfField()
        . '<input type="hidden" name="id" value="' . $editId . '">'
 
        . admin_settings_nav($a)
@@ -424,6 +481,34 @@ if ($editId > 0 || $isNew) {
             . f_text('site_sitemap_url', 'Sitemap address', $v('site_sitemap_url'), ['type' => 'url',
                 'hint' => 'Leave empty to use the website address followed by /sitemap.xml.'])
             . admin_card_close() : '')
+       . (Migrations::columnExists('agents', 'quote_enabled') ? (static function () use ($v, $a): string {
+            $set  = Quotation::settings($a ?: ['name' => (string)($_POST['name'] ?? '')]);
+            $why  = $a ? Quotation::whyNot($a) : null;
+            $out  = admin_card_open('set-quotations', 'Quotations',
+                    'A one-page PDF with figures from your price list, emailed when a visitor asks the chat for a quotation.')
+                  . f_check('quote_enabled', 'Let the chat email quotations by itself', (int)($a['quote_enabled'] ?? 0) === 1,
+                        'Never for a company in Pakistan, and only when the visitor has given their name, company, email, country, and one '
+                        . 'stand option with a size that can be booked, or one sponsorship tier. At most ' . Quotation::MAX_PER_CONVERSATION
+                        . ' per conversation. Your team gets the same PDF with the lead email.');
+            if ($a && (int)($a['quote_enabled'] ?? 0) === 1 && $why !== null) {
+                $out .= '<p class="hint" style="color:var(--danger)">Not working yet: ' . e($why) . '</p>';
+            }
+            $out .= '<div class="grid grid-2">'
+                  . f_text('quote_prefix', 'Number prefix', $v('quote_prefix'), ['max' => 12,
+                        'hint' => 'Numbers look like ' . e($set['prefix']) . '-Q-0001. Leave empty to use ' . e($set['prefix']) . '.'])
+                  . f_text('quote_valid_days', 'Valid for (days)', (string)($a['quote_valid_days'] ?? 30), ['type' => 'number'])
+                  . '</div>'
+                  . f_area('quote_terms', 'Terms printed on the quotation', $v('quote_terms'), ['rows' => 5,
+                        'hint' => 'One term per line. Leave empty for the standard four terms. {days} becomes the number of days above. Do not put payment details here; they go on the invoice.'])
+                  . f_area('quote_footer', 'Footer: organiser, address, phone, website', $v('quote_footer'), ['rows' => 3,
+                        'hint' => 'First line is the company name, shown next to the Ecommerce Gateway logo. Leave empty for "' . Quotation::DEFAULT_FOOTER . '".'])
+                  . '<div class="field"><label for="f_quote_logo_file">Exhibition logo at the top of the quotation</label>'
+                  . '<input type="file" id="f_quote_logo_file" name="quote_logo_file" accept="image/png,image/jpeg">'
+                  . '<p class="hint">' . ($set['logo'] !== null ? 'A logo is saved. Choose a file only to replace it. ' : 'No logo yet. ')
+                  . 'PNG or JPG, up to 1 MB. A wide logo on a white or clear background works best.</p></div>'
+                  . ($set['logo'] !== null ? f_check('quote_logo_remove', 'Remove the saved logo', false) : '');
+            return $out . admin_card_close();
+        })() : '')
        . admin_card_open('set-voice', 'How the assistant talks', 'Who it is, what it is trying to achieve, and how it should sell.')
        . f_area('persona', 'Who the assistant is', $v('persona'), ['rows' => 5])
        . f_area('sales_objectives', 'What it is trying to achieve', $v('sales_objectives'), ['rows' => 7])
@@ -656,7 +741,7 @@ admin_layout_end();
 function admin_settings_nav(array $a): string
 {
     $links = [
-        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-score' => 'Lead score', 'set-website' => 'Website answers', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
+        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-score' => 'Lead score', 'set-website' => 'Website answers', 'set-quotations' => 'Quotations', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
         'set-disclosure' => 'AI notice', 'set-leads' => 'Leads', 'set-reps' => 'Sales reps', 'set-whatsapp' => 'WhatsApp',
     ];
     if (array_key_exists('mail_from_email', $a) || ($a === [] && Migrations::columnExists('agents', 'mail_from_email'))) {

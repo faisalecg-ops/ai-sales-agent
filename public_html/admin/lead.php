@@ -27,6 +27,49 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     Security::requireCsrf();
     $action = (string)($_POST['action'] ?? '');
 
+    // A quotation made by hand: the price list only, never typed figures,
+    // and never for a company in Pakistan (owner, 12 Nov 2026).
+    if ($action === 'quotation' || $action === 'quotation-resend') {
+        admin_require_access('manage');
+        if ($action === 'quotation-resend') {
+            $row = db()->one('SELECT * FROM quotations WHERE id = ? AND agent_id = ? AND lead_id = ?',
+                [(int)($_POST['quotation_id'] ?? 0), $agentId, $leadId]);
+            if ($row !== null && (string)$row['status'] !== 'sent') {
+                db()->update('quotations', ['attempts' => 0, 'status' => 'queued'], 'id = ?', [(int)$row['id']]);
+                $row['attempts'] = 0;
+                Quotation::send($agent, $row)
+                    ? admin_flash('Quotation ' . $row['number'] . ' was emailed to ' . $row['to_email'] . '.')
+                    : admin_flash('It could not be sent: ' . (string)db()->value('SELECT last_error FROM quotations WHERE id = ?', [(int)$row['id']]), 'error');
+            }
+            admin_redirect('admin/lead.php?id=' . $leadId . '#quotations');
+        }
+        $record = null;
+        foreach (Quotation::options($agent) as $o) {
+            if ($o['_type'] . ':' . $o['id'] === (string)($_POST['option'] ?? '')) {
+                $record = $o;
+            }
+        }
+        $sqm   = trim((string)($_POST['sqm'] ?? '')) !== '' ? (float)$_POST['sqm'] : null;
+        $email = trim((string)($_POST['email'] ?? ''));
+        $problem = Quotation::staffProblem($agent, $lead, $record, $sqm, $email);
+        if ($problem !== null) {
+            admin_flash($problem, 'error');
+        } else {
+            try {
+                $perSqm = (string)($record['pricing_mode'] ?? 'fixed') === 'per_sqm';
+                $made = Quotation::issue($agent, ['email' => $email] + $lead, null, $record, $perSqm ? $sqm : null, 'staff', (string)$user['username']);
+                (string)$made['status'] === 'sent'
+                    ? admin_flash('Quotation ' . $made['number'] . ' was emailed to ' . $made['to_email'] . '. Your team has a copy.')
+                    : admin_flash('Quotation ' . $made['number'] . ' is made, but the email has not gone out yet: '
+                        . (string)($made['last_error'] ?? 'it will be tried again in a few minutes') . '.', 'warn');
+            } catch (Throwable $ex) {
+                app_log('quotation', 'staff quotation failed', ['error' => $ex->getMessage()]);
+                admin_flash('The quotation could not be made: ' . $ex->getMessage(), 'error');
+            }
+        }
+        admin_redirect('admin/lead.php?id=' . $leadId . '#quotations');
+    }
+
     if ($action === 'status') {
         $new = (string)($_POST['status'] ?? '');
         if (LeadManager::setStatusManually($agent, $leadId, $new, (string)$user['username'])) {
@@ -136,6 +179,65 @@ echo '<div class="card"><h2>Internal note</h2>'
 echo '</div>';
 
 echo '</div>';
+
+// ---- Quotations (plan part 3) ----
+if (Quotation::ready()) {
+    $quotes = Quotation::forLead($agentId, $leadId);
+    echo '<div class="card" id="quotations"><h2>Quotations</h2>';
+    if (!$quotes) {
+        echo '<p class="muted">None yet.</p>';
+    } else {
+        echo '<table class="table"><thead><tr><th>Number</th><th>For</th><th>Total</th><th>Sent to</th><th>Status</th><th>Made</th><th></th></tr></thead><tbody>';
+        foreach ($quotes as $q) {
+            $state = (string)$q['status'];
+            echo '<tr><td><strong>' . e((string)$q['number']) . '</strong></td>'
+               . '<td>' . e((string)$q['title']) . ($q['sqm'] ? ', ' . e(rtrim(rtrim(number_format((float)$q['sqm'], 2), '0'), '.')) . ' sqm' : '') . '</td>'
+               . '<td>' . e((string)$q['total_text']) . '</td>'
+               . '<td class="small">' . e((string)$q['to_email']) . '</td>'
+               . '<td><span class="pill ' . ($state === 'sent' ? 'pill-ok' : ($state === 'failed' ? 'pill-bad' : 'pill-info')) . '">'
+               . e(Quotation::statusLabel($q)) . '</span>'
+               . ($state !== 'sent' && !empty($q['last_error']) ? '<div class="small muted">' . e((string)$q['last_error']) . '</div>' : '') . '</td>'
+               . '<td class="small">' . e(admin_time((string)$q['created_at'])) . '<div class="muted">'
+               . e((string)$q['source'] === 'staff' ? 'by ' . (string)$q['created_by'] : 'by the chat') . '</div></td>'
+               . '<td style="white-space:nowrap">'
+               . (Quotation::path($q) !== null ? '<a class="btn btn-small" href="' . e(url('admin/quotation.php?id=' . (int)$q['id'])) . '">Open PDF</a> ' : '')
+               . ($state !== 'sent' && admin_can('manage')
+                    ? '<form method="post" style="display:inline">' . Security::csrfField()
+                      . '<input type="hidden" name="action" value="quotation-resend"><input type="hidden" name="quotation_id" value="' . (int)$q['id'] . '">'
+                      . '<button class="btn btn-small" type="submit">Send again</button></form>' : '')
+               . '</td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+
+    if (admin_can('manage')) {
+        $options = Quotation::options($agent);
+        $block   = Quotation::staffProblem($agent, $lead, $options[0] ?? null, 1.0, (string)($lead['email'] ?: 'x@example.com'));
+        $hard    = $block !== null && !str_contains($block, 'size') && !str_contains($block, 'Choose one');
+        echo '<h3 style="margin-top:18px">Make a quotation</h3>';
+        if ($hard) {
+            echo '<p class="muted">' . e($block) . '</p>';
+        } elseif (!$options) {
+            echo '<p class="muted">There is no live international price in the price list to quote from.</p>';
+        } else {
+            $choices = [];
+            foreach ($options as $o) {
+                $choices[$o['_type'] . ':' . $o['id']] = $o['_name'] . ((string)($o['pricing_mode'] ?? 'fixed') === 'per_sqm'
+                    ? ' (' . PricingEngine::formatPrice((float)$o['rate_per_sqm'], strtoupper((string)$o['currency'])) . ' per sqm)'
+                    : ' (' . PricingEngine::formatPrice((float)$o['price'], strtoupper((string)$o['currency'])) . ')');
+            }
+            echo '<form method="post">' . Security::csrfField() . '<input type="hidden" name="action" value="quotation">'
+               . '<div class="grid grid-3">'
+               . f_select('option', 'Stand option or sponsorship tier', $choices, null)
+               . f_text('sqm', 'Size in sqm', '', ['hint' => 'Only for a stand priced per sqm.'])
+               . f_text('email', 'Send to', (string)$lead['email'], ['type' => 'email'])
+               . '</div><p class="hint">The figures come from the price list and cannot be typed. The PDF is emailed to this address '
+               . 'from the exhibition\'s own mail account, and your team gets the same PDF.</p>'
+               . '<button class="btn btn-small" type="submit">Make and email the quotation</button></form>';
+        }
+    }
+    echo '</div>';
+}
 
 // ---- Packages ----
 if ($packages) {

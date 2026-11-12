@@ -815,6 +815,61 @@ final class Migrations
                             ADD COLUMN site_sitemap_url VARCHAR(255) NULL",
                 ])),
             ],
+            [
+                'key'   => '2026_11_quotations',
+                'label' => 'Quotations: the PDF emailed from the chat or made from the lead page',
+                'check' => static fn(): bool => self::tableExists('quotations') && self::columnExists('agents', 'quote_enabled')
+                    && self::columnExists('email_outbox', 'attachment_path'),
+                'sql'   => array_values(array_filter([
+                    "CREATE TABLE IF NOT EXISTS quotations (
+                        id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        agent_id        INT UNSIGNED NOT NULL,
+                        lead_id         INT UNSIGNED NULL,
+                        conversation_id INT UNSIGNED NULL,
+                        seq             INT UNSIGNED NOT NULL,
+                        number          VARCHAR(40) NOT NULL,
+                        to_name         VARCHAR(160) NOT NULL DEFAULT '',
+                        to_company      VARCHAR(200) NOT NULL DEFAULT '',
+                        to_country      VARCHAR(96) NOT NULL DEFAULT '',
+                        to_email        VARCHAR(255) NOT NULL,
+                        package_type    VARCHAR(16) NOT NULL,
+                        package_id      INT UNSIGNED NOT NULL,
+                        title           VARCHAR(200) NOT NULL,
+                        sqm             DECIMAL(8,2) NULL,
+                        total_text      VARCHAR(64) NOT NULL DEFAULT '',
+                        detail          MEDIUMTEXT NULL,
+                        valid_until     DATE NULL,
+                        file_path       VARCHAR(255) NULL,
+                        status          ENUM('queued','sent','failed') NOT NULL DEFAULT 'queued',
+                        attempts        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                        last_error      VARCHAR(400) NULL,
+                        message_id      VARCHAR(255) NULL,
+                        source          ENUM('chat','staff') NOT NULL DEFAULT 'chat',
+                        created_by      VARCHAR(64) NULL,
+                        created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        sent_at         DATETIME NULL,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_quote_seq (agent_id, seq),
+                        UNIQUE KEY uq_quote_number (agent_id, number),
+                        KEY idx_quote_lead (lead_id),
+                        KEY idx_quote_conversation (conversation_id),
+                        KEY idx_quote_email (to_email, created_at),
+                        KEY idx_quote_status (status, created_at)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                    self::columnExists('agents', 'quote_enabled') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN quote_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                            ADD COLUMN quote_prefix VARCHAR(12) NULL,
+                            ADD COLUMN quote_valid_days SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+                            ADD COLUMN quote_terms TEXT NULL,
+                            ADD COLUMN quote_logo VARCHAR(120) NULL,
+                            ADD COLUMN quote_footer VARCHAR(500) NULL",
+                    self::columnExists('email_outbox', 'attachment_path') ? null :
+                        "ALTER TABLE email_outbox
+                            ADD COLUMN attachment_path VARCHAR(255) NULL,
+                            ADD COLUMN attachment_name VARCHAR(120) NULL",
+                ])),
+            ],
         ];
     }
 

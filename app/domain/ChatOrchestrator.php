@@ -151,12 +151,19 @@ final class ChatOrchestrator
             || (in_array((string)$conversation['intent'], ['exhibitor', 'sponsor', 'partner'], true)
                 && self::detectCatalogueRequest($message));
         $offerFocus = $offerQ['items'] ?: (array)($leadState['offer_focus'] ?? []);
+        // A quotation in writing (plan part 3). PHP decides whether one is
+        // wanted; it stays wanted until it is sent, so an email address given
+        // two messages later still sends it.
+        $quoteOn     = (string)($conversation['channel'] ?? 'web') !== 'whatsapp' && Quotation::available($agent);
+        $quoteWanted = $quoteOn && (!empty($leadState['quote_wanted']) || Quotation::wants($message)
+            || (!empty($leadState['quote_offered']) && Quotation::saysYes($message)));
+
         $contactRecord = ChatGuide::noteVisitorAnswer(ChatGuide::contactRecord($leadState), $message);
         $contactRule   = ChatGuide::mayAsk(
             $contactRecord,
             $turnNo,
             self::hasContactInState($leadState),
-            self::asksForUs($message)
+            self::asksForUs($message) || $quoteWanted
         );
 
         // ---- 5. Geo gate (Sections 11, 13) --------------------------------
@@ -264,12 +271,46 @@ final class ChatOrchestrator
                 $pathFlags['next_step'] = true;
             }
             $pathStep  = Qualification::step($qual, $pathFlags);
-            $salesPath = Qualification::promptBlock($qual, $pathStep, $classification === GeoClassifier::INTERNATIONAL);
+            $salesPath = Qualification::promptBlock($qual, $pathStep, $classification === GeoClassifier::INTERNATIONAL, $quoteOn);
         }
         // What the exhibition's website says about what they asked (part 5).
         $sitePages = SitePages::match($agentId, $message, 3);
 
+        // What a quotation still needs, from what is known before this reply.
+        $quoteNames  = $offerQ['items'] ?: $offerFocus;
+        $quoteAssess = null;
+        if ($quoteWanted) {
+            $known = !empty($conversation['lead_id'])
+                ? (db()->one('SELECT name, company, email FROM leads WHERE id = ?', [(int)$conversation['lead_id']]) ?? [])
+                : [];
+            foreach (['name', 'company', 'email'] as $field) {
+                if (trim((string)($known[$field] ?? '')) === '' && !empty($leadState[$field])) {
+                    $known[$field] = (string)$leadState[$field];
+                }
+            }
+            // An address typed in this very message counts.
+            if (trim((string)($known['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $message, $em)) {
+                $known['email'] = $em[0];
+            }
+            $quoteAssess = Quotation::assess($agent, $conversation, $known, $quoteNames, null, $requestedSqm);
+        }
+
+        // A quotation already sent in this chat: the assistant knows, and
+        // does not promise a second "proposal" for the same thing.
+        $quoteNote = '';
+        if ($quoteAssess !== null) {
+            $quoteNote = Quotation::promptBlock($quoteAssess);
+        } elseif ($quoteOn && !empty($leadState['quotes_sent'])) {
+            $quoteNote = "QUOTATION ALREADY SENT\nQuotation " . implode(', ', array_map('strval', (array)$leadState['quotes_sent']))
+                . " has been emailed to them from this chat. It is an offer: a stand is booked only after the signed contract and "
+                . "payment, and an invoice with payment details follows their confirmation. Do not promise another proposal for the "
+                . "same thing and do not ask them to confirm their email address again. To go ahead, they reply to that email or "
+                . "contact the sales representative.";
+        }
+
         $promptCtx = [
+            'quotation'         => $quoteNote,
+            'quotation_on'      => $quoteOn,
             'sales_path'        => $salesPath,
             'site_pages'        => $sitePages,
             'agent'             => $agent,
@@ -455,6 +496,8 @@ final class ChatOrchestrator
             'known_contact'     => is_array($input['known_contact'] ?? null) ? $input['known_contact'] : [],
             // What the next turn needs to remember (fix plan steps 1 and 2).
             'memory'            => [
+                'quote'         => ['on' => $quoteOn, 'wanted' => $quoteWanted, 'names' => $quoteNames, 'sqm' => $requestedSqm,
+                                    'reference' => $pricingAllowed ? $reference : null],
                 'on_path'       => $onPath,
                 'qual'          => $qual,
                 'qual_update'   => $onPath ? Qualification::supported(
@@ -493,9 +536,11 @@ final class ChatOrchestrator
                 static fn($k) => in_array($k, LeadManager::TRACKED_FIELDS, true),
                 ARRAY_FILTER_USE_KEY
             ));
+            $quote = (array)($turn['memory']['quote'] ?? []);
             $needsLead = $hasFields
                 || $signals['handoff_required']
                 || $turn['pricing_requested']
+                || !empty($quote['wanted'])
                 || !empty($conversation['lead_id']);
 
             if ($needsLead) {
@@ -607,12 +652,58 @@ final class ChatOrchestrator
             $pakistanAsk = (string)($conversation['pricing_country'] ?? '') === GeoClassifier::PAKISTAN
                 && in_array((string)($signals['intent'] ?? $conversation['intent']), ['exhibitor', 'sponsor', 'partner'], true)
                 && ($turn['pricing_requested'] || Qualification::asksNextStep((string)$turn['message']));
+            // When the chat sends quotations itself, the word "quotation" alone
+            // no longer needs a person: the visitor is getting what they asked.
+            $personReason = PersonRequest::detect((string)$turn['message']);
+            if ($personReason === 'A contract, payment or discount question' && !empty($quote['on']) && !empty($quote['wanted'])
+                && (string)($conversation['pricing_country'] ?? '') === GeoClassifier::INTERNATIONAL
+                && PersonRequest::detect((string)preg_replace('/\b(?:quotation|pro-?\s?forma)\b/i', ' ', (string)$turn['message'])) === null) {
+                $personReason = null;
+            }
             if ((string)($conversation['channel'] ?? 'web') !== 'whatsapp'
-                && (PersonRequest::detect((string)$turn['message']) !== null || $pakistanAsk)) {
+                && ($personReason !== null || $pakistanAsk)) {
                 $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web');
                 if ($repText !== '') {
                     $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . $repText;
                     $leadState['rep_given'] = true;
+                }
+            }
+
+            // ---- The quotation (plan part 3) --------------------------------
+            // Prepared here, inside the same save as the reply that announces
+            // it; emailed after the save, so a slow mail server holds nothing up.
+            $quoteRow = null;
+            if (!empty($quote['on'])) {
+                $leadState['quote_offered'] = !$turn['is_fallback'] && Quotation::offered((string)$turn['reply']);
+                if (!empty($quote['wanted']) && $lead !== null && !$turn['is_fallback']) {
+                    $assess = Quotation::assess($agent, $conversation, $lead, (array)($quote['names'] ?? []),
+                        $quote['reference'] ?? null, isset($quote['sqm']) ? (float)$quote['sqm'] : null);
+                    if ($assess['missing'] === null) {
+                        try {
+                            $quoteRow = Quotation::prepare($agent, $lead, $conversation, $assess['record'], $assess['sqm']);
+                            $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . 'Quotation ' . $quoteRow['number']
+                                . ' is on its way to ' . $quoteRow['to_email'] . '. It is valid until '
+                                . (string)((array)json_decode((string)$quoteRow['detail'], true))['valid'] . '.';
+                            $leadState['quote_wanted'] = false;
+                            $leadState['quote_offered'] = false;
+                            $leadState['quotes_sent'] = array_slice(array_merge((array)($leadState['quotes_sent'] ?? []), [$quoteRow['number']]), -5);
+                        } catch (Throwable $ex) {
+                            app_log('quotation', 'could not prepare', ['error' => $ex->getMessage(), 'conversation' => (int)$conversation['id']]);
+                            $leadState['quote_wanted'] = false;
+                            $handoffReason ??= 'Asked for a quotation; it could not be made automatically';
+                        }
+                    } elseif (in_array($assess['missing'], ['pakistan', 'limit'], true)) {
+                        $leadState['quote_wanted'] = false;
+                        if ($assess['missing'] === 'limit' && empty($leadState['rep_given'])) {
+                            $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web');
+                            if ($repText !== '') {
+                                $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . $repText;
+                                $leadState['rep_given'] = true;
+                            }
+                        }
+                    } else {
+                        $leadState['quote_wanted'] = true;      // waits for the missing detail
+                    }
                 }
             }
 
@@ -656,6 +747,15 @@ final class ChatOrchestrator
                 CompanyResearch::considerConversation($agent, (int)$conversation['id']);
             } catch (Throwable $ex) {
                 app_log('research', 'could not consider research', ['error' => $ex->getMessage()]);
+            }
+
+            // The quotation's email, and the team's copy with the same PDF.
+            if ($quoteRow !== null) {
+                try {
+                    Quotation::dispatch($agent, $quoteRow);
+                } catch (Throwable $ex) {
+                    app_log('quotation', 'could not send', ['number' => $quoteRow['number'], 'error' => $ex->getMessage()]);
+                }
             }
 
             // Notifications after the transaction commits.
