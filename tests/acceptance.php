@@ -5681,6 +5681,43 @@ T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION ALREADY SENT') && str_c
     'Afterwards the assistant knows a quotation was sent, and that it is an offer, not a booking');
 T::equals(1, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'An ordinary message afterwards sends nothing');
 
+// The program offers a quotation itself (owner, 13 Nov 2026: "it does not offer the quotation on any stage").
+$mock->reset();
+$mock->push(['reply' => 'It includes walls, carpet and lights. Which products would you show?', 'intent' => 'exhibitor',
+    'package_reference' => 'stall:' . $qStallId,
+    'lead_fields' => ['name' => 'Jan Vos', 'company' => 'Vos Valves BV', 'email' => 'jan@vosvalves.example']]);
+[$qConvOf, $qSecretOf] = start_conversation($qAgent);
+$qOf1 = say($qAgent, $qConvOf, $qSecretOf, 'Vos Valves BV, based in the Netherlands. I am Jan Vos, jan@vosvalves.example. What does an 18 sqm Corner Pavilion cost?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION OFFER'), 'After a price question, the assistant is told to offer a quotation');
+T::ok(str_contains(blocks_text($qOf1), 'email you an official quotation'), 'If its reply does not offer one, the program adds the offer');
+T::ok((bool)preg_match('/USD\s?7,762\.50/', blocks_text($qOf1)), 'Under the price itself');
+$qBefore = (int)db()->value('SELECT COUNT(*) FROM quotations');
+$mock->push(['reply' => 'Sending it now.', 'intent' => 'exhibitor']);
+$qOf2 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'yes');
+$qOfRow = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+T::ok((int)db()->value('SELECT COUNT(*) FROM quotations') === $qBefore + 1 && (string)$qOfRow['to_email'] === 'jan@vosvalves.example'
+    && (float)$qOfRow['sqm'] === 18.0 && (int)$qOfRow['package_id'] === $qStallId, 'A plain "yes" sends the quotation for the option and size just priced');
+T::ok(str_contains(blocks_text($qOf2), 'is on its way to jan@vosvalves.example'), 'And says so');
+
+$mock->push(['reply' => 'The next step is to confirm with our team.', 'intent' => 'exhibitor']);
+$qOf3 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'How do we go ahead with the Diamond Partner?');
+T::ok(str_contains(blocks_text($qOf3), 'email you an official quotation'), '"How do we go ahead" also brings the offer');
+$mock->push(['reply' => 'Diamond Partner is our top tier.', 'intent' => 'exhibitor']);
+$qOf4 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'What does the Diamond Partner cost?');
+T::ok(!str_contains(blocks_text($qOf4), 'email you an official quotation'), 'But at most twice in a chat');
+
+// Not offered: Pakistan, a declined request, or switched off.
+$mock->reset();
+$mock->push(['reply' => 'Our local team will share the rates.', 'intent' => 'exhibitor']);
+[$qConvOfPk, $qSecretOfPk] = start_conversation($qAgent);
+$qOfPk = say($qAgent, $qConvOfPk, $qSecretOfPk, 'Karachi Pumps, based in Pakistan. What does an 18 sqm Corner Pavilion cost?');
+T::ok(!str_contains(blocks_text($qOfPk), 'quotation') && !str_contains($mock->lastSystemPrompt(), 'QUOTATION OFFER'), 'Never offered to a company in Pakistan');
+$qOfFile = Quotation::path($qOfRow);
+if ($qOfFile !== null) { @unlink($qOfFile); }
+db()->exec('DELETE FROM quotations WHERE id = ?', [(int)$qOfRow['id']]);
+db()->exec('DELETE FROM email_outbox WHERE attachment_name = ?', [(string)$qOfRow['number'] . '.pdf']);
+db()->exec('ALTER TABLE quotations AUTO_INCREMENT = 1');
+
 // Asked for, then they would rather not give an email: dropped, never pressed.
 $mock->reset();
 $mock->push(['reply' => 'Certainly. Which email address should I send it to?', 'intent' => 'exhibitor']);
@@ -5829,6 +5866,9 @@ $mock->push(['reply' => 'Our team will prepare a proposal for you.', 'intent' =>
 say($qAgentOff, $qConvOff, $qSecretOff, 'Lind Bygg AB, based in Sweden. I am Eva Lind, eva@lindbygg.example. Send me a quotation for 18 sqm Corner Pavilion.');
 T::equals($qCount, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Switched off: the chat sends no quotation');
 T::ok(!str_contains($mock->lastSystemPrompt(), "QUOTATION (this overrides"), 'And the assistant is not told about quotations');
+$mock->push(['reply' => 'It is USD 6,750 plus VAT.', 'intent' => 'exhibitor', 'package_reference' => 'stall:' . $qStallId]);
+$qOfOff = say($qAgentOff, reload_conversation($qConvOff), $qSecretOff, 'What does an 18 sqm Corner Pavilion cost?');
+T::ok(!str_contains(blocks_text($qOfOff), 'official quotation'), 'Switched off: no quotation is offered either');
 
 // Tidy up, so later groups see the agent as before.
 Mailer::$testTransport = null;

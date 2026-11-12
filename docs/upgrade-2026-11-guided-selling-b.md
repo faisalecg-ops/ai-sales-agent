@@ -35,6 +35,12 @@ All of these must be true:
 3. that price is live and approved in the price list;
 4. name, company and email address are known.
 
+**The chat offers a quotation itself** (added 13 Nov 2026, after the owner found it never offered one):
+after it shows a price to a company outside Pakistan, and when the visitor asks how to go ahead. If the
+AI's reply does not offer it, the program adds: *"I can also email you an official quotation for this.
+Just reply "yes"."* A plain "yes" then sends the quotation for the option and size just priced. It is
+offered at most twice in a chat, and never again once the visitor has declined to give their details.
+
 If one thing is missing, the assistant asks for that one thing. A size that cannot be booked (20 sqm):
 it offers the nearest sizes first. The request is remembered, so an email address given two messages
 later still sends the quotation.
@@ -100,7 +106,8 @@ The Backup Manager has a note about them.
    - check the prefix (PA27) and the days (30);
    - type the footer lines: company name, address, phone, website;
    - leave the terms empty for the standard four, or type your own;
-   - tick **Let the chat email quotations by itself**. Save.
+   - tick **Let the chat email quotations by itself**. Save. The card then shows **On**.
+     **Until this box is ticked, the chat never offers or sends a quotation.**
 7. Check **Sales reps → International** is filled: that person is "Your contact" on every quotation.
 8. Check **Prospect emails** has Pharma Asia's own mail account: quotations are sent through it.
 9. Test: open a lead from outside Pakistan → Quotations → make one to your own address. Read the PDF.
@@ -110,7 +117,7 @@ The Backup Manager has a note about them.
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,525 pass (108 new for Stage B).
+- `php tests/acceptance.php`: 1,534 pass (117 new for Stage B).
 - `php tests/access-http.php`: 82 pass.
 - Sample PDFs checked by eye: a stand and a sponsorship tier, with the Pharma Asia logo.
 - Real GPT-6 Luna and Tavily, 12 Nov 2026: all 22 chats, 45 of 49 replies passed on the full run.
@@ -125,4 +132,6 @@ The Backup Manager has a note about them.
   - chat 1: "Bartels" with no website; research did not finish inside the 14-second wait (the search service
     took 6.6 s tonight instead of about 3 s), so the first reply asked about their aim instead. Not a fault of
     this update; the research finished straight after and was used from the next reply.
+  13 Nov 2026, after adding the offer: chats 16, 20, 23 and 24 run again, 15 of 15 replies pass. The assistant
+  offered the quotation after the price and after "what is the next step?", and "yes" sent it.
   Transcript: `docs/reference/chat-tests-2026-11-12-quotations.txt`.

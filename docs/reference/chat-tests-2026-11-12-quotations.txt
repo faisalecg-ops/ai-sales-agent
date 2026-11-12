@@ -458,3 +458,94 @@ Replies passed: 3   failed: 1
   (research: done, poor)
 
 Replies passed: 5   failed: 0
+
+==================================================================
+13 Nov 2026: after the owner found the chat never offered a quotation, the program offers it after a price and when they ask how to go ahead. Chats 23, 24, 16 and 20 run again:
+
+=== 23. The assistant offers a quotation itself after a price, and "yes" sends it
+  (introduction card: {"first_name":"Lena","company":"Alpen Dosiertechnik GmbH","country":"AT","interest":"exhibit"}, answered in 15.8 s)
+  ASSISTANT: Thanks, Lena. What would you most want to achieve by exhibiting at Pharma Asia 2027?
+  PASS
+  VISITOR: What does an 18 sqm shell scheme stall cost? My email is lena.huber@alpen-dosier.example
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             It includes:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: yes
+  ASSISTANT: The quotation for the Shell Scheme Stall at 18 sqm is being emailed to you now.
+             Quotation PA27-Q-0001 is on its way to lena.huber@alpen-dosier.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 3   failed: 0
+
+=== 24. "How do we go ahead?" brings the offer of a quotation
+  (introduction card: {"first_name":"Omar","company":"Gulf Pharma Packaging LLC","country":"AE","interest":"exhibit"}, answered in 15.1 s)
+  ASSISTANT: Thanks, Omar. Packaging is a good fit for Pharma Asia, where exhibitors meet pharmaceutical manufacturers looking for packaging machinery and materials. What would you most want to achieve by exhibiting?
+  PASS
+  VISITOR: We make blister foils. What does a 27 sqm shell scheme stall cost?
+  ASSISTANT: The Shell Scheme Stall includes:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Shell Scheme Stall, 27 sqm: USD 10,125 (USD 11,643.75 with 15% VAT)
+             Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 10,125]
+  PASS
+  VISITOR: Sounds good. How do we go ahead?
+  ASSISTANT: I can arrange a written quotation for the 27 sqm Shell Scheme Stall. What email address should I send it to?
+             [card: Shell Scheme Stall USD 10,125]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 3   failed: 0
+
+=== 16. The guided path: one question at a time, to a next step
+  (introduction card: {"first_name":"Klaus","company":"Sensorik Pumps GmbH","country":"DE","interest":"exhibit"}, answered in 15.2 s)
+  ASSISTANT: Thanks, Klaus. Pumps are relevant to the event’s focus on equipment for pharmaceutical plants. What would you most want to achieve by exhibiting?
+  PASS
+  VISITOR: We make dosing pumps and flow sensors for pharma filling lines. I am the export manager.
+  ASSISTANT: Thanks, Klaus. Dosing pumps and flow sensors for pharma filling lines fit the event’s focus on pumps, sensors and automation. What would you most want to achieve by exhibiting?
+  PASS
+  VISITOR: We sell in Europe and the Gulf. Nothing in Pakistan yet. We want to find a distributor.
+  ASSISTANT: That sounds like a relevant goal: Pharma Asia brings pharmaceutical manufacturers, distributors and trade visitors together, and exhibitors use it to appoint distributors. What products would you want to showcase at the exhibition?
+  PASS
+  VISITOR: What stand would suit us, and what does it cost?
+  ASSISTANT: For a specialist supplier entering Pakistan for the first time and looking to meet distributors, I’d suggest the Shell Scheme Stall as a straightforward way to present your products. It includes walls and a fascia board with your company name, carpet, one table and two chairs, lights and a power socket. Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 3,375]
+  PASS
+  VISITOR: Good. What is the next step?
+  ASSISTANT: The next step is for our team to prepare and email an official quotation for the Shell Scheme Stall. Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 3,375]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 5   failed: 0
+
+=== 20. A quotation asked in one message, the email given in the next
+  (introduction card: {"first_name":"Klaus","company":"Sensorik Pumps GmbH","country":"DE","interest":"exhibit"}, answered in 8.2 s)
+  ASSISTANT: Thanks, Klaus. Pumps are relevant to the exhibition, particularly as pharmaceutical manufacturers upgrade their plants to international standards. What does Sensorik Pumps GmbH make?
+  PASS
+  VISITOR: Please send me a quotation for an 18 sqm shell scheme stall.
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             What email address should we send the quotation to?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: klaus.meyer@sensorik-pumps.example
+  ASSISTANT: The quotation for Shell Scheme Stall at 18 sqm is being emailed to you now.
+             Quotation PA27-Q-0001 is on its way to klaus.meyer@sensorik-pumps.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: Thanks. Is the stand reserved for me now?
+  ASSISTANT: No, the stand is not reserved. The quotation is an offer; a stand is booked only after the signed contract and payment, with an invoice and payment details following your confirmation. To proceed, reply to the quotation email or contact your sales representative.
+  PASS
+  (research: done, poor)
+
+Replies passed: 4   failed: 0

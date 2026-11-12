@@ -492,6 +492,12 @@ if ($editId > 0 || $isNew) {
                         . ' per conversation. Your team gets the same PDF with the lead email.');
             if ($a && (int)($a['quote_enabled'] ?? 0) === 1 && $why !== null) {
                 $out .= '<p class="hint" style="color:var(--danger)">Not working yet: ' . e($why) . '</p>';
+            } elseif ($a && (int)($a['quote_enabled'] ?? 0) === 1) {
+                $out .= '<p class="hint"><span class="pill pill-ok">On</span> The chat offers a quotation after showing a price, '
+                      . 'and when a visitor asks how to go ahead.</p>';
+            } elseif ($a) {
+                $out .= '<p class="hint"><span class="pill">Off</span> The chat neither offers nor sends quotations. '
+                      . 'Tick the box above and save to switch them on.</p>';
             }
             $out .= '<div class="grid grid-2">'
                   . f_text('quote_prefix', 'Number prefix', $v('quote_prefix'), ['max' => 12,

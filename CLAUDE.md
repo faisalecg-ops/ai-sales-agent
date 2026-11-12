@@ -167,8 +167,13 @@ Read this before any task on this project.
   `quotation.php` (opens a PDF), lead page Quotations card. Rules: international only and country from the
   visitor's own words (never IP), never Pakistan, approved live prices only, 3 per conversation, 5 per address
   per day, no payment details, no BCC (team notification `quotation` carries the PDF), the reply line
-  "Quotation N is on its way to …" is written by PHP. Acceptance tests 1,525. Real-AI chats 1 to 22 run 12 Nov (`docs/reference/chat-tests-2026-11-12-quotations.txt`).
+  "Quotation N is on its way to …" is written by PHP. Acceptance tests 1,534. Real-AI chats 1 to 24 run 12 Nov (`docs/reference/chat-tests-2026-11-12-quotations.txt`).
   A request is dropped when the visitor declines to give details, and let go after two replies without the missing detail.
+  **13 Nov 2026 (owner: "it does not offer the quotation on any stage"):** the program now offers it after a price
+  card or "how do we go ahead" (prompt section QUOTATION OFFER, plus a PHP line when the reply lacks one), at most
+  twice per chat; `lead_state.quote_last_ref` lets a plain "yes" quote the option just priced. Tests 1,534.
+  Note: five prospecting tests fail only in the first ~20 minutes after Karachi midnight (they move records back
+  20 minutes); the live daily limits are correct.
   The quotation email's Message-ID is kept in `quotations.message_id` for Stage C.
   **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
   prospect-campaign replies left out for now. It waits for the owner to try Stage B.

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, and 20 to 22 for quotations, Stage B (12 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, and 20 to 24 for quotations, Stage B (12-13 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -255,6 +255,29 @@ return [
             ['say' => 'We are interested in the Gold Partner sponsorship. My email is wei.zhang@shtablet.example. Can I have a quotation?',
                 'must' => ['the quotation is on its way' => '/Quotation PA27-Q-\d{4} is on its way to wei\.zhang@shtablet\.example/'],
                 'must_not' => ['says it is booked' => '/\b(?:booked|reserved)\b/']],
+        ],
+    ],
+    [
+        'name'  => '23. The assistant offers a quotation itself after a price, and "yes" sends it',
+        'intro' => ['first_name' => 'Lena', 'company' => 'Alpen Dosiertechnik GmbH', 'country' => 'AT', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null],
+            ['say' => 'What does an 18 sqm shell scheme stall cost? My email is lena.huber@alpen-dosier.example',
+                'must' => ['the price' => ANY_PRICE, 'offers a quotation' => '/quotation/'],
+                'must_not' => ['claims it was sent' => '/Quotation PA27-Q-/']],
+            ['say' => 'yes',
+                'must' => ['the quotation is on its way' => '/Quotation PA27-Q-\d{4} is on its way to lena\.huber@alpen-dosier\.example/']],
+        ],
+    ],
+    [
+        'name'  => '24. "How do we go ahead?" brings the offer of a quotation',
+        'intro' => ['first_name' => 'Omar', 'company' => 'Gulf Pharma Packaging LLC', 'country' => 'AE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => null],
+            ['say' => 'We make blister foils. What does a 27 sqm shell scheme stall cost?',
+                'must' => ['the price' => ANY_PRICE]],
+            ['say' => 'Sounds good. How do we go ahead?',
+                'must' => ['offers a quotation' => '/quotation/']],
         ],
     ],
 ];

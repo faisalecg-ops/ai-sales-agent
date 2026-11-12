@@ -126,7 +126,7 @@ final class Quotation
     {
         return (bool)preg_match(
             '/^\W*(?:yes|yeah|yep|sure|ok(?:ay)?|please(?:\s+do)?|go\s+ahead|that\s+would\s+be\s+(?:good|great|helpful)|sounds\s+good|'
-            . 'yes\s+please|please\s+send(?:\s+it)?|send\s+it)\b/i',
+            . 'yes\s+please|please\s+send(?:\s+it)?|send\s+it|please\s+(?:email|e-mail)\s+it|(?:email|e-mail)\s+it)\b/i',
             trim($message)
         );
     }

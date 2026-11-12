@@ -306,11 +306,26 @@ final class ChatOrchestrator
             if (trim((string)($known['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $message, $em)) {
                 $known['email'] = $em[0];
             }
-            $quoteAssess = Quotation::assess($agent, $conversation, $known, $quoteNames, null, $requestedSqm);
+            $quoteAssess = Quotation::assess($agent, $conversation, $known, $quoteNames,
+                $quoteNames === [] || count($quoteNames) > 1 ? ($leadState['quote_last_ref'] ?? null) : null, $requestedSqm);
         }
 
         // A quotation already sent in this chat: the assistant knows, and
         // does not promise a second "proposal" for the same thing.
+        // Offering a quotation (owner, 13 Nov 2026: "it does not offer the
+        // quotation on any stage"). The program offers it, not the AI: after
+        // a price is shown, or when they ask how to go ahead. Twice at most in
+        // a chat, never after they declined, never for Pakistan or an unknown
+        // country, and not once three have been sent.
+        $quoteCanOffer = $quoteOn && !$quoteWanted && !$quoteDropped
+            && empty($leadState['quote_declined']) && empty($contactRecord['stopped'])
+            && $classification === GeoClassifier::INTERNATIONAL && $pricingAllowed
+            && (string)($conversation['country_source'] ?? '') === GeoClassifier::SOURCE_DISCLOSED
+            && count((array)($leadState['quotes_sent'] ?? [])) < Quotation::MAX_PER_CONVERSATION
+            && (int)($leadState['quote_offers'] ?? 0) < 2;
+        $quoteNextStep = Qualification::asksNextStep($message);
+        $quoteOfferDue = $quoteCanOffer && ($pricingRequested || $quoteNextStep);
+
         $quoteNote = '';
         if ($quoteAssess !== null) {
             $quoteNote = Quotation::promptBlock($quoteAssess);
@@ -318,6 +333,10 @@ final class ChatOrchestrator
             $quoteNote = "QUOTATION\nThey asked for a quotation earlier but do not want to give the details it needs. Accept that in a few "
                 . "words and do not ask again. A quotation cannot be emailed without an address; they can go ahead through the Book "
                 . "a stand page or the sales representative whenever they wish. Keep helping with what they ask.";
+        } elseif ($quoteOfferDue) {
+            $quoteNote = "QUOTATION OFFER\nThe system can email them an official quotation (a PDF from the price list) for one option. "
+                . "End this reply by offering it, as your only question, in these words or close to them: "
+                . "\"Would you like me to email you a quotation for this?\" Do not write the quotation's figures yourself.";
         } elseif ($quoteOn && !empty($leadState['quotes_sent'])) {
             $quoteNote = "QUOTATION ALREADY SENT\nQuotation " . implode(', ', array_map('strval', (array)$leadState['quotes_sent']))
                 . " has been emailed to them from this chat. It is an offer: a stand is booked only after the signed contract and "
@@ -515,8 +534,12 @@ final class ChatOrchestrator
             // What the next turn needs to remember (fix plan steps 1 and 2).
             'memory'            => [
                 'quote'         => ['on' => $quoteOn, 'wanted' => $quoteWanted, 'asked' => $quoteAsked, 'dropped' => $quoteDropped,
+                                    'can_offer' => $quoteCanOffer, 'next_step' => $quoteNextStep,
                                     'names' => $quoteNames, 'sqm' => $requestedSqm,
-                                    'reference' => $pricingAllowed ? $reference : null],
+                                    // This turn's option, or the one whose price card was shown last.
+                                    'reference' => $pricingAllowed
+                                        ? ($reference ?? ($quoteNames === [] || count($quoteNames) > 1 ? ($leadState['quote_last_ref'] ?? null) : null))
+                                        : null],
                 'on_path'       => $onPath,
                 'qual'          => $qual,
                 'qual_update'   => $onPath ? Qualification::supported(
@@ -694,6 +717,20 @@ final class ChatOrchestrator
             $quoteRow = null;
             if (!empty($quote['on'])) {
                 $leadState['quote_offered'] = !$turn['is_fallback'] && Quotation::offered((string)$turn['reply']);
+                // The offer is certain: if a price was shown (or they asked how
+                // to go ahead) and the reply does not offer a quotation, the
+                // program adds one line. "Yes" to it then sends the quotation.
+                if (!empty($quote['can_offer']) && !$turn['is_fallback'] && empty($quote['wanted'])
+                    && ($turn['cards'] || !empty($quote['next_step']))) {
+                    if (!$leadState['quote_offered'] && !preg_match('/\bquot(?:ation|e)\b/i', (string)$turn['reply'])) {
+                        $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . 'I can also email you an official quotation for this. Just reply "yes".';
+                    }
+                    $leadState['quote_offered'] = true;
+                    $leadState['quote_offers']  = (int)($leadState['quote_offers'] ?? 0) + 1;
+                }
+                if ($turn['cards'] && !empty($turn['cards'][0]['reference'])) {
+                    $leadState['quote_last_ref'] = (string)$turn['cards'][0]['reference'];
+                }
                 if (!empty($quote['asked'])) {
                     unset($leadState['quote_declined']);
                 }
