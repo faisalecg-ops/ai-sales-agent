@@ -5558,6 +5558,29 @@ if ($pgName !== '') {
 $mock->reset();
 
 // =====================================================================
+// The optional company website on the chat card (owner, 12 Nov 2026)
+// =====================================================================
+T::group('Chat card: optional company website');
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Anna.', 'intent' => 'exhibitor']);
+$cwSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$cw = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$cwSt['conversation']['session_id'],
+    'session_secret' => $cwSt['session_secret'], 'first_name' => 'Anna', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit',
+    'website' => 'https://www.Bartels-Mikrotechnik.de/en/products']);
+T::ok(!empty($cw['ok']), 'A card with a website is accepted');
+$cwState = ConversationStore::leadState(reload_conversation($cwSt['conversation']));
+T::equals('bartels-mikrotechnik.de', (string)($cwState['website'] ?? ''), 'The website is kept as a plain address, for the research');
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Ben.', 'intent' => 'exhibitor']);
+$cwSt2 = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$cw2 = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$cwSt2['conversation']['session_id'],
+    'session_secret' => $cwSt2['session_secret'], 'first_name' => 'Ben', 'company' => 'Rhein Beton', 'country' => 'DE', 'interest' => 'exhibit',
+    'website' => 'we have no site']);
+T::ok(!empty($cw2['ok']), 'The website is optional: words that are not an address do not stop the card');
+T::ok(empty(ConversationStore::leadState(reload_conversation($cwSt2['conversation']))['website']), 'And are not kept as a website');
+$mock->reset();
+
+// =====================================================================
 // Blocked countries (owner, 12 Nov 2026)
 // =====================================================================
 T::group('Blocked countries: one list, closed in every part');

@@ -337,3 +337,16 @@ Replies passed: 1   failed: 0
   (research: done, direct)
 
 Replies passed: 1   failed: 0
+
+==================================================================
+Chat 19 (optional company website on the card), run four times:
+Test chats — 2026-11-12 12:34 UTC — Pharma Asia — openai / gpt-6-luna
+
+=== 19. Bartels with the website given on the card: the right Bartels
+  (introduction card: {"first_name":"Creasida","company":"Bartels","country":"DE","interest":"exhibit","website":"bartels-mikrotechnik.de"}, answered in 15.6 s)
+  ASSISTANT: Thanks, Creasida. What would you most want to achieve by exhibiting at Pharma Asia 2027?
+  FAIL: missing: knows what they make
+  (research: done, strong)
+
+Replies passed: 0   failed: 1
+(three more runs: all PASS, research strong, answered in 10.4 to 11.4 s)

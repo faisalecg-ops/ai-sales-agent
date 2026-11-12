@@ -146,7 +146,8 @@ Read this before any task on this project.
   Hot/Warm/Nurture/Low, the eight-step path; weights and target countries per exhibition), `SitePages` (weekly
   sitemap reading into `site_pages`, answers with links, only known links, never prices from the website),
   admin `website.php`. Pakistan price or quotation ask: no price, the local rep's details are added.
-  Acceptance tests 1,413. Real-AI test chats 1 to 18 run on 12 Nov 2026 (GPT-6 Luna + Tavily); transcript
+  The chat card has an optional **Company website** box (`lead_state.website`, used by research to tell
+  same-name companies apart). Acceptance tests 1,417. Real-AI test chats 1 to 18 run on 12 Nov 2026 (GPT-6 Luna + Tavily); transcript
   `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
   **Blocked countries (owner, 12 Nov 2026, in the same package):** one list for all exhibitions, Set-up →
   Blocked countries (`BlockedCountries`, setting `blocked_countries`, ISO codes). Not on the chat card; a chat

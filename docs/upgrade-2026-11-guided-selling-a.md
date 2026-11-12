@@ -89,6 +89,12 @@ checked in `ChatOrchestrator::process`, `ChatIntro`, `api/contact.php`, `Company
 and `WhatsAppEngine::blockedReason` (which every email and WhatsApp send already passes through).
 No database step.
 
+### 5. Company website on the chat card (owner, 12 November 2026)
+
+The first card has a new box, **Company website (optional)**. It is never required. When filled, the
+research starts from that website, so two companies of the same name are not mixed up. Words that are
+not a website address are ignored. Files: `widget.js`, `api/intro.php`, `ChatIntro.php`.
+
 ## Files in `salesagent-update-2026-11-guided-selling-a.zip` (36)
 
 New: `app/domain/Qualification.php`, `app/domain/SitePages.php`, `public_html/admin/website.php`,
@@ -133,14 +139,15 @@ Nothing changes for /social or the Backup Manager: no folder moved, no upload fo
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,413 pass (60 new for Stage A, 30 for blocked countries, 4 for the guaranteed price line).
+- `php tests/acceptance.php`: 1,417 pass (60 new for Stage A, 30 for blocked countries, 4 for the guaranteed price line, 4 for the website box).
 - `php tests/access-http.php`: 82 pass.
 - **The 18 written test chats with the real GPT-6 Luna and Tavily (12 Nov 2026):** 38 of 39 replies passed on the full run. The one miss (chat 11: a 27 sqm price asked, the reply listed what the stall includes but no price) is fixed: a price asked for one named option now always carries its price line and card, from the price record. Re-run after the fix: chats 7, 8, 11 (twice), 12 and 15 all pass.
   Transcript: `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
 - Found and fixed by the real-AI run: a visitor in Pakistan asking "is registration free?" was given
   the sales rep's details. They are now added only for a possible exhibitor, sponsor or partner.
-- **Known limit, not a fault of this update:** a company that gives only a one-word name can be mixed
-  up with another company of the same name. "Bartels, Germany" was read once as Bartels Mikrotechnik
-  (micropumps) and once as a Bartels that makes storage racking. The assistant says what it
-  understood ("I understand Bartels makes…"), so the visitor can correct it. Asking for the website address on the card would remove the mix-up; say if you want that.
+- **Same-name companies (fixed 12 Nov, owner's choice):** "Bartels, Germany" was read once as Bartels
+  Mikrotechnik (micropumps) and once as a Bartels that makes storage racking. The chat's first card now has
+  a **Company website (optional)** box. With the website given, research picked the right company in 4 of 4
+  real-AI runs (test chat 19; 3 of 4 before the first reply, one finished just after it because the search
+  was slow). Without a website, the assistant still says what it understood, so the visitor can correct it.
 - The test keys were used from memory only and are not stored anywhere in the workspace or the repository.

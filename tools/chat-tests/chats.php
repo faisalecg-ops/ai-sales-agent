@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 18 for guided selling, Stage A (12 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A (12 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -208,6 +208,14 @@ return [
             ['say' => 'Where can I see the floor plan?',
                 'must' => ['the page' => '~pharmaasia\.com\.pk/floor-plan~'],
                 'must_not' => ['an invented page' => '~pharmaasia\.com\.pk/(?!floor-plan|register-to-visit|book-a-stand|exhibitor-list)[a-z]~']],
+        ],
+    ],
+    [
+        'name'  => '19. Bartels with the website given on the card: the right Bartels',
+        'intro' => ['first_name' => 'Creasida', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit', 'website' => 'bartels-mikrotechnik.de'],
+        'turns' => [
+            ['say' => null, 'must' => ['knows what they make' => '/micro|pump|sensor|valve|fluid/'],
+                'must_not' => ['the other Bartels' => '/rack|shelving|warehouse/', 'a price' => ANY_PRICE]],
         ],
     ],
 ];

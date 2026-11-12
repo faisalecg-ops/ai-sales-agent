@@ -77,6 +77,13 @@ final class ChatIntro
         if ($countryName !== null) {
             $leadState['company_country'] = $countryName;
         }
+        // Optional company website (owner, 12 Nov 2026). It tells research
+        // which company this is when several share the name. Anything that
+        // is not a website address is simply left out, never refused.
+        $website = CompanyStore::normaliseDomain(self::text($input['website'] ?? null, 160));
+        if ($website !== null && str_contains($website, '.') && empty($leadState['website'])) {
+            $leadState['website'] = $website;
+        }
 
         ConversationStore::update($conversation, [
             'lead_state' => json_encode($leadState, JSON_UNESCAPED_UNICODE),

@@ -916,6 +916,10 @@
 
     var firstName = textField('first_name', 'First name', 'given-name');
     var company = textField('company', 'Company', 'organization');
+    // Optional (owner, 12 Nov 2026): tells two companies of the same name apart.
+    var website = textField('website', 'Company website (optional)', 'url');
+    website.setAttribute('inputmode', 'url');
+    website.placeholder = 'www.yourcompany.com';
 
     var cWrap = el('div', 'field');
     var cLab = el('label', null, 'Country your company is based in');
@@ -1042,6 +1046,7 @@
         visitor_id: visitorId(),
         first_name: name,
         company: org,
+        website: website.value.trim(),
         country: code,
         interest: interest,
         company_website_hp: ihp.value

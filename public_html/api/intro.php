@@ -40,6 +40,7 @@ try {
         'session_secret' => (string)($input['session_secret'] ?? ''),
         'first_name'     => $input['first_name'] ?? null,
         'company'        => $input['company'] ?? null,
+        'website'        => $input['website'] ?? null,
         'country'        => $input['country'] ?? null,
         'interest'       => $input['interest'] ?? null,
         'origin'         => $ctx['origin'],
