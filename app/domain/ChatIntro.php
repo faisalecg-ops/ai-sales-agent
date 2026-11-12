@@ -51,7 +51,7 @@ final class ChatIntro
         if (!in_array($interest, self::INTERESTS, true)) {
             return self::refuse('Please choose whether you are interested in exhibiting or visiting.');
         }
-        if ($country !== '' && CountryData::name($country) === null) {
+        if ($country !== '' && (CountryData::name($country) === null || BlockedCountries::blocks($country))) {
             return self::refuse('Please choose your country from the list.');
         }
         // An exhibitor's company and country decide what they are offered
@@ -240,8 +240,9 @@ final class ChatIntro
         $all = CountryData::COUNTRIES;
         asort($all, SORT_NATURAL | SORT_FLAG_CASE);
         $out = [['PK', $all['PK'] ?? 'Pakistan']];
+        $blocked = BlockedCountries::codes();
         foreach ($all as $code => $name) {
-            if ($code !== 'PK') {
+            if ($code !== 'PK' && !in_array($code, $blocked, true)) {
                 $out[] = [$code, $name];
             }
         }

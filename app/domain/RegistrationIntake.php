@@ -131,7 +131,7 @@ final class RegistrationIntake
 
         // Decided once the company is known, so a company on the do-not-
         // contact list is honoured for everyone who works there.
-        $state = self::decideState($agentId, $onsite, $phone, $consent, $email, $companyId);
+        $state = self::decideState($agentId, $onsite, $phone, $consent, $email, $companyId, $country);
 
         // Attach to a lead only if one already exists for this person.
         $leadId = null;
@@ -219,7 +219,8 @@ final class RegistrationIntake
             $state = $keep ? (string)$row['whatsapp_state'] : self::decideState(
                 $agentId, (int)$row['onsite'] === 1, $read['number'], (string)$row['consent_whatsapp'],
                 $row['email'] ?? null,
-                isset($row['company_id']) ? (int)$row['company_id'] : null
+                isset($row['company_id']) ? (int)$row['company_id'] : null,
+                $row['country'] ?? null
             );
 
             db()->update('registrations', [
@@ -279,7 +280,8 @@ final class RegistrationIntake
         ?string $phone,
         string $consent,
         ?string $email = null,
-        ?int $companyId = null
+        ?int $companyId = null,
+        ?string $country = null
     ): string {
         if ($onsite) {
             return 'onsite';
@@ -289,7 +291,7 @@ final class RegistrationIntake
         }
         // Every kind of block, not only the number: an address or a whole
         // company on the do-not-contact list covers this person too.
-        if (WhatsAppEngine::blockedReason($agentId, $phone, $email, $companyId) !== null) {
+        if (WhatsAppEngine::blockedReason($agentId, $phone, $email, $companyId, $country) !== null) {
             return 'suppressed';
         }
         if ($consent !== 'yes') {

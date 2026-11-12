@@ -1,0 +1,12 @@
+Test chats — 2026-11-12 11:34 UTC — Pharma Asia — openai / gpt-6-luna
+
+=== 18. A question about the website: the answer and the right link
+  (introduction card: {"first_name":"Sana","company":"City Hospital Pharmacy","country":"PK","interest":"visit"}, answered in 1.5 s)
+  VISITOR: How do I register as a visitor? Is it free?
+  ASSISTANT: Trade visitors can register online free of charge. Fill in the form with your name, company and mobile number; your visitor badge will be sent by email and scanned at the entrance: pharmaasia.com.pk (https://pharmaasia.com.pk/register-to-visit/)
+  PASS
+  VISITOR: Where can I see the floor plan?
+  ASSISTANT: You can view and download the floor plan for the Karachi Expo Centre halls here: pharmaasia.com.pk (https://pharmaasia.com.pk/floor-plan/)
+  PASS
+
+Replies passed: 2   failed: 0

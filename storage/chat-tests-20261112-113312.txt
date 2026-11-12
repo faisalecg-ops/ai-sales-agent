@@ -1,0 +1,20 @@
+Test chats — 2026-11-12 11:32 UTC — Pharma Asia — openai / gpt-6-luna
+
+=== 17. A company in Pakistan asks for a quotation: the local rep, no price
+  (introduction card: {"first_name":"Bilal","company":"Lahore Packaging Works","country":"PK","interest":"exhibit"}, answered in 14.2 s)
+  VISITOR: Please send me a quotation for a 9 sqm shell scheme stall.
+  ASSISTANT: A 9 sqm Shell Scheme Stall includes:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Our sales representative will provide the correct rates and an official proposal. Please share your email address or phone number so the team can reach you.
+             You can also reach them directly:
+             Farhan Mobeen, Senior Manager Sales
+             Mobile: +923152228225
+             WhatsApp: +923152228225
+             Email: farhan@ecgateway.info
+  PASS
+  (research: done, poor)
+
+Replies passed: 1   failed: 0

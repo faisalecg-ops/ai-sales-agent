@@ -439,7 +439,8 @@ final class Prospecting
         $state = 'discovered';
         $note  = null;
         if (!CompanyStore::isContactable($agentId, $company)) {
-            [$state, $note] = ['do_not_contact', 'The company is marked do not contact.'];
+            [$state, $note] = ['do_not_contact', BlockedCountries::blocksCompany($agentId, $company)
+                ? 'The company is in a blocked country.' : 'The company is marked do not contact.'];
         } elseif ($made['created'] && array_filter($made['duplicates'], static fn($d) => $d['strength'] === 'likely')) {
             [$state, $note] = ['duplicate_review', 'Looks like a company already on file: '
                 . (string)$made['duplicates'][0]['company']['name'] . ' (' . $made['duplicates'][0]['reason'] . ').'];

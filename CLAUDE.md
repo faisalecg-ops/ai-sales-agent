@@ -140,13 +140,22 @@ Read this before any task on this project.
   with GPT-6 Luna + Tavily on 12 Nov 2026; research wait default 14 s (research ~9 s while waiting).
 - **Guided selling plan (owner approved 12 Nov 2026):** Claude doc "AI Sales Agent — Guided selling,
   quotations and email replies: plan" (https://claude.ai/artifact/TVpaToSMHxL91yjL3SDpVC). Three stages.
-  **Stage A BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-a.zip` (26 files; it
+  **Stage A BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-a.zip` (36 files; it
   contains the chat fixes too and replaces that zip), Database upgrade steps `2026_11_qualification` and
   `2026_11_site_pages`. Read `docs/upgrade-2026-11-guided-selling-a.md`. Code: `Qualification` (nine facts, score,
   Hot/Warm/Nurture/Low, the eight-step path; weights and target countries per exhibition), `SitePages` (weekly
   sitemap reading into `site_pages`, answers with links, only known links, never prices from the website),
   admin `website.php`. Pakistan price or quotation ask: no price, the local rep's details are added.
-  Acceptance tests 1,379. Real-AI test chats 16 to 18 are written but NOT yet run (keys were deleted).
+  Acceptance tests 1,409. Real-AI test chats 1 to 18 run on 12 Nov 2026 (GPT-6 Luna + Tavily); transcript
+  `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
+  **Blocked countries (owner, 12 Nov 2026, in the same package):** one list for all exhibitions, Set-up →
+  Blocked countries (`BlockedCountries`, setting `blocked_countries`, ISO codes). Not on the chat card; a chat
+  from a blocked country gets only the standard reply `blocked_country` (no AI, research, price, lead or email
+  to the team); no WhatsApp, no prospect research or email (`CompanyStore::isContactable`,
+  `WhatsAppEngine::blockedReason`). By what the person said or the record's country, never by IP (owner's
+  choice). The Pharma Asia website has its own list (Admin → Forms → Blocked countries, `form_blocked_countries`).
+  Any new way of contacting people must pass `WhatsAppEngine::blockedReason`; any new chat entry point must
+  check `BlockedCountries::blocksConversation`.
   **Stage B (not built):** quotation PDF, sent automatically, international only, valid 30 days, no payment
   details, no BCC (the team notification carries the PDF), Ecommerce Gateway logo in the footer, max 3 per
   conversation. **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in

@@ -1,4 +1,4 @@
-# Sales agent update — 12 November 2026: guided selling, Stage A
+# Sales agent update — 12 November 2026: guided selling, Stage A, and blocked countries
 
 Approved by the owner on 12 November 2026 (Claude doc "AI Sales Agent — Guided selling,
 quotations and email replies: plan", https://claude.ai/artifact/TVpaToSMHxL91yjL3SDpVC).
@@ -62,16 +62,48 @@ question at a time:
 - **Agents and embed → the exhibition → Website answers:** on/off, and the sitemap address
   (leave empty for the usual `/sitemap.xml`).
 
-## Files in `salesagent-update-2026-11-guided-selling-a.zip` (26)
+### 4. Blocked countries (owner, 12 November 2026)
+
+New admin page **Set-up → Blocked countries** (super admin only): a tick list of every country, with a
+search box, like the one on the Pharma Asia website under Forms. **One list for every exhibition.**
+
+A ticked country is closed in every part of the sales agent:
+
+- **Website chat:** the country is not on the first card. A person who says their company is there gets
+  one polite standard reply ("…we are not able to assist with participation from your country") and
+  nothing more: no AI, no research, no prices, no lead, no email to the team. The contact form does
+  nothing for such a chat. The wording is under Standard messages → "Blocked country".
+- **WhatsApp:** no first message and no follow-up to a registration from that country or a number
+  with its dialling code. A message from such a number is not answered.
+- **Prospecting:** a company from that country is marked "do not contact" when found, is not
+  researched, and is never emailed, even if an email was already approved.
+- The conversation page shows **Blocked country**.
+
+It goes by the country the person chose or said, and by the country on a company or registration
+record. **The IP address is not used** (owner's choice). Conversations and leads already on file are
+not changed. The website keeps its own list (Admin → Forms → Blocked countries): tick the same
+countries in both places.
+
+Code: `app/domain/BlockedCountries.php` (setting `blocked_countries`, a list of country codes);
+checked in `ChatOrchestrator::process`, `ChatIntro`, `api/contact.php`, `CompanyStore::isContactable`
+and `WhatsAppEngine::blockedReason` (which every email and WhatsApp send already passes through).
+No database step.
+
+## Files in `salesagent-update-2026-11-guided-selling-a.zip` (36)
 
 New: `app/domain/Qualification.php`, `app/domain/SitePages.php`, `public_html/admin/website.php`,
+`app/domain/BlockedCountries.php`, `public_html/admin/blocked-countries.php`,
 `app/domain/ChatGuide.php` (from the chat fixes).
 
 Changed for Stage A: `app/domain/ChatOrchestrator.php`, `PromptBuilder.php`, `LlmContract.php`,
 `Migrations.php`, `LeadBriefing.php`, `cron/tasks.php`, `public_html/admin/_admin.php`,
 `agents.php`, `conversation.php`, `lead.php`, `leads.php`.
 
-From the chat fixes, unchanged since: `app/domain/ChatIntro.php`, `CompanyResearch.php`,
+Changed for blocked countries: `app/domain/CompanyStore.php`, `WhatsAppEngine.php`, `WhatsAppFollowUp.php`,
+`RegistrationIntake.php`, `Prospecting.php`, `Fallbacks.php`, `ChatIntro.php`, `ChatOrchestrator.php`,
+`public_html/api/contact.php`, `public_html/assets/admin.js`, `public_html/admin/_admin.php`, `conversation.php`.
+
+From the chat fixes, unchanged since: `app/domain/CompanyResearch.php`,
 `ConversationState.php`, `ConversationStore.php`, `PricingEngine.php`, `ValueProposition.php`,
 `app/lib/Sanitizer.php`, `public_html/admin/_content.php`, `settings.php`,
 `public_html/api/intro.php`, `public_html/widget/widget.js`.
@@ -89,8 +121,10 @@ From the chat fixes, unchanged since: `app/domain/ChatIntro.php`, `CompanyResear
 5. Agents and embed → Pharma Asia → **Lead score:** type the target countries. Save.
 6. Content → **Website pages** → **Read the website now**. The first pages appear at once, the rest
    over the next cron runs. Switch off any page the assistant should not use.
-7. Do the same for Build Asia when its new website is live.
-8. Test on the live chat: chats 16 to 18 in `tools/chat-tests/chats.php` (a full guided chat, a
+7. Set-up → **Blocked countries:** tick the countries and save. Tick the same ones on the website
+   (Admin → Forms → Blocked countries).
+8. Do the same website reading for Build Asia when its new website is live.
+9. Test on the live chat: chats 16 to 18 in `tools/chat-tests/chats.php` (a full guided chat, a
    Pakistan company asking for a quotation, a visitor asking how to register and where the floor plan is).
 
 Nothing changes for /social or the Backup Manager: no folder moved, no upload folder added,
@@ -99,8 +133,14 @@ Nothing changes for /social or the Backup Manager: no folder moved, no upload fo
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,379 pass (60 new: qualification, score, path, website answers).
+- `php tests/acceptance.php`: 1,409 pass (60 new for Stage A, 30 new for blocked countries).
 - `php tests/access-http.php`: 82 pass.
-- **Not yet run with the real AI.** Chats 16 to 18 are written but need an OpenAI and a Tavily key
-  in the test copy (`OPENAI_API_KEY=… TAVILY_API_KEY=… php tools/chat-tests/run.php`). The earlier
-  test keys were deleted after use, as promised.
+- **The 18 written test chats with the real GPT-6 Luna and Tavily (12 Nov 2026):** RESULT_LINE
+  Transcript: `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
+- Found and fixed by the real-AI run: a visitor in Pakistan asking "is registration free?" was given
+  the sales rep's details. They are now added only for a possible exhibitor, sponsor or partner.
+- **Known limit, not a fault of this update:** a company that gives only a one-word name can be mixed
+  up with another company of the same name. "Bartels, Germany" was read once as Bartels Mikrotechnik
+  (micropumps) and once as a Bartels that makes storage racking. The assistant says what it
+  understood ("I understand Bartels makes…"), so the visitor can correct it. Asking for the website address on the card would remove the mix-up; say if you want that.
+- The test keys were used from memory only and are not stored anywhere in the workspace or the repository.

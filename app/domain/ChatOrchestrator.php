@@ -123,6 +123,19 @@ final class ChatOrchestrator
             $conversation = self::applyDisclosedLocation($agent, $conversation, $stated, 'message_scan');
         }
 
+        // ---- Blocked countries (owner, 12 Nov 2026) ----------------------
+        // By what they said or chose, never the IP address. One fixed reply:
+        // no AI, no research, no prices, no lead, nothing sent to the team.
+        if (BlockedCountries::blocksConversation($conversation)) {
+            if (empty($leadState['blocked_country'])) {
+                $leadState['blocked_country'] = true;
+                ConversationStore::update($conversation, ['lead_state' => json_encode($leadState, JSON_UNESCAPED_UNICODE)]);
+                Audit::log('conversation_blocked_country', $agentId, 'conversation', (int)$conversation['id'],
+                    (string)($conversation['disclosed_company_country'] ?: $conversation['disclosed_country']));
+            }
+            return self::staticResponse($agent, $conversation, 'blocked_country');
+        }
+
         $pricingRequested = self::detectPricingRequest($message, (string)$conversation['state']);
 
         // ---- Fix plan (11 Nov 2026): what was named, memory, contact rule --
@@ -563,7 +576,10 @@ final class ChatOrchestrator
             // A company in Pakistan asking for prices, a quotation or the next
             // step is given the local representative's details (owner,
             // 12 Nov 2026): the chat itself never quotes Pakistan.
+            // Only for a possible exhibitor: a visitor asking whether
+            // registration is free is not sent to the sales rep.
             $pakistanAsk = (string)($conversation['pricing_country'] ?? '') === GeoClassifier::PAKISTAN
+                && in_array((string)($signals['intent'] ?? $conversation['intent']), ['exhibitor', 'sponsor', 'partner'], true)
                 && ($turn['pricing_requested'] || Qualification::asksNextStep((string)$turn['message']));
             if ((string)($conversation['channel'] ?? 'web') !== 'whatsapp'
                 && (PersonRequest::detect((string)$turn['message']) !== null || $pakistanAsk)) {

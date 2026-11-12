@@ -75,10 +75,10 @@ $textOf  = static function (array $response): string {
     foreach ((array)($response['blocks'] ?? []) as $b) {
         if (in_array($b['type'] ?? '', ['ul', 'ol'], true)) {
             foreach ((array)$b['items'] as $item) {
-                $lines[] = '- ' . implode('', array_map(static fn($s) => (string)($s['v'] ?? ''), (array)$item));
+                $lines[] = '- ' . implode('', array_map(static fn($s) => (string)($s['v'] ?? '') . (($s['t'] ?? '') === 'a' && ($s['href'] ?? '') !== ($s['v'] ?? '') ? ' (' . $s['href'] . ')' : ''), (array)$item));
             }
         } else {
-            $lines[] = implode('', array_map(static fn($s) => (string)($s['v'] ?? ''), (array)($b['spans'] ?? [])));
+            $lines[] = implode('', array_map(static fn($s) => (string)($s['v'] ?? '') . (($s['t'] ?? '') === 'a' && ($s['href'] ?? '') !== ($s['v'] ?? '') ? ' (' . $s['href'] . ')' : ''), (array)($b['spans'] ?? [])));
         }
     }
     foreach ((array)($response['cards'] ?? []) as $c) {

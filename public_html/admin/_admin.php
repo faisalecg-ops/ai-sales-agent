@@ -477,6 +477,7 @@ function admin_layout_start(string $title, array $actions = []): void
             'agents.php'      => ['Agents and embed', 0, 'super'],
             'messages.php'    => ['Standard messages', 0, 'manage'],
             'suppression.php' => ['Do not contact', 0, 'manage'],
+            'blocked-countries.php' => ['Blocked countries', 0, 'super'],
             'activity.php'    => ['Activity log', 0, 'manage'],
             'users.php'       => ['Users', 0, 'super'],
             'settings.php'    => ['Settings', 0, 'super'],

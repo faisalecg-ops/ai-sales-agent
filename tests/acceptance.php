@@ -5536,6 +5536,85 @@ db()->exec('DELETE FROM stall_packages WHERE agent_id = ?', [$fpId]);
 db()->exec('DELETE FROM knowledge_articles WHERE agent_id = ?', [$fpId]);
 $mock->reset();
 
+// =====================================================================
+// Blocked countries (owner, 12 Nov 2026)
+// =====================================================================
+T::group('Blocked countries: one list, closed in every part');
+
+$bcAgentId = (int)$agent['id'];
+T::equals([], BlockedCountries::codes(), 'Nothing is blocked to begin with');
+T::ok(!BlockedCountries::blocks('Fiji'), 'So no country is refused');
+
+$bcChange = BlockedCountries::save(['fj', 'XX', 'AE', 'FJ']);
+T::equals(['AE', 'FJ'], BlockedCountries::codes(), 'The list keeps real countries only, once each');
+T::equals(2, count($bcChange['added']), 'And reports what was added');
+T::ok(BlockedCountries::blocks('Fiji') && BlockedCountries::blocks('fj') && BlockedCountries::blocks('United Arab Emirates'),
+    'A blocked country is recognised by name or by code');
+T::ok(!BlockedCountries::blocks('Germany') && !BlockedCountries::blocks('') && !BlockedCountries::blocks(null),
+    'Other countries, and no country at all, are not blocked');
+BlockedCountries::forget();
+T::equals(['AE', 'FJ'], BlockedCountries::codes(), 'The list is kept in the settings');
+
+// The chat's first card
+$bcOptions = array_column(ChatIntro::countryOptions(), 0);
+T::ok(!in_array('FJ', $bcOptions, true) && !in_array('AE', $bcOptions, true), 'A blocked country is not offered on the chat card');
+T::ok(in_array('DE', $bcOptions, true) && $bcOptions[0] === 'PK', 'The other countries still are, Pakistan first');
+$bcSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$bcIntro = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$bcSt['conversation']['session_id'],
+    'session_secret' => $bcSt['session_secret'], 'first_name' => 'Tom', 'company' => 'Island Cement', 'country' => 'FJ', 'interest' => 'exhibit']);
+T::ok(empty($bcIntro['ok']), 'A card sent with a blocked country anyway is refused');
+
+// The chat itself
+$mock->reset();
+[$bcConv, $bcSecret] = start_conversation($agent);
+$bc1 = say($agent, $bcConv, $bcSecret, 'Our company is based in Fiji. What are your stand rates?');
+T::equals('blocked_country', (string)($bc1['fallback'] ?? ''), 'A visitor whose company is in a blocked country gets the standard reply');
+T::ok(str_contains(blocks_text($bc1), 'not able to assist'), 'It says politely that we cannot assist');
+T::ok(($bc1['cards'] ?? []) === [] && !preg_match('/(?:USD|PKR|\$)\s?\d/', blocks_text($bc1)), 'No price and no price card');
+$bcRow = reload_conversation($bcConv);
+T::ok(empty($bcRow['lead_id']), 'No lead is created');
+T::equals(0, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$bcConv['id']]), 'Their company is not researched');
+T::ok(BlockedCountries::blocksConversation($bcRow), 'The conversation is marked as from a blocked country');
+$bcMail = (int)db()->value('SELECT COUNT(*) FROM email_outbox');
+$bc2 = say($agent, $bcRow, $bcSecret, 'Please send me a proposal, my email is tom@islandcement.example');
+T::equals('blocked_country', (string)($bc2['fallback'] ?? ''), 'Every later message gets the same reply');
+T::ok(empty(reload_conversation($bcConv)['lead_id']) && (int)db()->value('SELECT COUNT(*) FROM email_outbox') === $bcMail,
+    'Even with an email address: still no lead and nothing sent to the team');
+
+// A personal location does not override the company's country
+$mock->reset();
+$mock->push(['reply' => 'Welcome. What does your company make?', 'intent' => 'exhibitor']);
+[$bcConv2, $bcSecret2] = start_conversation($agent);
+$bc3 = say($agent, $bcConv2, $bcSecret2, 'Our company is based in Germany. We make cement mixers.');
+T::ok(($bc3['fallback'] ?? '') !== 'blocked_country', 'A company in an open country is answered as usual');
+
+// Do not contact: WhatsApp, registrations, companies
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+923001234567', null, null, 'Fiji') !== null,
+    'A registration from a blocked country may not be messaged');
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+971501234567', null, null) !== null,
+    'Nor may a number with a blocked country\'s dialling code');
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+923001234567', null, null, 'Germany') === null,
+    'Other countries are not affected');
+T::equals('suppressed', RegistrationIntake::decideState($bcAgentId, false, '+923001234567', 'yes', null, null, 'Fiji'),
+    'A new registration from a blocked country is never queued for WhatsApp');
+T::equals('eligible', RegistrationIntake::decideState($bcAgentId, false, '+923001234567', 'yes', null, null, 'Germany'),
+    'One from an open country is');
+
+$bcCo = CompanyStore::findOrCreate($bcAgentId, ['name' => 'Suva Building Supplies', 'website' => 'suva-building.example', 'country' => 'Fiji'], 'manual')['company'];
+T::ok(!CompanyStore::isContactable($bcAgentId, $bcCo), 'A company in a blocked country may not be contacted');
+T::ok(str_contains((string)WhatsAppEngine::blockedReason($bcAgentId, null, 'sales@suva-building.example', (int)$bcCo['id']), 'blocked country'),
+    'So an email to it is stopped at sending, with the reason');
+$bcCo2 = CompanyStore::findOrCreate($bcAgentId, ['name' => 'Rhein Beton GmbH', 'website' => 'rhein-beton.example', 'country' => 'Germany'], 'manual')['company'];
+T::ok(CompanyStore::isContactable($bcAgentId, $bcCo2), 'A company in an open country may');
+
+// Lifting the block
+$bcChange = BlockedCountries::save([]);
+T::equals(2, count($bcChange['removed']), 'Unticking everything opens every country again');
+T::ok(!BlockedCountries::blocks('Fiji') && CompanyStore::isContactable($bcAgentId, $bcCo), 'At once, everywhere');
+T::ok(in_array('FJ', array_column(ChatIntro::countryOptions(), 0), true), 'And the country is back on the chat card');
+db()->exec('DELETE FROM companies WHERE id IN (?, ?)', [(int)$bcCo['id'], (int)$bcCo2['id']]);
+$mock->reset();
+
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');
 db()->exec('DELETE FROM agents WHERE slug LIKE \'acc-%\'');

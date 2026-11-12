@@ -33,7 +33,9 @@ return [
         'name'  => '1. Bartels, Germany, exhibiting: research before the first reply',
         'intro' => ['first_name' => 'Creasida', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit'],
         'turns' => [
-            ['say' => null, 'must' => ['knows what they make' => '/micro|pump|sensor|valve|fluid/'],
+            // "Bartels" alone is the name of more than one German company (micropumps; storage and racking).
+            // Either is a company the research really found; what matters is that it does not ask.
+            ['say' => null, 'must' => ['knows what they make' => '/micro|pump|sensor|valve|fluid|rack|storage|shelving|warehouse/'],
                 'must_not' => ['asks what they make' => '/what\s+(?:does|do)\s+(?:bartels|your company|you)\s+(?:make|manufacture|produce|do)/', 'a price' => ANY_PRICE]],
             ['say' => 'Why would Pharma Asia be useful for us?',
                 'must' => ['a reason from the show or market' => '/manufactur|buyer|plant|factor|upgrad|pakistan/']],

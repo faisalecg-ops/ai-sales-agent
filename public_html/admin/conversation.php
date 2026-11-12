@@ -49,6 +49,8 @@ echo '<div class="card"><h2>About this conversation</h2><table class="table"><tb
         default             => 'Never established',
      }) . '</td></tr>'
    . ($conversation['disclosed_company_country'] ? '<tr><td>Company based in</td><td>' . e((string)$conversation['disclosed_company_country']) . '</td></tr>' : '')
+   . (BlockedCountries::blocksConversation($conversation)
+        ? '<tr><td>Blocked country</td><td><span class="pill pill-bad">Blocked</span> <span class="small muted">Only the standard reply is given. No lead, no email to the team.</span></td></tr>' : '')
    . ($conversation['requested_sqm'] ? '<tr><td>Size asked about</td><td>' . e(rtrim(rtrim(number_format((float)$conversation['requested_sqm'], 2), '0'), '.')) . ' sqm</td></tr>' : '')
    . '<tr><td>Page</td><td class="small">' . e((string)$conversation['page_url']) . '</td></tr>'
    // The link that brought them (12 Oct 2026, docs/handover/2026-10-12-social-attribution.md).
