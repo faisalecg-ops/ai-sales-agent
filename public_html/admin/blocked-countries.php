@@ -44,7 +44,7 @@ echo '<form method="post" class="card">' . Security::csrfField()
    . '<h2>Blocked now <span class="pill ' . ($names ? 'pill-bad' : '') . '">' . count($names) . '</span></h2>'
    . '<p>' . ($names ? e(implode(', ', $names)) : 'None. Every country is open.') . '</p>'
    . '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0 10px">'
-   . '<input type="search" id="bc-find" placeholder="Find a country…" aria-label="Find a country" style="max-width:260px">'
+   . '<input type="text" id="bc-find" placeholder="Find a country…" aria-label="Find a country" style="max-width:260px">'
    . '<label class="small"><input type="checkbox" id="bc-only"> Show only blocked</label></div>'
    . '<div id="bc-list" data-tick-filter style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 16px;max-height:460px;overflow:auto;'
    . 'border:1px solid var(--line);border-radius:6px;padding:12px">';

@@ -133,9 +133,9 @@ Nothing changes for /social or the Backup Manager: no folder moved, no upload fo
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,409 pass (60 new for Stage A, 30 new for blocked countries).
+- `php tests/acceptance.php`: 1,413 pass (60 new for Stage A, 30 for blocked countries, 4 for the guaranteed price line).
 - `php tests/access-http.php`: 82 pass.
-- **The 18 written test chats with the real GPT-6 Luna and Tavily (12 Nov 2026):** RESULT_LINE
+- **The 18 written test chats with the real GPT-6 Luna and Tavily (12 Nov 2026):** 38 of 39 replies passed on the full run. The one miss (chat 11: a 27 sqm price asked, the reply listed what the stall includes but no price) is fixed: a price asked for one named option now always carries its price line and card, from the price record. Re-run after the fix: chats 7, 8, 11 (twice), 12 and 15 all pass.
   Transcript: `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
 - Found and fixed by the real-AI run: a visitor in Pakistan asking "is registration free?" was given
   the sales rep's details. They are now added only for a possible exhibitor, sponsor or partner.

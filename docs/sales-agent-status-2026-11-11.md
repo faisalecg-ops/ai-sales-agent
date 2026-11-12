@@ -85,5 +85,5 @@ Expert not yet connected to Pulse.
 - /social and the Backup Manager are not affected (one new table `site_pages`, new columns only).
 - Next: Stage B (quotation PDF), after the owner has tried Stage A.
 - **Blocked countries** added the same day at the owner's request (one list for all exhibitions, polite standard
-  reply then stop, no IP check): see section 4 of `docs/upgrade-2026-11-guided-selling-a.md`. Acceptance tests 1,409.
+  reply then stop, no IP check): see section 4 of `docs/upgrade-2026-11-guided-selling-a.md`. Acceptance tests 1,413.
 - Real-AI chats 1 to 18 were run after the owner gave test keys; result in the same note.

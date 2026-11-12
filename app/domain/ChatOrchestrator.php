@@ -388,6 +388,32 @@ final class ChatOrchestrator
             (string)($agent['book_stand_url'] ?? ''), (string)($agent['register_url'] ?? ''),
             (string)($agent['website_url'] ?? ''),
         ]);
+        // A price asked for one named option is always answered with its
+        // price line (real-AI test chat 11, 12 Nov 2026: on the sales path
+        // the model once listed what a stall includes and moved on to its
+        // next question). The line and the card come from the price record.
+        if ($pricingRequested && $pricingAllowed && count($offerQ['items']) === 1
+            && !preg_match('/(?:\b[A-Z]{3}|[$€£]|Rs\.?)\s?\d/u', $reply)) {
+            foreach ($records as $type => $list) {
+                foreach ($list as $rec) {
+                    $recName = (string)($rec[$type === 'stall' ? 'package_name' : 'tier_name'] ?? '');
+                    if (strcasecmp(trim($recName), trim((string)$offerQ['items'][0])) !== 0) {
+                        continue;
+                    }
+                    $perSqm = (string)($rec['pricing_mode'] ?? 'fixed') === 'per_sqm';
+                    if ($perSqm && $requestedSqm !== null && !PricingEngine::checkSize($rec, $requestedSqm)['ok']) {
+                        break 2;                    // that size cannot be booked: no figure
+                    }
+                    $card  = PricingEngine::toCard($rec, $type, $perSqm ? $requestedSqm : null);
+                    $reply = ChatGuide::quoteLine($card) . "\n\n" . ltrim($reply);
+                    if (!$cards) {
+                        $cards[] = $card;
+                    }
+                    break 2;
+                }
+            }
+        }
+
         $priceViolation = null;
 
         if (!$pricingAllowed) {

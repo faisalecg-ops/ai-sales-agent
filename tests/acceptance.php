@@ -5537,6 +5537,27 @@ db()->exec('DELETE FROM knowledge_articles WHERE agent_id = ?', [$fpId]);
 $mock->reset();
 
 // =====================================================================
+// A price asked for one named option is always given (test chat 11, 12 Nov 2026)
+// =====================================================================
+T::group('Price asked for a named option: the price line is guaranteed');
+$pgName = (string)db()->value("SELECT package_name FROM stall_packages WHERE agent_id = ? AND active = 1 AND status = 'approved' AND region_group = 'international' ORDER BY id LIMIT 1", [(int)$agent['id']]);
+if ($pgName !== '') {
+    $mock->reset();
+    $mock->push(['reply' => "It includes carpet and lights.\nWhich products would you show?", 'intent' => 'exhibitor']);
+    [$pgConv, $pgSecret] = start_conversation($agent);
+    $pg = say($agent, $pgConv, $pgSecret, 'Our company is based in Germany. What does the ' . $pgName . ' cost?');
+    T::ok((bool)preg_match('/(?:USD|PKR|EUR)\s?\d/', blocks_text($pg)), 'The model left the price out; the reply still carries the price line');
+    T::ok(str_contains(blocks_text($pg), 'Which products would you show?'), 'The rest of the reply is kept');
+    T::ok(count($pg['cards'] ?? []) === 1, 'With its price card');
+    $mock->reset();
+    $mock->push(['reply' => "It includes carpet and lights.", 'intent' => 'exhibitor']);
+    [$pgConv2, $pgSecret2] = start_conversation($agent);
+    $pg2 = say($agent, $pgConv2, $pgSecret2, 'Our company is based in Pakistan. What does the ' . $pgName . ' cost?');
+    T::ok(!preg_match('/(?:USD|PKR|EUR)\s?\d/', blocks_text($pg2)), 'Never for a company in Pakistan');
+}
+$mock->reset();
+
+// =====================================================================
 // Blocked countries (owner, 12 Nov 2026)
 // =====================================================================
 T::group('Blocked countries: one list, closed in every part');
