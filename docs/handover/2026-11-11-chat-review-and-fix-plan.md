@@ -176,7 +176,18 @@ All six steps are built on branch `pharma-asia-2027`. They are **not yet install
 | 4 Content | `pharmaasia-chat-fixes-2026-11.sql` (Market article draft; outdoor, FAQ and article edits awaiting review); `pharmaasia-sectors-and-tier-guidance.sql` (sectors if empty; guidance appended once) | Both checked on a scratch copy, imported twice. |
 | 4 Expired | `content_status_pill()` in `admin/_content.php` | Applies to Stand pricing and Sponsorship. |
 | 5 Sponsorship | `PromptBuilder::offerGuidance()` | Modes: detail, compare, recommend, list. |
-| 6 Tests | `tests/acceptance.php` groups "Chat fix plan …" (68 new, 1,313 total); `tools/chat-tests/` (`run.php`, `chats.php`, `fixture.php`) | The 15 chats need the real model. This chat's workspace cannot reach OpenAI or Tavily, so they were checked only with a stand-in. |
+| 6 Tests | `tests/acceptance.php` groups "Chat fix plan …" (74 new, 1,319 total); `tools/chat-tests/` (`run.php`, `chats.php`, `fixture.php`, `--pause` for small OpenAI accounts) | **12 Nov 2026, real GPT-6 Luna + Tavily: 31 of 31 replies pass.** Research done before all 14 first replies (9 to 13 s). Transcript: `docs/reference/chat-tests-2026-11-12-gpt-6-luna.txt`. |
+
+**Fixed on 12 Nov 2026 after the real-model runs:**
+- Research while the visitor waits reads 10 pages of 1,000 characters (`QUICK_SOURCES`, `QUICK_SOURCE_CHARS`) and asks for a brief report (`analyse(..., $quick)`, max_tokens 1400). It takes 8 to 9 s.
+- `research.first_reply_wait_seconds` defaults to 14.
+- Research still `queued`/`running` at the reply: `researchFor()` tells the AI not to ask what they make.
+- `known_products` (research + `product_category`) gives the line "Do not ask what they make" under THIS TURN.
+- Price cards only when price is asked or was already given. No card for a size that cannot be booked.
+- `ChatGuide::replyAsksForContact` ignores our own team's details and "I won't ask…".
+- `Sanitizer` trims ")?" and similar from bare links.
+- Pakistan price text no longer names the country.
+- `app_log('research','timing')` records search and reading seconds.
 
 **Unchanged:**
 - the reply guard;

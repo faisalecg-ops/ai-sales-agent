@@ -424,8 +424,9 @@ echo admin_card_open('set-research', 'Company research', 'Looks companies up on 
    . f_text('research_first_wait', 'Seconds to wait before the first reply to an exhibitor',
         (string)CompanyResearch::firstReplyWait(), [
         'type' => 'number',
-        'hint' => 'Between 0 and 20. When someone chooses "exhibiting", their company is looked up first, so the first '
-                . 'reply is about their business. The visitor sees only the typing dots. 0 switches the wait off.',
+        'hint' => 'Between 0 and 20 (14 recommended). When someone chooses "exhibiting", their company is looked up first, '
+                . 'so the first reply is about their business; writing the reply takes about 6 seconds more. The visitor '
+                . 'sees only the typing dots. 0 switches the wait off.',
      ]);
 
 $rsPct = $rsLimit > 0 ? min(100, (int)round(100 * $rsUsed / $rsLimit)) : 0;

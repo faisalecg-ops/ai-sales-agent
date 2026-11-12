@@ -24,7 +24,7 @@ const EVERY_REPLY_MUST_NOT = [
 ];
 
 /** Contact asks, used by several chats. */
-const ASKS_CONTACT = '/(?:your|share|leave|send me)[^.?]{0,40}(?:e-?mail|phone|number|contact details)|(?:e-?mail|phone|number)[^.]{0,40}\?/';
+const ASKS_CONTACT = '/^(?!.*\b(?:won.?t|will not)\s+ask)(?:.*\byour\s+(?:\w+\s+)?(?:e-?mail|phone|number|contact details)|.*(?:what|which)\s+(?:e-?mail|phone|number)[^.]{0,40}\?|.*(?:share|leave|provide)\s+an?\s+(?:e-?mail|phone|number))/s';
 const ANY_PRICE    = '/(?:USD|\$)\s?\d/';
 
 return [
@@ -142,7 +142,8 @@ return [
         'intro' => ['first_name' => 'Ravi', 'company' => 'Mumbai Capsules', 'country' => 'IN', 'interest' => 'exhibit'],
         'turns' => [
             ['say' => 'Can I get a 20 sqm shell scheme stall? How much?', 'must' => ['the nearest sizes' => '/18/', 'and' => '/27/'],
-                'must_not' => ['a price for 20 sqm' => '/7,500/']],
+                'must_not' => ['a price for 20 sqm' => '/7,500/', 'the price of another size' => '/3,375/',
+                    'asks what they make' => '/what\s+(?:does|do)\s+(?:mumbai capsules|your company|you)\s+(?:make|sell|manufacture|produce)/']],
         ],
     ],
     [

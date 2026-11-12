@@ -16,13 +16,13 @@ Built by the AI Sales Agent chat on branch `pharma-asia-2027`.
 | "What do I get with Silver?" after a while got nothing | The stands and tiers stay in view for the whole chat. Tier names and follow-ups ("compare", "which one", "what do I get") are recognised. |
 | Short, vague comparisons; no recommendation | One tier: its benefits in full, as a list. Two tiers: only the differences. "Which one for us?": one tier, with one reason, then one question. |
 | Forgot earlier parts of the chat | A short summary of the whole chat goes with every reply (who they are, what they make, what was shown and quoted, how the contact question went). |
-| Never researched Bartels, asked what they make | When someone chooses "exhibiting" on the card, their company is researched first: up to 18 seconds, with only the typing dots showing. If research is slower, the reply goes out normally and research finishes straight after, for the next reply. |
+| Never researched Bartels, asked what they make | When someone chooses "exhibiting" on the card, their company is researched first: up to 14 seconds (about 9 s in tests), with only the typing dots showing. The first reply arrived in 9 to 13 seconds in all tests. If research is slower, the reply goes out normally and research finishes straight after, for the next reply. |
 | No Pakistan market argument | For a possible exhibitor, the assistant builds the case in four steps: what they make, why it fits, the Pakistan market (only from your Market article), and the stand or tier that suits them. |
 
 ## What changes in the admin
 
 - **Conversation page:** a new **Company research** card shows whether research ran, what it found (what they make, the best fit), or why it did not run: not an exhibitor, no company name, no research service set up, or the month's limit reached.
-- **Settings → Company research:** new box **Seconds to wait before the first reply to an exhibitor** (0 to 20, set to 18). 0 switches the wait off.
+- **Settings → Company research:** new box **Seconds to wait before the first reply to an exhibitor** (0 to 20, 14 recommended). 0 switches the wait off.
 - **Stand pricing and Sponsorship lists:** a price whose end date has passed shows **Expired** instead of "Live" (finding 3).
 
 ## Files in `salesagent-update-2026-11-chat-fixes.zip`
@@ -41,6 +41,7 @@ Built by the AI Sales Agent chat on branch `pharma-asia-2027`.
 | `app/domain/LlmContract.php` | Replies may carry a short list |
 | `public_html/api/intro.php` | Allows the research wait |
 | `public_html/widget/widget.js` | Typing dots, with nothing said, while the first reply is prepared |
+| `app/lib/Sanitizer.php` | A link written in brackets no longer swallows the bracket (it led to a "page not found") |
 | `public_html/admin/conversation.php`, `_content.php`, `settings.php` | Research card, "Expired", the wait setting |
 
 **There is no Database upgrade step.** Nothing in the database changes shape.
@@ -73,6 +74,26 @@ From now on, the conversation page's **Company research** card says which of the
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,313 pass (68 new, one group per plan step).
+- `php tests/acceptance.php`: 1,319 pass (74 new, one group per plan step).
 - `php tests/access-http.php`: 82 pass.
-- `php tools/chat-tests/run.php`: the 15 written test chats with the real AI model, on a test copy. It refuses a live installation. See `docs/chat-test-script.md`.
+- **The 15 written test chats with the real GPT-6 Luna and Tavily (12 Nov 2026): 31 of 31 replies pass.**
+  Research finished before the first reply in all 14 exhibitor chats. First replies took 9 to 13 seconds.
+  Transcript: `docs/reference/chat-tests-2026-11-12-gpt-6-luna.txt`. Command: `php tools/chat-tests/run.php`
+  (a test copy only; it refuses a live installation). See `docs/chat-test-script.md`.
+- Found and fixed by those runs:
+  - research was too slow for the first reply: it now reads 10 shorter pages and writes a brief report while
+    the visitor waits (8 to 9 s instead of 13 to 18 s, same quality score);
+  - a price card appeared when only the inclusions were asked: cards now come only when price is asked or was
+    already given;
+  - a size that cannot be booked showed a card for another size;
+  - offering the team's contact details was counted as asking for the visitor's;
+  - a link in brackets broke;
+  - Pakistan price replies said "for companies in Pakistan".
+  If research is still running at the first reply (a slow moment at OpenAI), the assistant asks about their aims
+  instead of what they make.
+
+## A warning about OpenAI limits
+
+A new OpenAI account allows only 50 requests a day per model and 10,000 tokens a minute (about one chat reply a
+minute). Make sure the live sales agent's OpenAI account has a payment method (Tier 1 or above), or the chat stops
+answering after about 50 messages a day.

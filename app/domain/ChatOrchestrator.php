@@ -256,6 +256,7 @@ final class ChatOrchestrator
             'handoff_expected'  => (string)$conversation['state'] === ConversationState::HANDOFF,
             // What research found about their company, when it has run.
             'research'          => self::researchFor($conversation),
+            'known_products'    => self::knownProducts($conversation, $leadState),
             'offer_question'    => $offerQ,
             'offer_focus'       => (array)($leadState['offer_focus'] ?? []),
             'contact_rule'      => $contactRule,
@@ -321,12 +322,24 @@ final class ChatOrchestrator
             $record = PricingEngine::resolveReference($reference, $agentId, $eligibility['region_groups']);
             if ($record !== null) {
                 // Quote at the visitor's size only when that size can be sold.
+                // When it cannot, no card at all: a card at another size would
+                // put a price nobody asked for under "the nearest sizes are…"
+                // (test chat 12, 12 Nov 2026).
                 $cardSize = null;
+                $sellable = true;
                 if ((string)($record['pricing_mode'] ?? 'fixed') === 'per_sqm' && $requestedSqm !== null) {
                     $check = PricingEngine::checkSize($record, $requestedSqm);
                     $cardSize = $check['ok'] ? $requestedSqm : null;
+                    $sellable = $check['ok'];
                 }
-                $cards[] = PricingEngine::toCard($record, (string)$record['_type'], $cardSize);
+                // A price card only when price is being discussed: asked now,
+                // or given before. "What is included?" gets the list, not a
+                // price (owner: prices only when asked; test chats 5 and 15).
+                $priceWanted = $pricingRequested || !empty($leadState['prices_given'])
+                    || (int)($conversation['pricing_shown'] ?? 0) === 1;
+                if ($sellable && $priceWanted) {
+                    $cards[] = PricingEngine::toCard($record, (string)$record['_type'], $cardSize);
+                }
             } else {
                 app_log('pricing', 'package_reference did not resolve', [
                     'agent' => $agentId, 'reference' => $reference,
@@ -794,6 +807,19 @@ final class ChatOrchestrator
      * Persist a disclosed location. A disclosed country always overrides an
      * earlier IP result, and the IP result is retained (Section 12).
      */
+    /** What they make, from research or from what they told us: never asked again. */
+    private static function knownProducts(array $conversation, array $leadState): array
+    {
+        $told = trim((string)($leadState['product_category'] ?? ''));
+        try {
+            $row = Migrations::tableExists('company_research') ? CompanyResearch::forConversation($conversation) : null;
+            $found = $row !== null ? CompanyResearch::knownProducts($row) : [];
+        } catch (Throwable) {
+            $found = [];
+        }
+        return array_values(array_unique(array_filter(array_merge($told !== '' ? [$told] : [], $found))));
+    }
+
     private static function researchFor(array $conversation): string
     {
         try {
@@ -801,7 +827,21 @@ final class ChatOrchestrator
                 return '';
             }
             $row = CompanyResearch::forConversation($conversation);
-            return $row !== null ? CompanyResearch::promptBlock($row) : '';
+            if ($row !== null) {
+                return CompanyResearch::promptBlock($row);
+            }
+            // Started before the first reply but not finished in time (a
+            // slow moment at the AI service): it will be ready for the next
+            // reply, so this one does not ask what research will tell us.
+            $pending = db()->value(
+                "SELECT COUNT(*) FROM company_research WHERE conversation_id = ? AND status IN ('queued', 'running')",
+                [(int)$conversation['id']]
+            );
+            return (int)$pending > 0
+                ? "WHAT RESEARCH FOUND ABOUT THEIR COMPANY\nResearch on their company is still running and will be "
+                  . "ready for your next reply. Do not ask what their company makes; ask what they would most want "
+                  . "to achieve at the exhibition instead."
+                : '';
         } catch (Throwable) {
             return '';
         }

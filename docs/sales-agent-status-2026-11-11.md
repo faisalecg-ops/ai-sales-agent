@@ -47,7 +47,8 @@ Findings 2 to 10 below are fixed by it. Finding 3's admin badge now shows "Expir
 
 Still to do:
 - the owner installs the package, approves the Pharma Asia content, and re-tests with `docs/chat-test-script.md`;
-- the 15 test chats with the real model (`tools/chat-tests/run.php`) need a test copy that can reach OpenAI and Tavily.
+- the 15 test chats were run with the real GPT-6 Luna and Tavily on 12 Nov 2026: 31 of 31 replies pass (`docs/reference/chat-tests-2026-11-12-gpt-6-luna.txt`).
+- Check that the live OpenAI account has a payment method: a new account allows only 50 requests a day per model.
 
 Representatives: the owner's screenshot of 11 Nov shows both entered:
 - Local: Farhan Mobeen.

@@ -5107,6 +5107,17 @@ T::ok(str_contains($mock->lastSystemPrompt(), 'THIS PRICE QUESTION is about: "Go
 $quoteAllowed = PricingEngine::allowedFigures(PricingEngine::stallPackages($fpId, ['international', 'both']), 'stall');
 T::equals(null, PricingEngine::findUnauthorisedPrice("- Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)", $quoteAllowed),
     'A copied quote line passes the price guard');
+$mock->push(['reply' => 'The nearest sizes are 18 sqm and 27 sqm. Which would you prefer?', 'intent' => 'exhibitor',
+    'package_reference' => 'stall:' . $fpShell]);
+$r20 = say($fpAgent, reload_conversation($fc), $fs, 'Can I get a 20 sqm shell scheme stall? How much?');
+T::equals([], $r20['cards'] ?? [], 'A size that cannot be booked gets no price card at another size (test chat 12, 12 Nov 2026)');
+$mock->push(['reply' => "The Shell Scheme Stall includes:\n- Carpet", 'intent' => 'exhibitor', 'package_reference' => 'stall:' . $fpShell]);
+$fpInc = $fpStart();
+$rInc = say($fpAgent, $fpInc[0], $fpInc[1], "What's included in the shell scheme stall?");
+T::equals([], $rInc['cards'] ?? [], 'Asking what is included shows no price card (owner: prices only when asked)');
+$lnk = Sanitizer::toBlocks('Go ahead through the Book a stand page (https://pharmaasia.com.pk/book-a-stand/)?', ['pharmaasia.com.pk']);
+T::equals('https://pharmaasia.com.pk/book-a-stand/', (string)($lnk[0]['spans'][1]['href'] ?? ''),
+    'A link in brackets does not swallow the ")?" after it');
 T::equals(80.0, PricingEngine::referenceSize(['package_type' => 'outdoor', 'min_sqm' => 80]), 'Outdoor reference size is its minimum, 80 sqm');
 $fpOutRow = db()->one('SELECT * FROM stall_packages WHERE id = ?', [$fpOutdoor]);
 T::equals('below_minimum', PricingEngine::checkSize($fpOutRow, 50)['reason'], 'A smaller outdoor area is not priced');
@@ -5116,6 +5127,11 @@ T::group('Chat fix plan, step 1: asking for contact details');
 T::ok(ChatGuide::replyAsksForContact('Could you share your email address so the team can send a proposal?'), 'An ask is recognised');
 T::ok(ChatGuide::replyAsksForContact('Please leave your phone number and a colleague will call.'), 'So is a request without a question mark');
 T::ok(!ChatGuide::replyAsksForContact('Our team will email the floor plan to every exhibitor.'), 'Mentioning email is not asking');
+T::ok(!ChatGuide::replyAsksForContact("I can share the sales team's contact details if you prefer.")
+    && !ChatGuide::replyAsksForContact("Would you like the sales team's contact details?"),
+    'Offering our own team\'s details is not asking for theirs (test chat 5, 12 Nov 2026)');
+T::ok(ChatGuide::replyAsksForContact('Please share an email address or phone number so the team can send them.'),
+    '"Please share an email address" is an ask');
 T::ok(ChatGuide::isDecline('no thanks') && ChatGuide::isDecline("I'd rather not share my email")
     && ChatGuide::isDecline('just tell me the price'), 'A refusal is recognised');
 T::ok(!ChatGuide::isDecline('No, we have not exhibited in Pakistan before'), 'A "no" to another question is not a refusal');
@@ -5250,7 +5266,7 @@ $fpRs->pages = [
 ResearchProviderFactory::setTestProvider($fpRs);
 Settings::set('research.searches_per_company', '4');
 Settings::set('research.monthly_credit_limit', '900');
-Settings::set('research.first_reply_wait_seconds', '18');
+Settings::set('research.first_reply_wait_seconds', '14');
 $fpAnalysis = ['official_website' => 'https://www.bartels-mikrotechnik.de', 'summary' => 'Bartels Mikrotechnik makes micropumps, sensors and valves.',
     'facts' => [['claim' => 'Makes micropumps, sensors and valves for microfluidics', 'source' => 'S1']],
     'products' => ['micropumps', 'sensors', 'valves'], 'match_level' => 'strong', 'prospect_type' => 'exhibitor',
@@ -5273,6 +5289,16 @@ T::ok(str_contains($p, 'HOW TO MAKE THE CASE FOR EXHIBITING') && str_contains($p
     'The four-step case, with the market note for their sector (pumps)');
 T::ok(str_contains($fpRs->queries[0]['query'], 'Germany') && str_contains($fpRs->queries[1]['query'] ?? '', 'pharmaceutical'),
     'A short name is searched with their country and the exhibition\'s industry, to find the right Bartels');
+
+// Research still running at the first reply: the assistant does not ask what they make.
+$pendConv = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['company' => 'Slow GmbH'])], 'id = ?', [(int)$pendConv['conversation']['id']]);
+CompanyResearch::request($fpAgent, 'Slow GmbH', 'Germany', null, 'chat', (int)$pendConv['conversation']['id']);
+$mock->reset();
+$mock->push(['reply' => 'Welcome. What would you most want to achieve?', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pendConv['conversation']), $pendConv['session_secret'], 'Hello');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Research on their company is still running'),
+    'Research still running: the reply asks about their aims, not what they make');
 
 // Not finished within the wait: kept, and finished afterwards without searching again.
 $fpRs->queries = [];

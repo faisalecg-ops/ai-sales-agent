@@ -287,6 +287,7 @@ final class CompanyResearch
         $credits  = 0;
         $problems = [];
 
+        $tStart = microtime(true);
         if ($cached === null) {
             $searched = 0;
             foreach (self::queries($agent, $job, $budget) as $q) {
@@ -333,6 +334,7 @@ final class CompanyResearch
         // are read: the first searches (the company's own site, its products
         // and industry) come first, and the reading finishes in about half
         // the time (measured 12 Nov 2026 with GPT-6 Luna).
+        $tSearch   = microtime(true) - $tStart;
         $readCount = $deadline === null ? self::MAX_SOURCES : self::QUICK_SOURCES;
         $readChars = $deadline === null ? self::SOURCE_TEXT_CHARS : self::QUICK_SOURCE_CHARS;
         $numbered = [];
@@ -350,8 +352,13 @@ final class CompanyResearch
 
         // ---- 2. Read ------------------------------------------------
         $offers   = self::offers($agentId);
+        $tRead    = microtime(true);
         $analysis = self::analyse($agent, $job, $numbered, $offers,
             $deadline === null ? 60 : (int)max(3, floor($left())), $deadline !== null);
+        app_log('research', 'timing', [
+            'id' => $id, 'search_s' => round($tSearch, 1), 'read_s' => round(microtime(true) - $tRead, 1),
+            'pages' => count($numbered), 'waiting' => $deadline !== null, 'read' => $analysis !== null,
+        ]);
         if ($analysis === null) {
             // Not read in time for the first reply: kept, and finished
             // straight after it.
@@ -1178,6 +1185,16 @@ final class CompanyResearch
         }
     }
 
+    /** What research says the company makes, when it is sure enough to use. @return string[] */
+    public static function knownProducts(array $row): array
+    {
+        $f = self::findingsOf($row);
+        if (($f['match_level'] ?? '') === 'poor') {
+            return [];
+        }
+        return array_slice(array_values(array_filter(array_map('strval', (array)($f['products'] ?? [])))), 0, 6);
+    }
+
     /**
      * The one repeat research a conversation may have: when the visitor has
      * given a website research did not use, or research found no sure match
@@ -1250,10 +1267,13 @@ final class CompanyResearch
         }
     }
 
-    /** How long the first exhibitor reply may wait for research (owner: 10 to 20 seconds). */
+    /**
+     * How long the first exhibitor reply may wait for research. The owner allows 10 to 20 seconds for
+     * the whole first reply; research takes about 9 s and the reply about 6 s (GPT-6 Luna, 12 Nov 2026).
+     */
     public static function firstReplyWait(): int
     {
-        return max(0, min(20, (int)Settings::get('research.first_reply_wait_seconds', '18')));
+        return max(0, min(20, (int)Settings::get('research.first_reply_wait_seconds', '14')));
     }
 
     /**

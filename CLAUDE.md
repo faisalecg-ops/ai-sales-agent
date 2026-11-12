@@ -24,7 +24,7 @@ Read this before any task on this project.
   switcher. Read `docs/sales-agent-status-2026-10-10.md`. The contract for
   /social is the "Done — what /social can rely on" section at the end of
   `docs/handover/2026-10-10-shared-login-and-event-access.md`. Sales agent
-  tests now: `php tests/acceptance.php` (1,313) and `php tests/access-http.php`
+  tests now: `php tests/acceptance.php` (1,319) and `php tests/access-http.php`
   (82, end-to-end staff isolation). New admin pages must use
   `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
   **Approved sales agent change (12 Oct 2026) — built, owner to install:**
@@ -136,7 +136,8 @@ Read this before any task on this project.
   whole-chat summary every turn, research before the first exhibitor reply (`research.first_reply_wait_seconds`,
   paused runs keep their pages), the four-step case, research card on the conversation page, "Expired" badge.
   Read `docs/upgrade-2026-11-chat-fixes.md` and the "Done" section of `docs/handover/2026-11-11-chat-review-and-fix-plan.md`.
-  Acceptance tests 1,313. The 15 real-model test chats: `tools/chat-tests/run.php` (test copy only).
+  Acceptance tests 1,319. The 15 real-model test chats: `tools/chat-tests/run.php` (test copy only) — 31/31 pass
+  with GPT-6 Luna + Tavily on 12 Nov 2026; research wait default 14 s (research ~9 s while waiting).
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links
   saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
   texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter

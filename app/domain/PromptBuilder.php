@@ -335,10 +335,17 @@ final class PromptBuilder
 
         if (!empty($ctx['requested_sqm'])) {
             $asked = rtrim(rtrim(number_format((float)$ctx['requested_sqm'], 2, '.', ''), '0'), '.');
+            $notSellable = array_filter($facts, static fn(array $f): bool => !empty($f['size_note']));
             $lines[] = "";
-            $lines[] = "They have asked about " . $asked . " sqm. Where a note above says that size "
-                     . "cannot be booked, tell them what the nearest available sizes are, using only "
-                     . "the wording in that note. Do not price the size they asked for.";
+            if ($notSellable) {
+                $lines[] = "They have asked about " . $asked . " sqm. Where a note above says that size "
+                         . "cannot be booked, tell them what the nearest available sizes are, using only "
+                         . "the wording in that note, and ask which they would like. Do not price the size they "
+                         . "asked for, and do not give the Quote line of any other size in that reply.";
+            } else {
+                $lines[] = "They have asked about " . $asked . " sqm. The Quote lines above are already worked out "
+                         . "for that size: give the one they asked about.";
+            }
         }
 
         return implode("\n", $lines);
@@ -605,6 +612,12 @@ final class PromptBuilder
             $lines[] = "You do not yet have a way to contact them. Ask for a name and an email address or phone "
                      . "number ONLY if it helps them now: they want a proposal, a call, a price only the team can "
                      . "give, or to book. Otherwise do not ask; keep helping.";
+        }
+
+        if (!empty($ctx['known_products'])) {
+            $lines[] = "You already know what their company makes ("
+                     . mb_substr(implode(', ', array_map('strval', (array)$ctx['known_products'])), 0, 200)
+                     . "). Do not ask what they make or sell.";
         }
 
         if (!empty($ctx['handoff_expected'])) {

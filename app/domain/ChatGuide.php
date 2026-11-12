@@ -219,13 +219,23 @@ final class ChatGuide
     {
         $contact = '(?:e-?mail(?:\s+address)?|phone(?:\s+number)?|mobile(?:\s+number)?|whats\s?app(?:\s+number)?|'
                  . 'contact\s+(?:details|number|information|info)|number\s+to\s+reach)';
+        // Our own team's details, offered to them, are not an ask:
+        // "I can share the sales team's contact details if you prefer."
+        $ours = '/\b(?:(?:sales\s+)?team[\x{2019}\']?s|their|our|colleague[\x{2019}\']?s|representative[\x{2019}\']?s|rep[\x{2019}\']?s|her|his)\s+'
+              . '(?:direct\s+)?' . $contact . '/iu';
         foreach (preg_split('/(?<=[.!?])\s+|\n+/u', $reply) ?: [] as $sentence) {
             if (!preg_match('/' . $contact . '/i', $sentence)) {
                 continue;
             }
-            if (str_contains($sentence, '?')
-                || preg_match('/\byour\s+(?:best\s+|preferred\s+|work\s+|business\s+)?' . $contact . '/i', $sentence)
-                || preg_match('/\b(?:please\s+)?(?:share|leave|send\s+me|provide|let\s+me\s+have|drop)\b[^.]{0,40}' . $contact . '/i', $sentence)) {
+            // "I won't ask for your email again" is the opposite of an ask.
+            if (preg_match('/\b(?:won[\x{2019}\']?t|will\s+not|no\s+need|don[\x{2019}\']?t\s+need|not\s+(?:ask|need))\b/iu', $sentence)) {
+                continue;
+            }
+            if (preg_match('/\byour\s+(?:best\s+|preferred\s+|work\s+|business\s+)?' . $contact . '/i', $sentence)
+                || preg_match('/\b(?:share|leave|send\s+me|provide|let\s+me\s+have|drop)\s+(?:me\s+|us\s+)?(?:your\b|an?\s+(?:e-?mail|phone|mobile|whats\s?app|contact|number))/i', $sentence)) {
+                return true;
+            }
+            if (str_contains($sentence, '?') && !preg_match($ours, $sentence)) {
                 return true;
             }
         }
