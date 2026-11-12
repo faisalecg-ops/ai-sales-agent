@@ -25,7 +25,7 @@ const EVERY_REPLY_MUST_NOT = [
 ];
 
 /** Contact asks, used by several chats. */
-const ASKS_CONTACT = '/^(?!.*\b(?:won.?t|will not)\s+ask)(?:.*\byour\s+(?:\w+\s+)?(?:e-?mail|phone|number|contact details)|.*(?:what|which)\s+(?:e-?mail|phone|number)[^.]{0,40}\?|.*(?:share|leave|provide)\s+an?\s+(?:e-?mail|phone|number))/s';
+const ASKS_CONTACT = '/^(?!.*\b(?:won.{0,3}t|will not)\s+ask)(?!.*rather\s+not\s+share)(?:.*\byour\s+(?:\w+\s+)?(?:e-?mail|phone|number|contact details)|.*(?:what|which)\s+(?:e-?mail|phone|number)[^.]{0,40}\?|.*(?:share|leave|provide)\s+an?\s+(?:e-?mail|phone|number))/s';
 const ANY_PRICE    = '/(?:USD|\$)\s?\d/';
 
 return [

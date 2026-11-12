@@ -472,7 +472,8 @@ final class Quotation
             : 'the option they choose';
         $head = "QUOTATION (this overrides the contact rule above)\n"
               . "The visitor wants a quotation in writing. The system makes the PDF itself, from the price list, and emails it. "
-              . "You never write the quotation's figures, and you never say a stand is booked or reserved.\n";
+              . "You never write the quotation's figures, and you never say a stand is booked or reserved. "
+              . "If this message asks something else, answer that first, then deal with the quotation in one sentence.\n";
         return $head . match ($assess['missing']) {
             null => "Everything needed is known. Say in one sentence that the quotation for " . $what . " is being emailed to them now. "
                   . "A line with its number is added under your reply. Do not ask for anything else in this reply.",

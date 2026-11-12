@@ -5681,6 +5681,33 @@ T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION ALREADY SENT') && str_c
     'Afterwards the assistant knows a quotation was sent, and that it is an offer, not a booking');
 T::equals(1, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'An ordinary message afterwards sends nothing');
 
+// Asked for, then they would rather not give an email: dropped, never pressed.
+$mock->reset();
+$mock->push(['reply' => 'Certainly. Which email address should I send it to?', 'intent' => 'exhibitor']);
+[$qConvNo, $qSecretNo] = start_conversation($qAgent);
+say($qAgent, $qConvNo, $qSecretNo, 'Valvole Italia, based in Italy. Can you send me a quotation for an 18 sqm Corner Pavilion?');
+$mock->push(['reply' => 'That is fine. You can go ahead through the Book a stand page whenever you wish.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConvNo), $qSecretNo, "I'd rather not share my email.");
+T::ok(str_contains($mock->lastSystemPrompt(), 'do not ask again') && !str_contains($mock->lastSystemPrompt(), 'Still missing'),
+    'When they would rather not give an email, the assistant is told to accept it and not ask again');
+T::ok(empty(ConversationStore::leadState(reload_conversation($qConvNo))['quote_wanted']), 'The request is dropped');
+$mock->push(['reply' => 'Bare space is floor space only.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConvNo), $qSecretNo, 'What about bare space?');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'QUOTATION'), 'And the next replies are not about the quotation any more');
+
+// Asked for, then the missing detail never comes: let go after two replies.
+$mock->reset();
+$mock->push(['reply' => 'Which size would you like?', 'intent' => 'exhibitor']);
+[$qConvW, $qSecretW] = start_conversation($qAgent);
+say($qAgent, $qConvW, $qSecretW, 'Nordic Mixers, based in Sweden. Please send a quotation for a Corner Pavilion.');
+foreach (['What are the opening hours?', 'Is there parking?', 'Who visits the show?'] as $qOther) {
+    $mock->push(['reply' => 'Here is the answer.', 'intent' => 'exhibitor']);
+    say($qAgent, reload_conversation($qConvW), $qSecretW, $qOther);
+}
+T::ok(empty(ConversationStore::leadState(reload_conversation($qConvW))['quote_wanted']) && !str_contains($mock->lastSystemPrompt(), 'Still missing'),
+    'A request whose missing detail never comes is let go after two replies, so the chat does not repeat one question');
+T::equals(1, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Neither of these chats produced a quotation');
+
 // Yes to the assistant's offer; a sponsorship tier; then the limit.
 $mock->push(['reply' => 'Diamond Partner includes sixteen benefits. Would you like a quotation by email?', 'intent' => 'sponsor']);
 say($qAgent, reload_conversation($qConv), $qSecret, 'Tell me about Diamond Partner.');
@@ -5841,6 +5868,17 @@ $cw2 = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)
 T::ok(!empty($cw2['ok']), 'The website is optional: words that are not an address do not stop the card');
 T::ok(empty(ConversationStore::leadState(reload_conversation($cwSt2['conversation']))['website']), 'And are not kept as a website');
 $mock->reset();
+
+// A website given now is not answered with an earlier research on the same name.
+T::group('Research: the same name with a different website is a different company');
+$rwA = CompanyResearch::request($agent, 'Bartels', 'Germany', null, 'chat');
+$rwB = CompanyResearch::request($agent, 'Bartels', 'Germany', null, 'chat');
+T::equals($rwA, $rwB, 'The same name with no website reuses the earlier research');
+$rwC = CompanyResearch::request($agent, 'Bartels', 'Germany', 'https://www.bartels-mikrotechnik.de/', 'chat');
+T::ok($rwC !== null && $rwC !== $rwA, 'The same name with a website gets its own research');
+$rwD = CompanyResearch::request($agent, 'Bartels', 'Germany', 'bartels-mikrotechnik.de', 'chat');
+T::equals($rwC, $rwD, 'The same name and the same website reuses that one');
+db()->exec('DELETE FROM company_research WHERE id IN (?, ?)', [(int)$rwA, (int)$rwC]);
 
 // =====================================================================
 // Blocked countries (owner, 12 Nov 2026)

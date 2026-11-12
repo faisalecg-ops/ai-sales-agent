@@ -95,6 +95,15 @@ final class CompanyResearch
         // A fresh research (the visitor has since given a website or other
         // products) does not reuse an earlier one on the same name.
         $existing = $fresh ? null : self::recentFor($agentId, $name, $companyId);
+        // A website given now names the company exactly. An earlier research
+        // on the same name that was about another website, or about none, may
+        // be a different company of that name, so it is not reused
+        // (real-AI test chat 19, 12 Nov 2026: two companies called Bartels).
+        $site = CompanyStore::normaliseDomain($website);
+        if ($existing !== null && $site !== null && $companyId === null
+            && CompanyStore::normaliseDomain((string)($existing['company_website'] ?? '')) !== $site) {
+            $existing = null;
+        }
         if ($existing !== null) {
             // Linked to this conversation too, so its prompt can use it.
             if ($conversationId !== null && empty($existing['conversation_id'])) {

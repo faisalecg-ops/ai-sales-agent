@@ -155,8 +155,20 @@ final class ChatOrchestrator
         // wanted; it stays wanted until it is sent, so an email address given
         // two messages later still sends it.
         $quoteOn     = (string)($conversation['channel'] ?? 'web') !== 'whatsapp' && Quotation::available($agent);
-        $quoteWanted = $quoteOn && (!empty($leadState['quote_wanted']) || Quotation::wants($message)
+        $quoteAsked  = $quoteOn && (Quotation::wants($message)
             || (!empty($leadState['quote_offered']) && Quotation::saysYes($message)));
+        if ($quoteAsked) {
+            unset($leadState['quote_declined']);        // they have asked again themselves
+        }
+        $quoteWanted = $quoteAsked || ($quoteOn && !empty($leadState['quote_wanted']));
+        // They would rather not give their details: the request is dropped,
+        // never pressed. They are pointed to the booking page or the rep, as
+        // for any visitor who declines (test chat 5, 12 Nov 2026).
+        $quoteDropped = false;
+        if ($quoteWanted && !$quoteAsked && ChatGuide::isDecline($message)) {
+            $quoteWanted  = false;
+            $quoteDropped = true;
+        }
 
         $contactRecord = ChatGuide::noteVisitorAnswer(ChatGuide::contactRecord($leadState), $message);
         $contactRule   = ChatGuide::mayAsk(
@@ -271,7 +283,9 @@ final class ChatOrchestrator
                 $pathFlags['next_step'] = true;
             }
             $pathStep  = Qualification::step($qual, $pathFlags);
-            $salesPath = Qualification::promptBlock($qual, $pathStep, $classification === GeoClassifier::INTERNATIONAL, $quoteOn);
+            // A quotation is not offered to someone who has declined to give their details.
+            $salesPath = Qualification::promptBlock($qual, $pathStep, $classification === GeoClassifier::INTERNATIONAL,
+                $quoteOn && !$quoteDropped && empty($leadState['quote_declined']) && empty($contactRecord['stopped']));
         }
         // What the exhibition's website says about what they asked (part 5).
         $sitePages = SitePages::match($agentId, $message, 3);
@@ -300,6 +314,10 @@ final class ChatOrchestrator
         $quoteNote = '';
         if ($quoteAssess !== null) {
             $quoteNote = Quotation::promptBlock($quoteAssess);
+        } elseif ($quoteDropped) {
+            $quoteNote = "QUOTATION\nThey asked for a quotation earlier but do not want to give the details it needs. Accept that in a few "
+                . "words and do not ask again. A quotation cannot be emailed without an address; they can go ahead through the Book "
+                . "a stand page or the sales representative whenever they wish. Keep helping with what they ask.";
         } elseif ($quoteOn && !empty($leadState['quotes_sent'])) {
             $quoteNote = "QUOTATION ALREADY SENT\nQuotation " . implode(', ', array_map('strval', (array)$leadState['quotes_sent']))
                 . " has been emailed to them from this chat. It is an offer: a stand is booked only after the signed contract and "
@@ -496,7 +514,8 @@ final class ChatOrchestrator
             'known_contact'     => is_array($input['known_contact'] ?? null) ? $input['known_contact'] : [],
             // What the next turn needs to remember (fix plan steps 1 and 2).
             'memory'            => [
-                'quote'         => ['on' => $quoteOn, 'wanted' => $quoteWanted, 'names' => $quoteNames, 'sqm' => $requestedSqm,
+                'quote'         => ['on' => $quoteOn, 'wanted' => $quoteWanted, 'asked' => $quoteAsked, 'dropped' => $quoteDropped,
+                                    'names' => $quoteNames, 'sqm' => $requestedSqm,
                                     'reference' => $pricingAllowed ? $reference : null],
                 'on_path'       => $onPath,
                 'qual'          => $qual,
@@ -675,6 +694,14 @@ final class ChatOrchestrator
             $quoteRow = null;
             if (!empty($quote['on'])) {
                 $leadState['quote_offered'] = !$turn['is_fallback'] && Quotation::offered((string)$turn['reply']);
+                if (!empty($quote['asked'])) {
+                    unset($leadState['quote_declined']);
+                }
+                if (!empty($quote['dropped'])) {
+                    $leadState['quote_declined'] = true;
+                    $leadState['quote_wanted'] = false;
+                    $leadState['quote_waits']  = 0;
+                }
                 if (!empty($quote['wanted']) && $lead !== null && !$turn['is_fallback']) {
                     $assess = Quotation::assess($agent, $conversation, $lead, (array)($quote['names'] ?? []),
                         $quote['reference'] ?? null, isset($quote['sqm']) ? (float)$quote['sqm'] : null);
@@ -685,6 +712,7 @@ final class ChatOrchestrator
                                 . ' is on its way to ' . $quoteRow['to_email'] . '. It is valid until '
                                 . (string)((array)json_decode((string)$quoteRow['detail'], true))['valid'] . '.';
                             $leadState['quote_wanted'] = false;
+                            $leadState['quote_waits']  = 0;
                             $leadState['quote_offered'] = false;
                             $leadState['quotes_sent'] = array_slice(array_merge((array)($leadState['quotes_sent'] ?? []), [$quoteRow['number']]), -5);
                         } catch (Throwable $ex) {
@@ -702,7 +730,12 @@ final class ChatOrchestrator
                             }
                         }
                     } else {
-                        $leadState['quote_wanted'] = true;      // waits for the missing detail
+                        // Waits for the missing detail, but not for ever: asked
+                        // for in two replies and still missing, it is let go, so
+                        // the chat never turns into the same question repeated.
+                        $waits = !empty($quote['asked']) ? 1 : (int)($leadState['quote_waits'] ?? 0) + 1;
+                        $leadState['quote_waits']  = $waits;
+                        $leadState['quote_wanted'] = $waits <= 2;
                     }
                 }
             }

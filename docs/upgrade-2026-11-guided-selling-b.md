@@ -78,7 +78,7 @@ Changed for Stage B: `app/lib/Mailer.php` (emails can carry a file), `app/domain
 `ChatOrchestrator.php`, `PromptBuilder.php`, `Qualification.php`, `LeadManager.php`, `LeadBriefing.php`,
 `Analytics.php`, `cron/tasks.php`, `public_html/admin/agents.php`, `lead.php`.
 
-Everything from the earlier 11 and 12 November updates is in the zip too (41 files in all).
+Everything from the earlier 11 and 12 November updates is in the zip too (43 files in all).
 
 New folders, created by the program when first needed, both outside the web folder:
 `storage/quotations/<exhibition id>/` (the PDFs) and `storage/uploads/quotation-logos/`.
@@ -110,8 +110,19 @@ The Backup Manager has a note about them.
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,517 pass (100 new for Stage B).
+- `php tests/acceptance.php`: 1,525 pass (108 new for Stage B).
 - `php tests/access-http.php`: 82 pass.
 - Sample PDFs checked by eye: a stand and a sponsorship tier, with the Pharma Asia logo.
-- Real GPT-6 Luna and Tavily, 12 Nov 2026: RESULT_LINE
+- Real GPT-6 Luna and Tavily, 12 Nov 2026: all 22 chats, 45 of 49 replies passed on the full run.
+  The three quotation chats (20 to 22) passed every reply. The four misses, and what was done:
+  - chat 5 (two replies): after "I'd rather not share my email" the assistant kept asking for the stand size for
+    the proposal. **Fixed:** a quotation request is dropped as soon as the visitor declines, it is let go if the
+    missing detail has not come after two replies, and a quotation is not offered again to someone who declined.
+    Re-run: the behaviour is right (one re-run was marked as a miss only because the checker read "I won't ask
+    again for your email" as asking; the checker is corrected).
+  - chat 19: "Bartels" with its website reused the research chat 1 had just made for the other Bartels.
+    **Fixed:** an earlier research on the same name is not reused when a website is given. Re-run: pass.
+  - chat 1: "Bartels" with no website; research did not finish inside the 14-second wait (the search service
+    took 6.6 s tonight instead of about 3 s), so the first reply asked about their aim instead. Not a fault of
+    this update; the research finished straight after and was used from the next reply.
   Transcript: `docs/reference/chat-tests-2026-11-12-quotations.txt`.

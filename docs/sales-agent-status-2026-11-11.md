@@ -93,7 +93,7 @@ Expert not yet connected to Pulse.
 - Owner: "if Stage A is complete start the Stage B". Built: `docs/upgrade-2026-11-guided-selling-b.md`.
 - One combined package for everything since the last install: `salesagent-update-2026-11-guided-selling-b.zip`.
 - Also added the same day at the owner's request: the optional Company website box on the chat card.
-- Tests: 1,517 acceptance, 82 access-http; real-AI chats 1 to 22 run.
+- Tests: 1,525 acceptance, 82 access-http; real-AI chats 1 to 22 run.
 - Backup Manager: note left in its `docs/handover/2026-11-12-sales-agent-new-folders.md`.
 - /social: not affected (it reads `conversations.utm_*` and `leads.exhibitor_intent` only).
 - Open: the owner asked whether the chat can answer in Chinese or Urdu; answered (not reliably today),
