@@ -34,6 +34,8 @@ final class Lang
         'ja' => ['Japanese', '日本語', false],
         'fa' => ['Persian', 'فارسی', true],
         'th' => ['Thai', 'ไทย', false],
+        'id' => ['Indonesian', 'Bahasa Indonesia', false],
+        'ms' => ['Malay', 'Bahasa Melayu', false],
     ];
 
     public static function valid(?string $code): ?string
@@ -300,10 +302,64 @@ final class Lang
         'sponsor' => ['sponsorizzazione', 'اسپانسر', 'スポンサー', '協賛', 'สปอนเซอร์', 'ผู้สนับสนุน'],
     ];
 
+    // -----------------------------------------------------------------
+    // Bahasa Indonesia and Bahasa Melayu (owner, 13 Nov 2026)
+    // -----------------------------------------------------------------
+
+    private const TEXT_IDMS = [
+        'quote_offer' => [
+            'id' => 'Saya juga dapat mengirimkan penawaran harga resmi untuk ini melalui email. Cukup balas "ya".',
+            'ms' => 'Saya juga boleh menghantar sebut harga rasmi untuk ini melalui e-mel. Balas sahaja "ya".',
+        ],
+        'quote_sent' => [
+            'id' => 'Penawaran harga {number} sedang dikirim ke {email}. Berlaku hingga {date}.',
+            'ms' => 'Sebut harga {number} sedang dihantar ke {email}. Sah sehingga {date}.',
+        ],
+        'rep_one'   => ['id' => 'Anda juga dapat menghubungi mereka langsung:', 'ms' => 'Anda juga boleh menghubungi mereka secara terus:'],
+        'rep_both'  => ['id' => 'Anda dapat menghubungi tim kami langsung:', 'ms' => 'Anda boleh menghubungi pasukan kami secara terus:'],
+        'rep_local' => ['id' => 'Untuk perusahaan yang berlokasi di Pakistan', 'ms' => 'Untuk syarikat yang berpangkalan di Pakistan'],
+        'rep_intl'  => ['id' => 'Untuk perusahaan yang berlokasi di luar Pakistan', 'ms' => 'Untuk syarikat yang berpangkalan di luar Pakistan'],
+        'mobile'    => ['id' => 'Ponsel', 'ms' => 'Telefon bimbit'],
+        'email'     => ['id' => 'Email', 'ms' => 'E-mel'],
+        'with_tax'  => ['id' => 'termasuk', 'ms' => 'termasuk'],
+        'link_quote' => [
+            'id' => 'Selamat datang kembali, {name}. Terima kasih telah menindaklanjuti penawaran harga {number}. Apa lagi yang bisa saya bantu?',
+            'ms' => 'Selamat kembali, {name}. Terima kasih kerana menyusuli sebut harga {number}. Apa lagi yang boleh saya bantu?',
+        ],
+        'link_prospect' => [
+            'id' => 'Selamat datang, {name}. Terima kasih telah menanggapi email kami tentang {exhibition}. Apa yang bisa saya bantu?',
+            'ms' => 'Selamat datang, {name}. Terima kasih kerana membalas e-mel kami tentang {exhibition}. Apa yang boleh saya bantu?',
+        ],
+        'link_whatsapp' => [
+            'id' => 'Selamat datang, {name}. Terima kasih atas minat Anda pada {exhibition}. Apa yang bisa saya bantu?',
+            'ms' => 'Selamat datang, {name}. Terima kasih atas minat anda terhadap {exhibition}. Apa yang boleh saya bantu?',
+        ],
+        'said_name'         => ['id' => 'Nama saya {name}.', 'ms' => 'Nama saya {name}.'],
+        'said_from_country' => ['id' => 'Saya dari {org}, berlokasi di {country}.', 'ms' => 'Saya dari {org}, yang berpangkalan di {country}.'],
+        'said_from'         => ['id' => 'Saya dari {org}.', 'ms' => 'Saya dari {org}.'],
+        'said_country'      => ['id' => 'Saya berada di {country}.', 'ms' => 'Saya berada di {country}.'],
+        'said_exhibit'      => ['id' => 'Saya tertarik untuk menjadi peserta pameran.', 'ms' => 'Saya berminat untuk menyertai pameran sebagai pempamer.'],
+        'said_visit'        => ['id' => 'Saya tertarik untuk berkunjung.', 'ms' => 'Saya berminat untuk melawat.'],
+    ];
+
+    private const WORDS_IDMS = [
+        'price'   => ['harga', 'berapa harga', 'berapa biaya', 'berapa kos', 'biaya', 'kos', 'caj', 'tarif'],
+        'quote'   => ['penawaran harga', 'penawaran resmi', 'surat penawaran', 'sebut harga', 'sebutharga', 'tawaran harga', 'tawaran rasmi'],
+        'yes'     => ['ya', 'iya', 'boleh', 'baik', 'silakan', 'sila', 'tentu', 'baiklah'],
+        'next'    => ['langkah selanjutnya', 'langkah seterusnya', 'cara memesan', 'bagaimana memesan', 'pesan stan',
+                      'cara menempah', 'bagaimana menempah', 'tempah'],
+        'person'  => ['bicara dengan orang', 'berbicara dengan staf', 'telepon saya', 'bercakap dengan seseorang',
+                      'bercakap dengan wakil', 'telefon saya', 'hubungi saya'],
+        'money'   => ['diskon', 'potongan harga', 'kontrak', 'faktur', 'pembayaran', 'diskaun', 'invois'],
+        'decline' => ['tidak usah', 'tidak perlu', 'nggak', 'tak perlu', 'tidak mengapa', 'tidak', 'tak'],
+        'stand'   => ['stan', 'gerai', 'reruai'],
+        'sponsor' => ['penaja', 'penajaan'],
+    ];
+
     /** All the words of one kind, in every language. */
     private static function words(string $kind): array
     {
-        return array_merge(self::WORDS[$kind] ?? [], self::WORDS_MORE[$kind] ?? []);
+        return array_merge(self::WORDS[$kind] ?? [], self::WORDS_MORE[$kind] ?? [], self::WORDS_IDMS[$kind] ?? []);
     }
 
     /**
@@ -337,7 +393,7 @@ final class Lang
     /** A line in the visitor's language, with {placeholders} filled in. */
     public static function t(?string $code, string $key, array $vars = []): string
     {
-        $row  = array_merge(self::TEXT[$key] ?? [], self::TEXT_MORE[$key] ?? []);
+        $row  = array_merge(self::TEXT[$key] ?? [], self::TEXT_MORE[$key] ?? [], self::TEXT_IDMS[$key] ?? []);
         $text = (string)($row[self::valid($code) ?? 'en'] ?? $row['en'] ?? $key);
         foreach ($vars as $k => $v) {
             $text = str_replace('{' . $k . '}', (string)$v, $text);

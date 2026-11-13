@@ -105,7 +105,7 @@
     ['en', 'English'], ['zh', '中文 (Chinese)'], ['ur', 'Urdu (Roman)'], ['ar', 'العربية (Arabic)'],
     ['tr', 'Türkçe (Turkish)'], ['ru', 'Русский (Russian)'], ['es', 'Español (Spanish)'], ['fr', 'Français (French)'],
     ['de', 'Deutsch (German)'], ['ko', '한국어 (Korean)'], ['it', 'Italiano (Italian)'], ['ja', '日本語 (Japanese)'],
-    ['fa', 'فارسی (Persian)'], ['th', 'ไทย (Thai)']
+    ['fa', 'فارسی (Persian)'], ['th', 'ไทย (Thai)'], ['id', 'Bahasa Indonesia'], ['ms', 'Bahasa Melayu']
   ];
   var RTL = { ar: true, fa: true };
   var TEXT = {
@@ -370,6 +370,44 @@
       f_name: "ชื่อของคุณ", f_company: "บริษัท", f_email: "อีเมล", f_phone: "หมายเลขโทรศัพท์", f_note: "ข้อมูลอื่นที่เราควรทราบ",
       f_send: "ส่งข้อมูลของฉัน", f_sending: "กำลังส่ง", f_need: "กรุณากรอกอีเมลหรือหมายเลขโทรศัพท์เพื่อให้ทีมงานติดต่อกลับ",
       f_thanks: "ขอบคุณ ทีมงานจะติดต่อกลับโดยเร็ว", not_you: "ไม่ใช่คุณใช่ไหม? เริ่มแชทใหม่"
+    },
+    id: {
+      lead: "Agar kami dapat membantu dengan baik, ceritakan sedikit tentang Anda.", language: "Bahasa",
+      first: "Nama depan", company: "Perusahaan", website: "Situs web perusahaan (opsional)", country: "Negara lokasi perusahaan Anda",
+      choose: "Pilih negara", interest: "Saya tertarik untuk", exhibit: "Menjadi peserta pameran", visit: "Berkunjung", cont: "Lanjut",
+      skip: "Lewati — langsung bertanya", wait: "Mohon tunggu",
+      e_name: "Silakan isi nama depan Anda.", e_interest: "Silakan pilih menjadi peserta pameran atau berkunjung.",
+      e_company: "Untuk membantu soal pameran, kami perlu nama perusahaan Anda.", e_country: "Untuk membantu soal pameran, pilih negara lokasi perusahaan Anda.",
+      e_timeout: "Sesi chat telah berakhir. Muat ulang halaman untuk memulai lagi.", e_generic: "Gagal terkirim. Periksa koneksi Anda lalu coba lagi.",
+      said_name: "Nama saya {name}.", said_from_country: "Saya dari {org}, berlokasi di {country}.", said_from: "Saya dari {org}.",
+      said_country: "Saya berada di {country}.", said_exhibit: "Saya tertarik untuk menjadi peserta pameran.", said_visit: "Saya tertarik untuk berkunjung.",
+      placeholder: "Ketik pesan Anda", send: "Kirim", person: "Bicara dengan staf", still: "Jawaban Anda sedang disiapkan…",
+      busy: "Maaf — saat ini sedang sangat sibuk. ", retry: "Coba lagi", retrying: "Mencoba lagi…",
+      many: "Banyak pertanyaan saat ini — jawaban Anda segera datang…",
+      n_fast: "Anda mengirim pesan terlalu cepat. Tunggu sebentar lalu coba lagi.", n_long: "Pesan terlalu panjang. Persingkat lalu kirim lagi.",
+      n_fail: "Gagal terkirim. Coba lagi sebentar lagi.", n_conn: "Gagal terkirim. Periksa koneksi Anda lalu coba lagi.",
+      f_name: "Nama Anda", f_company: "Perusahaan", f_email: "Alamat email", f_phone: "Nomor telepon", f_note: "Hal lain yang perlu kami ketahui",
+      f_send: "Kirim data saya", f_sending: "Mengirim", f_need: "Isi alamat email atau nomor telepon agar tim kami dapat menghubungi Anda.",
+      f_thanks: "Terima kasih. Tim kami akan segera menghubungi Anda.", not_you: "Bukan Anda? Mulai chat baru"
+    },
+    ms: {
+      lead: "Supaya kami dapat membantu dengan baik, ceritakan sedikit tentang diri anda.", language: "Bahasa",
+      first: "Nama pertama", company: "Syarikat", website: "Laman web syarikat (pilihan)", country: "Negara syarikat anda berpangkalan",
+      choose: "Pilih negara", interest: "Saya berminat untuk", exhibit: "Menjadi pempamer", visit: "Melawat", cont: "Teruskan",
+      skip: "Langkau — terus bertanya", wait: "Sebentar",
+      e_name: "Sila isi nama pertama anda.", e_interest: "Sila pilih menjadi pempamer atau melawat.",
+      e_company: "Untuk membantu tentang pameran, kami perlukan nama syarikat anda.", e_country: "Untuk membantu tentang pameran, pilih negara syarikat anda berpangkalan.",
+      e_timeout: "Sesi chat telah tamat. Muat semula halaman untuk bermula semula.", e_generic: "Tidak berjaya dihantar. Semak sambungan anda dan cuba lagi.",
+      said_name: "Nama saya {name}.", said_from_country: "Saya dari {org}, yang berpangkalan di {country}.", said_from: "Saya dari {org}.",
+      said_country: "Saya berada di {country}.", said_exhibit: "Saya berminat untuk menyertai pameran sebagai pempamer.", said_visit: "Saya berminat untuk melawat.",
+      placeholder: "Taip mesej anda", send: "Hantar", person: "Bercakap dengan seseorang", still: "Jawapan anda sedang disediakan…",
+      busy: "Maaf — kami sangat sibuk sekarang. ", retry: "Cuba lagi", retrying: "Mencuba lagi…",
+      many: "Banyak pertanyaan sekarang — jawapan anda sedang dalam perjalanan…",
+      n_fast: "Anda menghantar mesej terlalu cepat. Tunggu sebentar dan cuba lagi.", n_long: "Mesej terlalu panjang. Pendekkan dan hantar semula.",
+      n_fail: "Tidak berjaya dihantar. Cuba lagi sebentar nanti.", n_conn: "Tidak berjaya dihantar. Semak sambungan anda dan cuba lagi.",
+      f_name: "Nama anda", f_company: "Syarikat", f_email: "Alamat e-mel", f_phone: "Nombor telefon", f_note: "Perkara lain yang perlu kami tahu",
+      f_send: "Hantar butiran saya", f_sending: "Menghantar", f_need: "Isi alamat e-mel atau nombor telefon supaya pasukan kami boleh menghubungi anda.",
+      f_thanks: "Terima kasih. Pasukan kami akan menghubungi anda.", not_you: "Bukan anda? Mulakan chat baharu"
     }
   };
   var LANG = 'en';

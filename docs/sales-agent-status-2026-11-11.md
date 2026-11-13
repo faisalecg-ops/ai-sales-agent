@@ -109,3 +109,6 @@ Expert not yet connected to Pulse.
 - One package for everything since the last install: `salesagent-update-2026-11-languages-links.zip`.
 - Tests 1,618 + 82; real-AI chats in Chinese, Roman Urdu and Arabic pass.
 - Next: Stage C (email replies in the same thread), after the owner has tried all this.
+- Later on 13 Nov: Italian, Japanese, Persian, Thai, Bahasa Indonesia and Bahasa Melayu added (16 languages).
+  The owner has not installed any November zip: one final package `salesagent-update-2026-11-final.zip` with one
+  guide `docs/install-2026-11-final.md`. Tests 1,636 + 82.

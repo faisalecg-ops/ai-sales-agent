@@ -334,7 +334,7 @@ final class PricingEngine
         // 18 mètres carrés, 18 Quadratmeter, 18 제곱미터 (13 Nov 2026).
         if (preg_match('/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:平方米|平米|平方|㎡|متر\s*مربع|مترا\s*مربعا|م2|metrekare|кв\.?\s*м\w*|квадратн\w*\s+метр\w*|'
             . 'metros?\s+cuadrados?|m[eè]tres?\s+carr[ée]s?|quadratmeter|qm|제곱미터|murabba\s+met(?:er|re)|'
-            . 'metri\s+quadr(?:ati|i)|mq|平方メートル|ตารางเมตร|ตร\.\s?ม\.?)/iu', $message, $m)) {
+            . 'metri\s+quadr(?:ati|i)|mq|平方メートル|ตารางเมตร|ตร\.\s?ม\.?|meter\s+persegi)/iu', $message, $m)) {
             $v = (float)str_replace(',', '.', $m[1]);
             return $v > 0 ? $v : null;
         }
@@ -769,8 +769,9 @@ final class PricingEngine
         // and companies in Pakistan are never given a price anyway.
         if (preg_match('/(?<![\p{L}])(?:euros?|liras?|yuan|renminbi|dirhams?|riyals?|rials?|dinars?|'
             . 'pounds?\s+sterling|рубл\w*|евро|лир\w*|юан\w*|дирхам\w*|يورو|درهم|دراهم|ريال|جنيه|'
-            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로|تومان|ریال|یورو|บาท|ユーロ|ยูโร|euro)(?![\p{L}])/iu', $reply, $cm)
-            || preg_match('/\d\s*(?<!美)(?:元|円|엔|원)(?!\p{L})/u', $reply, $cm)) {
+            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로|تومان|ریال|یورو|บาท|ユーロ|ยูโร|euro|rupiah|ringgit)(?![\p{L}])/iu', $reply, $cm)
+            || preg_match('/\d\s*(?<!美)(?:元|円|엔|원)(?!\p{L})/u', $reply, $cm)
+            || preg_match('/(?<![\p{L}])(?:Rp|RM)\.?\s?\d/u', $reply, $cm)) {
             return trim($cm[0]);
         }
 

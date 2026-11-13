@@ -13,14 +13,14 @@ Built by the AI Sales Agent chat on branch `pharma-asia-2027`.
 **This package contains everything since the last installed version:** the chat fixes (11 Nov), Stage A
 (guided path, lead score, website answers), blocked countries, the company website box, Stage B
 (quotations, and the chat offering them), and this update. Install only
-`salesagent-update-2026-11-languages-links.zip`; ignore the earlier November zips.
+`salesagent-update-2026-11-final.zip` (see `docs/install-2026-11-final.md`); ignore the earlier November zips.
 
 ## 1. Languages
 
 The chat card starts with **Language**: English, 中文 (Chinese), Urdu (Roman), العربية (Arabic),
 Türkçe (Turkish), Русский (Russian), Español (Spanish), Français (French), Deutsch (German),
-한국어 (Korean), Italiano (Italian), 日本語 (Japanese), فارسی (Persian), ไทย (Thai) — 14 in all. The last
-four were added the same day at the owner's request. Singapore needs no separate language: its companies
+한국어 (Korean), Italiano (Italian), 日本語 (Japanese), فارسی (Persian), ไทย (Thai), Bahasa Indonesia,
+Bahasa Melayu — 16 in all. The last six were added the same day at the owner's request. Singapore needs no separate language: its companies
 use English, and Chinese is on the list.
 
 - Choosing a language changes the card and the chat window at once (labels, buttons, messages).
@@ -30,7 +30,7 @@ use English, and Chinese is on the list.
   (for example "USD 6,750").
 - The lines the program writes itself come in the chosen language: the quotation offer, "Quotation …
   is on its way", the sales rep's details, and the welcome from a personal link.
-- The program understands, in all fourteen languages: a price question, "send me a quotation", a short
+- The program understands, in all sixteen languages: a price question, "send me a quotation", a short
   "yes" or "no", "what is the next step?", "I want to speak to a person", discount/contract/payment
   questions, and sizes ("18平方米", "18 metrekare", "27 кв. м"…).
 - If a visitor writes in another language than the one chosen, the assistant answers in the language
@@ -44,7 +44,7 @@ use English, and Chinese is on the list.
 "USD 6,750" or "$6,750". Now any amount written with dollars in any of these languages ("6,750 dollars",
 "6.750 dólares", "6 750 долларов", "6,750美元") must be one of your approved prices, or the reply is
 replaced by the standard message. Other currencies written as words (euros, yuan, roubles…) are refused
-too (also tomans, rials, baht). Rupees are allowed, because the Pakistan market article quotes medicine
+too (also tomans, rials, baht, rupiah, ringgit). Rupees are allowed, because the Pakistan market article quotes medicine
 sales in rupees. Prices written with Persian, Arabic or Thai digits ("۶٬۷۵۰") are checked the same way.
 
 ## 2. Personal chat links
@@ -95,7 +95,7 @@ No new folders. `config/config.php` is unchanged (the link signature uses the ex
 ## How to install
 
 1. Back up the database (phpMyAdmin → Export).
-2. Upload the files from `salesagent-update-2026-11-languages-links.zip` into `/home/salesagent/`,
+2. Upload the files from `salesagent-update-2026-11-final.zip` into `/home/salesagent/`,
    over the existing ones.
 3. Admin → **Database upgrade** → run every step it lists. From the November updates there are four:
    `2026_11_qualification`, `2026_11_site_pages`, `2026_11_quotations`, `2026_11_personal_links`.
@@ -109,13 +109,14 @@ No new folders. `config/config.php` is unchanged (the link signature uses the ex
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,631 pass (97 new: languages, price guard, personal links).
+- `php tests/acceptance.php`: 1,636 pass (102 new: languages, price guard, personal links).
 - `php tests/access-http.php`: 82 pass.
 - In a real browser: the card in Chinese and Arabic (right to left), and a personal link opening the
   chat with the welcome and "Not you?".
 - Real GPT-6 Luna and Tavily, 13 Nov 2026: chats in Chinese, Roman Urdu and Arabic, 7 of 7 replies pass;
   then Italian, Japanese, Persian and Thai, 8 of 8 (right language, right prices, the quotation offered;
-  fixed on the way: the Italian word "quotazione" was not known, so the offer was made twice);
+  fixed on the way: the Italian word "quotazione" was not known, so the offer was made twice); then
+  Bahasa Indonesia and Bahasa Melayu, 4 of 4 (fixed: "penawaran resmi" was not known);
   the English quotation chats 20 and 23 still pass (7 of 7). Fixed on the way: in Chinese the AI offered
   the quotation and the program added a second offer. Transcript:
   `docs/reference/chat-tests-2026-11-13-languages.txt`.

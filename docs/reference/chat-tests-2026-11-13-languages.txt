@@ -205,3 +205,81 @@ Replies passed: 2   failed: 0
   (research: done, indirect)
 
 Replies passed: 2   failed: 0
+
+==================================================================
+Bahasa Indonesia and Bahasa Melayu added (owner, 13 Nov 2026):
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 14.1 s)
+  ASSISTANT: Senang berkenalan, Budi. Agar saya bisa memahami kecocokan Pharma Asia untuk perusahaan Anda, apa yang diproduksi atau dijual Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Yang termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Apakah Anda ingin saya mengirimkan quotation resmi untuk opsi ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  FAIL: missing: offers a quotation
+  (research: done, poor)
+
+Replies passed: 1   failed: 1
+
+=== 33. Bahasa Melayu: price and quotation offer
+  (introduction card: {"first_name":"Aisyah","company":"Penang Pharma Pack Sdn Bhd","country":"MY","interest":"exhibit","language":"ms"}, answered in 16.3 s)
+  ASSISTANT: Terima kasih, Aisyah. Apakah yang paling ingin dicapai oleh Penang Pharma Pack melalui penyertaan di Pharma Asia 2027?
+  PASS
+  VISITOR: Berapa harga gerai shell scheme 18 meter persegi?
+  ASSISTANT: Kadar untuk Shell Scheme Stall 18 sqm ialah:
+             - Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Bolehkah saya e-melkan sebut harga rasmi untuk pilihan ini?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+----- Indonesian again, after the program learnt the words 'penawaran resmi' (it had offered twice) -----
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 8.6 s)
+  ASSISTANT: Terima kasih, Budi. Agar saya bisa memahami kecocokan Pharma Asia untuk perusahaan Anda, apa yang diproduksi atau dijual oleh Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Shell Scheme Stall mencakup:
+             - Dinding dan papan fascia dengan nama perusahaan
+             - Karpet
+             - Satu meja dan dua kursi
+             - Lampu dan satu soket listrik
+             Apakah Anda ingin saya mengirimkan penawaran resmi untuk ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  FAIL: missing: offers a quotation
+  (research: done, poor)
+
+Replies passed: 1   failed: 1
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 8.9 s)
+  ASSISTANT: Terima kasih, Budi. Saya memahami bahwa Anda tertarik menjadi peserta pameran untuk Jakarta Farma Mesin. Riset kami belum dapat memastikan produk yang dijual perusahaan Anda; apa yang dibuat atau dijual Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Yang termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Apakah Anda ingin saya mengirimkan quotation untuk ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0

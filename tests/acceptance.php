@@ -5925,7 +5925,15 @@ db()->exec('DELETE FROM company_research WHERE id IN (?, ?)', [(int)$rwA, (int)$
 // =====================================================================
 T::group('Languages: the chat card, the words the program listens for, the price guard');
 
-T::equals(14, count(Lang::LANGUAGES), 'Fourteen languages: English and thirteen more');
+T::equals(16, count(Lang::LANGUAGES), 'Sixteen languages: English and fifteen more');
+T::ok(isset(Lang::LANGUAGES['id'], Lang::LANGUAGES['ms']), 'Including Bahasa Indonesia and Bahasa Melayu');
+T::ok(ChatOrchestrator::detectPricingRequest('Berapa harga stan 18 meter persegi?', ConversationState::NEW_CONVERSATION)
+    && Quotation::wants('Boleh hantar sebut harga?') && Quotation::wants('Mohon kirim penawaran harga') && Quotation::saysYes('Ya, silakan'),
+    'A price question, a quotation request and a yes, in Indonesian and Malay');
+T::equals(18.0, PricingEngine::requestedSize('stan 18 meter persegi'), 'A size in Indonesian and Malay');
+T::ok(Lang::has('Apakah Anda ingin saya mengirimkan penawaran resmi?', 'quote'), 'An Indonesian offer worded "penawaran resmi" is recognised, so it is not offered twice');
+T::ok(PricingEngine::findUnauthorisedPrice('Harga Rp 100.000.000', ['USD 6,750']) !== null
+    && PricingEngine::findUnauthorisedPrice('RM 30,000', ['USD 6,750']) !== null, 'Prices in rupiah or ringgit are refused');
 T::ok(isset(Lang::LANGUAGES['it'], Lang::LANGUAGES['ja'], Lang::LANGUAGES['fa'], Lang::LANGUAGES['th']), 'Including Italian, Japanese, Persian and Thai');
 T::ok(isset(Lang::LANGUAGES['zh'], Lang::LANGUAGES['ur']) && Lang::LANGUAGES['ur'][0] === 'Urdu (Roman)', 'Chinese and Roman Urdu are among them');
 T::equals(null, Lang::valid('xx'), 'An unknown language is refused');

@@ -176,10 +176,11 @@ Read this before any task on this project.
   20 minutes); the live daily limits are correct.
   The quotation email's Message-ID is kept in `quotations.message_id` for Stage C.
   **Languages and personal chat links (owner, 13 Nov 2026), BUILT, owner to install**
-  `salesagent-update-2026-11-languages-links.zip` (contains every November change; replaces all earlier zips), extra
+  `salesagent-update-2026-11-final.zip` with one guide `docs/install-2026-11-final.md` (contains every November change;
+  the owner has installed none of the November zips; replaces all of them), extra
   Database upgrade step `2026_11_personal_links`. Read `docs/upgrade-2026-11-languages-and-chat-links.md`.
-  `Lang` (14 languages: en, zh, ur = Roman Urdu, ar, tr, ru, es, fr, de, ko, and it, ja, fa, th added the same day in
-  `TEXT_MORE`/`WORDS_MORE`; fa and ar right to left; `Lang::digits` reads Persian/Arabic/Thai digits; `lead_state.language`, sent by the
+  `Lang` (16 languages: en, zh, ur = Roman Urdu, ar, tr, ru, es, fr, de, ko; it, ja, fa, th in `TEXT_MORE`/`WORDS_MORE`;
+  id, ms in `TEXT_IDMS`/`WORDS_IDMS`; fa and ar right to left; `Lang::digits` reads Persian/Arabic/Thai digits; `lead_state.language`, sent by the
   widget with every message; prompt section LANGUAGE; program-written lines translated; price/quote/yes/next/
   person/money/decline/size words recognised in all ten). Widget 1.2.0: Language select on the card, all labels
   translated, Arabic RTL. Quotation PDFs and emails stay English (owner). Price guard now checks amounts with
@@ -189,7 +190,7 @@ Read this before any task on this project.
   per exhibition `agents.chat_link_*` (default on), valid until the end of `event_ends_on` (90 days without one),
   opened by `api/session.php` (`personal`): no card, welcome by name, lead linked, earlier chat's summary and
   offer kept; do-not-contact and blocked countries get the normal chat; utm_medium=personal-link (/social only
-  counts utm_medium social/exhibitor-share/share, so it is unaffected). Tests 1,631.
+  counts utm_medium social/exhibitor-share/share, so it is unaffected). Tests 1,636.
   **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
   prospect-campaign replies left out for now. It waits for the owner to try Stage B.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links

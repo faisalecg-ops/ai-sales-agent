@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 31 for languages (13 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 33 for languages (13 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -345,6 +345,24 @@ return [
             ['say' => null, 'must' => ['Thai' => '/\p{Thai}{4}/u']],
             ['say' => 'บูธ shell scheme ขนาด 18 ตารางเมตร ราคาเท่าไหร่',
                 'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/ใบเสนอราคา/u']],
+        ],
+    ],
+    [
+        'name'  => '32. Bahasa Indonesia: price and quotation offer',
+        'intro' => ['first_name' => 'Budi', 'company' => 'Jakarta Farma Mesin', 'country' => 'ID', 'interest' => 'exhibit', 'language' => 'id'],
+        'turns' => [
+            ['say' => null, 'must' => ['Indonesian' => '/\b(?:Anda|yang|untuk|dengan|apa)\b/i']],
+            ['say' => 'Berapa harga stan shell scheme 18 meter persegi?',
+                'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/penawaran|quotation/i']],
+        ],
+    ],
+    [
+        'name'  => '33. Bahasa Melayu: price and quotation offer',
+        'intro' => ['first_name' => 'Aisyah', 'company' => 'Penang Pharma Pack Sdn Bhd', 'country' => 'MY', 'interest' => 'exhibit', 'language' => 'ms'],
+        'turns' => [
+            ['say' => null, 'must' => ['Malay' => '/\b(?:anda|yang|untuk|dengan|apa)\b/i']],
+            ['say' => 'Berapa harga gerai shell scheme 18 meter persegi?',
+                'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/sebut harga/i']],
         ],
     ],
 ];
