@@ -73,7 +73,7 @@ Also needed, once: two SQL files for Pharma Asia, `pharmaasia-chat-fixes-2026-11
 22. Admin → Leads: the lead shows its score, its quotation and the chat language.
 23. In a test chat, say "that is too expensive" and then "please do not contact me again". The chat should
     accept it without offering a discount and without asking anything more. The conversation page shows
-    **Concerns raised** and **Do not contact**. Your email is then on Set-up → Do-not-contact: remove it
+    **Concerns raised** and **Do not contact**. Your email is then on Set-up → Do not contact: remove it
     there after the test.
 
 If something does not look right, tell me what you saw, with a screenshot if you can.
