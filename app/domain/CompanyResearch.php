@@ -1512,6 +1512,17 @@ final class CompanyResearch
         if (is_array($f['decision_maker'] ?? null) && !empty($f['decision_maker']['title'])) {
             $lines[] = '- The person who usually decides on exhibiting there: ' . $quote((string)$f['decision_maker']['title']) . '.';
         }
+        // A concern they may raise, and a fair answer (improvement plan,
+        // 13 Nov 2026): for judgement only, used if they raise it themselves.
+        $objections = array_slice(array_values(array_filter((array)($f['objections'] ?? []), 'is_array')), 0, 2);
+        foreach ($objections as $o) {
+            if (trim((string)($o['objection'] ?? '')) !== '') {
+                $lines[] = '- A concern they may raise: ' . $quote((string)$o['objection'], 160)
+                         . (trim((string)($o['response'] ?? '')) !== '' ? '; a fair answer: ' . $quote((string)$o['response'], 220) : '')
+                         . '. Use it only if they raise it themselves.';
+            }
+        }
+        $lines[] = 'Mention at most one or two of these facts in a reply, when they help; never recite the research or say that you researched them.';
         $lines[] = 'Never claim anything about their company that is not in what research found above.';
         return implode("\n", $lines);
     }

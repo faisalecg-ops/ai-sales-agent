@@ -181,12 +181,23 @@ final class ChatOrchestrator
         }
 
         $contactRecord = ChatGuide::noteVisitorAnswer(ChatGuide::contactRecord($leadState), $message);
+        // A concern in this message (improvement plan, 13 Nov 2026). Someone
+        // who asks not to be contacted is never asked for details again, nor
+        // offered a quotation, unless they ask for one themselves.
+        $concernNow = Concerns::detect($message);
+        $optedOut   = $concernNow === 'opt_out' || !empty($leadState['no_contact']) || !empty($leadState['no_contact_maybe']);
+        if ($optedOut) {
+            $contactRecord['stopped'] = true;
+        }
         $contactRule   = ChatGuide::mayAsk(
             $contactRecord,
             $turnNo,
             self::hasContactInState($leadState),
             self::asksForUs($message) || $quoteWanted
         );
+        if ($optedOut && $contactRule['why'] === 'stopped') {
+            $contactRule['why'] = 'opted_out';
+        }
 
         // ---- 5. Geo gate (Sections 11, 13) --------------------------------
         $geoRan = false;
@@ -355,6 +366,17 @@ final class ChatOrchestrator
                 . "contact the sales representative.";
         }
 
+        // Concerns: how to answer one raised now, and what was raised before.
+        $exhibitorCase = self::exhibitorCase($agent, $conversation, $leadState);
+        $concernsBefore = (array)($leadState['concerns'] ?? []);
+        $concernBlock = '';
+        if ($optedOut && $concernNow !== 'opt_out') {
+            $concernBlock = Concerns::optedOutBlock();
+        } elseif ($concernNow !== null || $onPath || $concernsBefore) {
+            $concernBlock = Concerns::promptBlock($concernNow, $concernsBefore,
+                is_array($exhibitorCase) ? (array)($exhibitorCase['audience'] ?? []) : self::audienceFacts($agent));
+        }
+
         $promptCtx = [
             'quotation'         => $quoteNote,
             'language'          => $lang,
@@ -386,7 +408,8 @@ final class ChatOrchestrator
             'offer_question'    => $offerQ,
             'offer_focus'       => (array)($leadState['offer_focus'] ?? []),
             'contact_rule'      => $contactRule,
-            'exhibitor_case'    => self::exhibitorCase($agent, $conversation, $leadState),
+            'exhibitor_case'    => $exhibitorCase,
+            'concerns'          => $concernBlock,
         ];
 
         if ($requestedSqm !== null && (float)($conversation['requested_sqm'] ?? 0) !== $requestedSqm) {
@@ -552,6 +575,9 @@ final class ChatOrchestrator
                                         ? ($reference ?? ($quoteNames === [] || count($quoteNames) > 1 ? ($leadState['quote_last_ref'] ?? null) : null))
                                         : null],
                 'on_path'       => $onPath,
+                // The concern PHP read, or else the one the assistant heard.
+                'concern'       => $concernNow ?? ($signals['concern'] ?? null),
+                'opt_out'       => $concernNow === 'opt_out',
                 'qual'          => $qual,
                 'qual_update'   => $onPath ? Qualification::supported(
                     Qualification::fromModel($signals['qualification'] ?? null),
@@ -639,6 +665,26 @@ final class ChatOrchestrator
             $leadState = $qualified['lead_state'];
 
             $contactCaptured = $lead !== null && LeadManager::hasContact($lead);
+
+            // "Please don't contact me" (improvement plan, scenario H): their
+            // email address and phone number go on the exhibition's
+            // Do-not-contact list, so no prospect email, WhatsApp message or
+            // follow-up reaches them. Taking someone off it stays a
+            // deliberate step in the admin.
+            if (!empty($turn['memory']['opt_out']) && Migrations::tableExists('suppression_list')) {
+                $put = [];
+                foreach (['email', 'phone'] as $kind) {
+                    foreach ([$lead[$kind] ?? null, $leadState[$kind] ?? null] as $value) {
+                        $value = trim((string)$value);
+                        if ($value !== '' && !in_array($kind . $value, $put, true)
+                            && Suppression::add($agentId, $kind, $value, 'Asked in the website chat not to be contacted', 'opt_out')) {
+                            $put[] = $kind . $value;
+                        }
+                    }
+                }
+                Audit::log('chat_opt_out', $agentId, 'conversation', (int)$conversation['id'],
+                    $put ? 'Put on the Do-not-contact list' : 'No email or phone to put on the Do-not-contact list');
+            }
 
             // Readiness signals (Section 30) — PHP computed.
             $stored  = json_decode((string)($conversation['readiness_signals'] ?? '{}'), true) ?: [];
@@ -1352,7 +1398,30 @@ final class ChatOrchestrator
         if (!empty($memory['prices_given'])) {
             $leadState['prices_given'] = true;
         }
+        $leadState = Concerns::remember($leadState, $memory['concern'] ?? null);
+        if (!empty($memory['opt_out'])) {
+            $leadState['no_contact'] = true;
+        } elseif (($memory['concern'] ?? null) === 'opt_out') {
+            // Heard by the assistant (another language, other words) but not
+            // read by PHP: the asking stops; the team checks the chat before
+            // putting them on the Do-not-contact list.
+            $leadState['no_contact_maybe'] = true;
+        }
+        if (!empty($leadState['no_contact']) || !empty($leadState['no_contact_maybe'])) {
+            $leadState['contact_asks']['stopped'] = true;
+            $leadState['contact_asks']['pending'] = false;
+        }
         return $leadState;
+    }
+
+    /** Approved facts about who visits, for a concern from someone not (yet) on the exhibitor path. */
+    private static function audienceFacts(array $agent): array
+    {
+        try {
+            return (array)(ValueProposition::build($agent, ['track' => 'visitor'], [])['audience'] ?? []);
+        } catch (Throwable) {
+            return [];
+        }
     }
 
     /**

@@ -39,6 +39,8 @@ final class PromptBuilder
         $sections[] = (string)($ctx['research'] ?? '');
         $sections[] = self::exhibitorCase($ctx);
         $sections[] = (string)($ctx['sales_path'] ?? '');
+        // Concerns (improvement plan, 13 Nov 2026).
+        $sections[] = (string)($ctx['concerns'] ?? '');
         $sections[] = self::turnGuidance($ctx);
         // A quotation request: what the system still needs, or that it is being sent.
         $sections[] = (string)($ctx['quotation'] ?? '');
@@ -101,6 +103,9 @@ final class PromptBuilder
            or floor-plan location. Never offer a floor map.
         10. When you cannot help reliably, say so plainly and offer a
             colleague's follow-up rather than guessing.
+        11. Results. Never promise or imply guaranteed buyers, orders, sales,
+            leads, meetings, distributors or a return on investment. Say what
+            exhibiting may or could do, never what it will do.
 
         HOW YOU SOUND
         You are an experienced, friendly sales person for the exhibition,
@@ -114,8 +119,15 @@ final class PromptBuilder
           know. Say "our stand rates", "the 2027 rates", "what is included".
         - Never mention the visitor's country when you give a price, and never
           suggest that prices differ by country.
+        - Answer the question they actually asked first, then move the
+          conversation on. Never hold back ordinary information until they
+          answer a question or give their details.
         - Never ask for something the visitor has already told you or that
           research about their company already says.
+        - What they said most recently wins over anything older. If they
+          change their mind (from exhibiting to only visiting, or the other
+          way), follow their new purpose at once.
+        - Someone who only wants to visit gets visitor help, not a sales pitch.
         - When you set out several prices, inclusions or differences, put
           each on its own line starting with "- ". Never run several prices
           together in one sentence.
@@ -617,7 +629,9 @@ final class PromptBuilder
             $lines[] = "You already have a way to contact them. Do not ask for contact details again.";
         } elseif (is_array($rule) && empty($rule['may_ask'])) {
             $lines[] = "Do not ask for contact details in this reply.";
-            if (($rule['why'] ?? '') === 'stopped') {
+            if (($rule['why'] ?? '') === 'opted_out') {
+                $lines[] = "They asked not to be contacted: never ask for contact details and offer no follow-up.";
+            } elseif (($rule['why'] ?? '') === 'stopped') {
                 $book = trim((string)($ctx['agent']['book_stand_url'] ?? ''));
                 $lines[] = "They have chosen not to give contact details, so never ask again. If they want to go "
                          . "ahead, point them to the Book a stand page"

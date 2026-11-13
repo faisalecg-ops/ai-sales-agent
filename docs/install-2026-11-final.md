@@ -9,6 +9,7 @@ you installed on 11 November 2026. Ignore all earlier November zips.
 | Guided path, lead score, website answers, blocked countries, company website box | `docs/upgrade-2026-11-guided-selling-a.md` |
 | Quotation PDF, offered and sent by the chat, made by hand on the lead page | `docs/upgrade-2026-11-guided-selling-b.md` |
 | 16 chat languages, stronger price check, personal "Let's discuss more" links | `docs/upgrade-2026-11-languages-and-chat-links.md` |
+| Concerns answered with care ("too expensive", "ask my manager", "guarantee buyers"…), "don't contact me" respected | `docs/upgrade-2026-11-conversation-quality.md` |
 
 Also needed, once: two SQL files for Pharma Asia, `pharmaasia-chat-fixes-2026-11.sql` and
 `pharmaasia-sectors-and-tier-guidance.sql`.
@@ -70,6 +71,10 @@ Also needed, once: two SQL files for Pharma Asia, `pharmaasia-chat-fixes-2026-11
       should open, greeting you by name.
 21. As a company in Pakistan, ask a price: you should get no price, and the local sales rep's details.
 22. Admin → Leads: the lead shows its score, its quotation and the chat language.
+23. In a test chat, say "that is too expensive" and then "please do not contact me again". The chat should
+    accept it without offering a discount and without asking anything more. The conversation page shows
+    **Concerns raised** and **Do not contact**. Your email is then on Set-up → Do-not-contact: remove it
+    there after the test.
 
 If something does not look right, tell me what you saw, with a screenshot if you can.
 
@@ -81,6 +86,6 @@ Bahasa Melayu — 16 in all. Quotation PDFs and emails stay in English.
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,636 pass. `php tests/access-http.php`: 82 pass.
+- `php tests/acceptance.php`: 1,682 pass. `php tests/access-http.php`: 82 pass.
 - Real GPT-6 Luna and Tavily (12–13 Nov 2026): the English test chats, quotation chats, and one or more
   chats in each new language. Transcripts in `docs/reference/`.

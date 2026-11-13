@@ -112,3 +112,6 @@ Expert not yet connected to Pulse.
 - Later on 13 Nov: Italian, Japanese, Persian, Thai, Bahasa Indonesia and Bahasa Melayu added (16 languages).
   The owner has not installed any November zip: one final package `salesagent-update-2026-11-final.zip` with one
   guide `docs/install-2026-11-final.md`. Tests 1,636 + 82.
+- 13 Nov evening: the conversation-quality plan (owner's document on main) — concerns answered with care and
+  remembered, "don't contact me" puts their details on Do-not-contact. Same final zip. Tests 1,682 + 82.
+  Real-AI chats 34–41 wait for a working test key. See `docs/upgrade-2026-11-conversation-quality.md`.

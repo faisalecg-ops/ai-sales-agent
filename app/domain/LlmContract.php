@@ -63,6 +63,8 @@ final class LlmContract
             'lead_fields'       => self::leadFields($decoded['lead_fields'] ?? null),
             // Validated by Qualification::fromModel before any of it is kept.
             'qualification'     => is_array($decoded['qualification'] ?? null) ? $decoded['qualification'] : null,
+            // A concern the visitor raised in this message (13 Nov 2026), from a fixed list.
+            'concern'           => Concerns::fromModel($decoded['concern'] ?? null),
         ];
 
         return ['ok' => true, 'reason' => null, 'data' => $data];
@@ -243,7 +245,8 @@ final class LlmContract
           "package_reference": "stall:ID or sponsorship:ID, or null",
           "handoff_required": true or false,
           "handoff_reason": string or null,
-          "location_ambiguous": true or false
+          "location_ambiguous": true or false,
+          "concern": "price | approval | send_details | other_shows | not_ready | guarantee | audience | opt_out, or null"
         }
 
         Field notes:
@@ -260,6 +263,13 @@ final class LlmContract
           words; leave every other key out. Never infer or guess a value.
         - "country_disclosed" is where the person is. "company_country_disclosed"
           is where their business is based. If they differ, report both.
+        - "concern": the concern the visitor raised in THIS message, in any language:
+          price (finds it expensive), approval (needs management's approval or
+          is collecting options for someone else), send_details (asks for
+          information to be sent), other_shows (already does other
+          exhibitions), not_ready (not this year), guarantee (wants guaranteed
+          buyers or results), audience (doubts the visitors), opt_out (asks not
+          to be contacted). null when there is none.
         - "location_ambiguous": true when a place they named could belong to
           more than one country and you could not tell which they meant.
         - "package_reference": only a Reference from the prices supplied to

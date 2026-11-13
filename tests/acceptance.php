@@ -6242,6 +6242,109 @@ T::ok(in_array('FJ', array_column(ChatIntro::countryOptions(), 0), true), 'And t
 db()->exec('DELETE FROM companies WHERE id IN (?, ?)', [(int)$bcCo['id'], (int)$bcCo2['id']]);
 $mock->reset();
 
+// =====================================================================
+// Concerns and opt-out (improvement plan, 13 Nov 2026)
+// =====================================================================
+T::group('Concerns: read, answered with care, remembered, and an opt-out respected');
+
+$cnCases = [
+    'This is too expensive for us' => 'price',
+    'Honestly that is more than we expected' => 'price',
+    'Bohat mehnga hai yaar' => 'price',
+    'I need to discuss this with my director first' => 'approval',
+    'My manager asked me to collect the prices for him' => 'approval',
+    'Can you send me the brochure?' => 'send_details',
+    'Please email me more details' => 'send_details',
+    'We already exhibit at other shows in Dubai' => 'other_shows',
+    'Not this year, maybe next edition' => 'not_ready',
+    'Can you guarantee we will get buyers?' => 'guarantee',
+    'What ROI can we expect?' => 'guarantee',
+    'What is the quality of the visitors? Are they serious buyers?' => 'audience',
+    'Please do not contact me again' => 'opt_out',
+    'Unsubscribe me' => 'opt_out',
+    'Remove my email from your list' => 'opt_out',
+    'Mujhe contact mat karna' => 'opt_out',
+];
+foreach ($cnCases as $cnText => $cnType) {
+    T::equals($cnType, Concerns::detect($cnText), 'Read: "' . $cnText . '"');
+}
+foreach (['What are the dates?', 'Please send me a quotation for 18 sqm', 'Not now, thanks', 'How much is a 9 sqm stall?',
+          'We make pumps', 'Can you contact me tomorrow at 10?', 'Is the visitor registration free?'] as $cnText) {
+    T::equals(null, Concerns::detect($cnText), 'Not a concern: "' . $cnText . '"');
+}
+T::equals('approval', Concerns::fromModel('approval'), 'The concern the assistant heard is kept when it is one of the list');
+T::equals(null, Concerns::fromModel('give a discount'), 'Anything else is dropped');
+$cnState = Concerns::remember(Concerns::remember(Concerns::remember([], 'price'), 'approval'), 'price');
+T::equals(['price', 'approval'], $cnState['concerns'], 'Concerns are remembered once each, in order');
+T::equals(['Finds it expensive', 'Needs approval from management'], Concerns::labels($cnState['concerns']), 'In the team\'s words');
+
+$cnBlock = Concerns::promptBlock('price', [], [['title' => 'Who visits', 'body' => '35,000 trade visitors in 2026.']]);
+T::ok(str_contains($cnBlock, 'Do not offer or hint at a discount') && str_contains($cnBlock, 'total budget'),
+    'A price concern: no discount, one question about budget or exposure');
+T::ok(str_contains($cnBlock, '35,000 trade visitors'), 'With the approved facts about who visits');
+T::ok(str_contains(Concerns::promptBlock('guarantee', []), 'no exhibition can guarantee'), 'A guarantee is answered honestly');
+T::ok(str_contains(Concerns::promptBlock(null, ['price']), 'Raised earlier in this chat: finds it expensive'), 'An earlier concern stays in view');
+
+// In the chat
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Lena. What would you like to show?', 'intent' => 'exhibitor']);
+[$cnConv, $cnSecret] = start_conversation($agent);
+say($agent, $cnConv, $cnSecret, 'Hi, I am Lena from Kessler Pumpen, Germany. We would like to exhibit.');
+$mock->push(['reply' => 'I understand the investment has to make sense. Is it the total budget or the space?', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Hmm, that is too expensive for us.');
+$cnPrompt = $mock->lastSystemPrompt();
+T::ok(str_contains($cnPrompt, 'THIS MESSAGE: they find it expensive'), 'The chat is told how to answer a price concern');
+T::ok(str_contains($cnPrompt, 'Never promise or imply guaranteed buyers'), 'And never to promise results');
+$cnState = ConversationStore::leadState(reload_conversation($cnConv));
+T::equals(['price'], $cnState['concerns'] ?? null, 'The concern is kept with the conversation');
+
+$mock->push(['reply' => 'Of course. I can help you prepare a summary for him.', 'intent' => 'exhibitor', 'concern' => 'approval']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Ich muss das mit meinem Chef besprechen.');
+T::equals(['price', 'approval'], ConversationStore::leadState(reload_conversation($cnConv))['concerns'] ?? null,
+    'A concern the assistant heard in another language is kept too');
+
+// "Please don't contact me again"
+$mock->push(['reply' => 'Thanks. Could I have your email so the team can send it?', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Lena', 'email' => 'lena@kessler-pumpen.example']]);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Sure, lena@kessler-pumpen.example');
+$cnLeadId = (int)reload_conversation($cnConv)['lead_id'];
+T::ok($cnLeadId > 0, 'A lead with an email address');
+$mock->push(['reply' => 'Understood. The team will not follow up with you.', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Actually, please do not contact me again.');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THIS MESSAGE: they asked not to be contacted'), 'The chat is told to accept it and ask nothing');
+$cnState = ConversationStore::leadState(reload_conversation($cnConv));
+T::ok(!empty($cnState['no_contact']) && !empty($cnState['contact_asks']['stopped']), 'The conversation is marked: no contact, no more asking');
+T::ok(Suppression::blocksEmail((int)$agent['id'], 'lena@kessler-pumpen.example'), 'Their email address is on the Do-not-contact list');
+$mock->push(['reply' => 'The exhibition is on 7 to 9 December 2027.', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'When is the exhibition?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THEY ASKED NOT TO BE CONTACTED'), 'Every later reply is told not to sell or ask');
+$cnBrief = LeadBriefing::build($agent, db()->one('SELECT * FROM leads WHERE id = ?', [$cnLeadId]), 'new_lead', false);
+T::ok(str_contains($cnBrief['text'], 'They asked in the chat NOT to be contacted'), 'The team is told first thing in the briefing');
+T::ok(str_contains($cnBrief['text'], 'Concerns raised') && str_contains($cnBrief['text'], 'Finds it expensive; Needs approval from management; Asked not to be contacted'),
+    'With the concerns raised');
+
+// Heard only by the assistant: no list, but the asking stops and the team checks
+$mock->reset();
+$mock->push(['reply' => 'Welcome.', 'intent' => 'exhibitor']);
+[$cnConv2, $cnSecret2] = start_conversation($agent);
+say($agent, $cnConv2, $cnSecret2, 'Hello, we may exhibit.');
+$mock->push(['reply' => 'Verstanden.', 'intent' => 'exhibitor', 'concern' => 'opt_out']);
+say($agent, reload_conversation($cnConv2), $cnSecret2, 'Bitte kontaktieren Sie mich nicht mehr.');
+$cnState2 = ConversationStore::leadState(reload_conversation($cnConv2));
+T::ok(!empty($cnState2['no_contact_maybe']) && empty($cnState2['no_contact']) && !empty($cnState2['contact_asks']['stopped']),
+    'An opt-out heard only by the assistant stops the asking and is flagged for the team to check');
+
+// Someone collecting options for their manager
+$cnPath = Qualification::promptBlock(['products_made' => ['pumps'], 'contact_role' => 'Purchase assistant'], 7, true, true);
+T::ok(str_contains($cnPath, 'Treat them as just as important'), 'Someone preparing options for a manager is helped, not passed over');
+T::ok(!str_contains(Qualification::promptBlock(['products_made' => ['pumps'], 'contact_role' => 'Managing Director'], 7, true, true), 'Treat them as just as important'),
+    'Not said about a director');
+T::ok(str_contains(Qualification::promptBlock(['products_made' => ['pumps']], 7, true, true), 'decide themselves or prepare the options'),
+    'When the role is unknown, it may be asked once, naturally');
+
+db()->exec('DELETE FROM suppression_list WHERE agent_id = ?', [(int)$agent['id']]);
+$mock->reset();
+
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');
 db()->exec('DELETE FROM agents WHERE slug LIKE \'acc-%\'');

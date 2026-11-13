@@ -407,7 +407,9 @@ final class Qualification
                . "Then ask if they would like the details.",
             7 => "Answer their questions about sizes, what is included, " . ($pricesAllowed ? "prices, " : "") . "dates and "
                . "logistics. When they seem satisfied, offer the next step"
-               . ($pricesAllowed && $quotations ? ": a quotation by email for the option you discussed." : "."),
+               . ($pricesAllowed && $quotations ? ": a quotation by email for the option you discussed." : ".")
+               . (self::isKnown($qual, 'contact_role') ? '' : " If it comes up naturally, and only as your one question, ask "
+                 . "whether they will decide themselves or prepare the options for their management."),
             default => $pricesAllowed
                 ? ($quotations
                     ? "Help them take the next step. Offer ONE of these, the first that fits: a quotation by email for the "
@@ -428,6 +430,13 @@ final class Qualification
             "Rules: the visitor leads. If they ask something, answer it fully first, then return to the path with at most "
             . "one question. Never ask for something listed as known below. Never ask two things in one reply.",
         ];
+        // Someone collecting options for a manager is helped, not passed over
+        // (improvement plan, 13 Nov 2026).
+        if (self::isKnown($qual, 'contact_role') && !self::isDecisionMaker((string)($qual['contact_role'] ?? ''))) {
+            $lines[] = "They may not make the final decision themselves. Treat them as just as important: help them put "
+                . "together what their management needs (the fitting option, what it includes"
+                . ($pricesAllowed ? ", its cost" : "") . "), and never ask to speak to someone more senior.";
+        }
         if ($known) {
             $lines[] = "";
             $lines[] = "KNOWN ABOUT THEM";

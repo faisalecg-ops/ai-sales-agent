@@ -190,7 +190,15 @@ Read this before any task on this project.
   per exhibition `agents.chat_link_*` (default on), valid until the end of `event_ends_on` (90 days without one),
   opened by `api/session.php` (`personal`): no card, welcome by name, lead linked, earlier chat's summary and
   offer kept; do-not-contact and blocked countries get the normal chat; utm_medium=personal-link (/social only
-  counts utm_medium social/exhibitor-share/share, so it is unaffected). Tests 1,636.
+  counts utm_medium social/exhibitor-share/share, so it is unaffected). Tests 1,636 (then 1,682 with the concerns).
+  **Conversation quality (owner, 13 Nov 2026: "improve according to"
+  `docs/SALES_CONVERSATION_QUALITY_AND_PROMPT_IMPROVEMENT_PLAN.md` on main), BUILT, in the same final zip, no database step.**
+  Read `docs/upgrade-2026-11-conversation-quality.md` (what already existed, what was added, what was not). `Concerns`
+  (price, approval, send_details, other_shows, not_ready, guarantee, audience, opt_out; PHP reads English/Roman Urdu,
+  the AI reports `concern` in any language; `lead_state.concerns`; prompt section WHEN THEY RAISE A CONCERN with approved
+  audience facts); a PHP-read opt-out puts the lead's email/phone on the Do-not-contact list (`Suppression`, source
+  opt_out) and sets `lead_state.no_contact`; heard only by the AI → `no_contact_maybe` (asking stops, team checks).
+  Rule 11 (no guaranteed results). Tests 1,682. Real-AI chats 34–41 written, not run (the test keys were rotated).
   **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
   prospect-campaign replies left out for now. It waits for the owner to try Stage B.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links

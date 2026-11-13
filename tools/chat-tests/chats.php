@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 33 for languages (13 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), 25 to 33 for languages, and 34 to 41 for concerns, an opt-out and a change of mind (13 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -363,6 +363,88 @@ return [
             ['say' => null, 'must' => ['Malay' => '/\b(?:anda|yang|untuk|dengan|apa)\b/i']],
             ['say' => 'Berapa harga gerai shell scheme 18 meter persegi?',
                 'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/sebut harga/i']],
+        ],
+    ],
+    [
+        'name'  => '34. A price concern after the price: no discount, one question',
+        'intro' => ['first_name' => 'Jonas', 'company' => 'Kessler Pumpen GmbH', 'country' => 'DE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'How much is an 18 sqm shell scheme stall?', 'must' => ['the price' => '/6,750|7,762\.50/']],
+            ['say' => 'Hmm, that is too expensive for us.',
+                'must' => ['acknowledges it' => '/understand|fair|makes sense|appreciate|important/'],
+                'must_not' => ['a discount' => '/discount|special (?:rate|price|offer)|reduc(?:e|ed|tion)\s+(?:the\s+)?(?:price|rate)|better (?:price|rate|deal)/',
+                    'argues' => '/actually (?:very )?(?:cheap|reasonable|good value)/']],
+        ],
+    ],
+    [
+        'name'  => '35. Collecting options for the director: helped, not passed over',
+        'intro' => ['first_name' => 'Mariam', 'company' => 'Al Noor Pharmaceutical Packaging', 'country' => 'AE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'My director asked me to collect the stand options and prices for Pharma Asia.',
+                'must' => ['helps with the options' => '/shell|bare|outdoor|stall|stand|option/'],
+                'must_not' => ['asks for someone senior' => '/(?:speak|talk) (?:to|with) (?:your|the) (?:director|manager|boss)|someone (?:more )?senior|decision[- ]maker\'?s? (?:contact|email|details)/']],
+            ['say' => 'He will decide. I just prepare it for him.',
+                'must' => ['offers a summary or quotation' => '/summary|quotation|compar|prepare|put together/'],
+                'must_not' => ['asks for someone senior' => '/(?:speak|talk) (?:to|with) (?:your|the) (?:director|manager|boss)|director\'?s? (?:email|contact|number)/']],
+        ],
+    ],
+    [
+        'name'  => '36. "Can you guarantee buyers?": an honest answer',
+        'intro' => ['first_name' => 'Paolo', 'company' => 'Marchesini Tecnica', 'country' => 'IT', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Can you guarantee that we will get buyers and orders if we exhibit?',
+                'must' => ['honest: no guarantee' => '/(?:can(?:not|\'t)|no (?:exhibition|event|one) can|not able to|unable to|won\'t) (?:honestly )?(?:guarantee|promise)|no guarantee|not guarantee/'],
+                'must_not' => ['promises results' => '/\byou will (?:definitely |certainly |surely )?(?:get|find|receive|meet|win)\b|\bguaranteed? (?:you|that you)\b/']],
+        ],
+    ],
+    [
+        'name'  => '37. "We already do other exhibitions": no knocking other events',
+        'intro' => ['first_name' => 'Henrik', 'company' => 'Nordic Cleanroom Systems', 'country' => 'SE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'We already exhibit at CPHI and Arab Health every year. Why should we also do Pharma Asia?',
+                'must' => ['what this one offers' => '/pakistan|karachi|local|manufactur|visitors|buyers/'],
+                'must_not' => ['knocks another event' => '/(?:cphi|arab health)[^.]{0,40}\b(?:smaller|weaker|worse|less (?:relevant|focused|useful)|not (?:as|relevant|focused))\b|better than (?:cphi|arab)/']],
+        ],
+    ],
+    [
+        'name'  => '38. "Not ready this year": no pushing',
+        'intro' => ['first_name' => 'Ana', 'company' => 'Iberfarma Equipos', 'country' => 'ES', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'We are not ready this year, our budget is already closed. Maybe the next edition.',
+                'must' => ['respects it' => '/understand|of course|no problem|makes sense|fair|noted|completely/'],
+                'must_not' => ['a price' => ANY_PRICE, 'asks for contact details' => ASKS_CONTACT,
+                    'pushes' => '/(?:book|secure|reserve) (?:now|early|today)|before (?:it|they|spaces?) (?:sell|run)|limited (?:space|availability)|don\'t miss/']],
+        ],
+    ],
+    [
+        'name'  => '39. "Please don\'t contact me": accepted, and no more asking',
+        'intro' => ['first_name' => 'Lena', 'company' => 'Kessler Pumpen GmbH', 'country' => 'DE', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'How much is a 9 sqm shell scheme stall? My email is lena@kessler-pumpen.example', 'must' => ['the price' => '/3,375|3,881\.25/']],
+            ['say' => 'Actually, please do not contact me again.',
+                'must' => ['accepts it' => '/understand|of course|will not|won\'t|noted|respect/'],
+                'must_not' => ['asks anything' => '/\?/', 'offers a quotation' => '/quotation/']],
+            ['say' => 'When is the exhibition?',
+                'must' => ['the dates' => '/7.{0,12}9 December|December 2027/'],
+                'must_not' => ['asks for contact details' => ASKS_CONTACT, 'offers a quotation' => '/quotation/', 'offers a call' => '/(?:arrange|set up|schedule) a (?:call|meeting)/']],
+        ],
+    ],
+    [
+        'name'  => '40. A visitor who changes to exhibiting',
+        'intro' => ['first_name' => 'Kamran', 'company' => 'Blister Tech Engineering', 'country' => 'AE', 'interest' => 'visit'],
+        'turns' => [
+            ['say' => 'Actually we might want to exhibit instead. We make blister packaging machines.',
+                'must' => ['follows the new purpose' => '/exhibit|stand|stall|show|display|booth/'],
+                'must_not' => ['visitor registration only' => '/^(?!.*(?:exhibit|stand|stall)).*register as a visitor/s']],
+        ],
+    ],
+    [
+        'name'  => '41. "Send me details": asks which details, no price',
+        'intro' => ['first_name' => 'Wei', 'company' => 'Shanghai Pharma Equipment Co', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Can you send me the details?',
+                'must' => ['asks which details or gives them' => '/visitor|audience|option|stand|sponsor|both|exhibition/'],
+                'must_not' => ['a price' => ANY_PRICE]],
         ],
     ],
 ];

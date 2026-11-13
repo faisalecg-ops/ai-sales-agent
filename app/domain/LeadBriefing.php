@@ -41,10 +41,22 @@ final class LeadBriefing
         $subject = $headline . ' (' . (string)$agent['name'] . ')';
 
         $summary     = self::summaryRows($lead, $agent, $tz);
+        // Concerns the visitor raised (improvement plan, 13 Nov 2026).
+        $concerns    = self::concernsOf($conversations);
+        if ($concerns['labels']) {
+            $summary['Concerns raised'] = implode('; ', $concerns['labels']);
+        }
         $interest    = self::packageInterest($lead);
         $signals     = self::signalLabels($conversations);
         $unanswered  = self::unansweredQuestions($conversations);
         $suggestions = self::suggestions($agent, $lead, $conversations, $isLocal, $interest, $unanswered);
+        if ($concerns['no_contact']) {
+            array_unshift($suggestions, 'They asked in the chat NOT to be contacted. Their email address and phone number '
+                . 'are on the Do-not-contact list. Do not follow up unless they contact you again.');
+        } elseif ($concerns['no_contact_maybe']) {
+            array_unshift($suggestions, 'They may have asked in the chat not to be contacted (the assistant understood it '
+                . 'so). Read the conversation before any follow-up; if so, add them under Do-not-contact.');
+        }
 
         return [
             'subject' => $subject,
@@ -235,6 +247,24 @@ final class LeadBriefing
         return implode('; ', $parts);
     }
 
+    /** @return array{labels:string[],no_contact:bool,no_contact_maybe:bool} */
+    private static function concernsOf(array $conversations): array
+    {
+        $types = [];
+        $no = false;
+        $maybe = false;
+        foreach ($conversations as $c) {
+            $state = json_decode((string)($c['lead_state'] ?? ''), true);
+            if (!is_array($state)) {
+                continue;
+            }
+            array_push($types, ...array_map('strval', (array)($state['concerns'] ?? [])));
+            $no    = $no || !empty($state['no_contact']);
+            $maybe = $maybe || !empty($state['no_contact_maybe']);
+        }
+        return ['labels' => Concerns::labels($types), 'no_contact' => $no, 'no_contact_maybe' => $maybe && !$no];
+    }
+
     private static function packageInterest(array $lead): array
     {
         $decoded = json_decode((string)($lead['package_interest'] ?? '[]'), true);
@@ -337,6 +367,16 @@ final class LeadBriefing
         foreach (['company' => 'company name', 'industry' => 'industry', 'product_category' => 'what they make or sell'] as $field => $label) {
             if (trim((string)($lead[$field] ?? '')) === '') {
                 $missing[] = $label;
+            }
+        }
+        // From the guided-selling record: what is worth asking on the first call.
+        $qual = json_decode((string)($lead['qualification'] ?? ''), true);
+        if (is_array($qual) && $qual) {
+            foreach (['main_aim' => 'what they want from exhibiting', 'stand_interest' => 'the size of stand they need',
+                      'contact_role' => 'whether this person decides or prepares it for management'] as $key => $label) {
+                if (!Qualification::isKnown($qual, $key) && !($key === 'main_aim' && Qualification::isKnown($qual, 'seeking'))) {
+                    $missing[] = $label;
+                }
             }
         }
         if ($missing) {
