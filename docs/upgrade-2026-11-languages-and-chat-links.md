@@ -19,16 +19,18 @@ Built by the AI Sales Agent chat on branch `pharma-asia-2027`.
 
 The chat card starts with **Language**: English, 中文 (Chinese), Urdu (Roman), العربية (Arabic),
 Türkçe (Turkish), Русский (Russian), Español (Spanish), Français (French), Deutsch (German),
-한국어 (Korean). Any of these can be swapped for another (Italian, Persian, Portuguese…) on request.
+한국어 (Korean), Italiano (Italian), 日本語 (Japanese), فارسی (Persian), ไทย (Thai) — 14 in all. The last
+four were added the same day at the owner's request. Singapore needs no separate language: its companies
+use English, and Chinese is on the list.
 
 - Choosing a language changes the card and the chat window at once (labels, buttons, messages).
-  Arabic is shown right to left.
+  Arabic and Persian are shown right to left.
 - The assistant replies in that language. Roman Urdu is written in Latin letters, never Urdu script.
 - Prices, stand and tier names, sizes, email addresses and links stay exactly as in the price list
   (for example "USD 6,750").
 - The lines the program writes itself come in the chosen language: the quotation offer, "Quotation …
   is on its way", the sales rep's details, and the welcome from a personal link.
-- The program understands, in all ten languages: a price question, "send me a quotation", a short
+- The program understands, in all fourteen languages: a price question, "send me a quotation", a short
   "yes" or "no", "what is the next step?", "I want to speak to a person", discount/contract/payment
   questions, and sizes ("18平方米", "18 metrekare", "27 кв. м"…).
 - If a visitor writes in another language than the one chosen, the assistant answers in the language
@@ -42,7 +44,8 @@ Türkçe (Turkish), Русский (Russian), Español (Spanish), Français (Fre
 "USD 6,750" or "$6,750". Now any amount written with dollars in any of these languages ("6,750 dollars",
 "6.750 dólares", "6 750 долларов", "6,750美元") must be one of your approved prices, or the reply is
 replaced by the standard message. Other currencies written as words (euros, yuan, roubles…) are refused
-too. Rupees are allowed, because the Pakistan market article quotes medicine sales in rupees.
+too (also tomans, rials, baht). Rupees are allowed, because the Pakistan market article quotes medicine
+sales in rupees. Prices written with Persian, Arabic or Thai digits ("۶٬۷۵۰") are checked the same way.
 
 ## 2. Personal chat links
 
@@ -106,11 +109,13 @@ No new folders. `config/config.php` is unchanged (the link signature uses the ex
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,618 pass (84 new: languages, price guard, personal links).
+- `php tests/acceptance.php`: 1,631 pass (97 new: languages, price guard, personal links).
 - `php tests/access-http.php`: 82 pass.
 - In a real browser: the card in Chinese and Arabic (right to left), and a personal link opening the
   chat with the welcome and "Not you?".
 - Real GPT-6 Luna and Tavily, 13 Nov 2026: chats in Chinese, Roman Urdu and Arabic, 7 of 7 replies pass;
+  then Italian, Japanese, Persian and Thai, 8 of 8 (right language, right prices, the quotation offered;
+  fixed on the way: the Italian word "quotazione" was not known, so the offer was made twice);
   the English quotation chats 20 and 23 still pass (7 of 7). Fixed on the way: in Chinese the AI offered
   the quotation and the program added a second offer. Transcript:
   `docs/reference/chat-tests-2026-11-13-languages.txt`.

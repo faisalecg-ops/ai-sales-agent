@@ -324,6 +324,7 @@ final class PricingEngine
      */
     public static function requestedSize(string $message): ?float
     {
+        $message = Lang::digits($message);
         // Explicit area: "27 sqm", "27 m2", "27 square meters"
         if (preg_match('/\b(\d{1,4}(?:\.\d{1,2})?)\s*(?:sqm|sq\.?\s?m|m2|m²|square\s?met(?:re|er)s?)\b/i', $message, $m)) {
             $v = (float)$m[1];
@@ -332,7 +333,8 @@ final class PricingEngine
         // The same in the chat's other languages: 18平方米, 18 متر مربع, 18 metrekare, 18 кв. м, 18 metros cuadrados,
         // 18 mètres carrés, 18 Quadratmeter, 18 제곱미터 (13 Nov 2026).
         if (preg_match('/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:平方米|平米|平方|㎡|متر\s*مربع|مترا\s*مربعا|م2|metrekare|кв\.?\s*м\w*|квадратн\w*\s+метр\w*|'
-            . 'metros?\s+cuadrados?|m[eè]tres?\s+carr[ée]s?|quadratmeter|qm|제곱미터|murabba\s+met(?:er|re))/iu', $message, $m)) {
+            . 'metros?\s+cuadrados?|m[eè]tres?\s+carr[ée]s?|quadratmeter|qm|제곱미터|murabba\s+met(?:er|re)|'
+            . 'metri\s+quadr(?:ati|i)|mq|平方メートル|ตารางเมตร|ตร\.\s?ม\.?)/iu', $message, $m)) {
             $v = (float)str_replace(',', '.', $m[1]);
             return $v > 0 ? $v : null;
         }
@@ -749,13 +751,15 @@ final class PricingEngine
      */
     public static function findUnauthorisedPrice(string $reply, array $allowedPriceStrings): ?string
     {
+        // Persian, Arabic, Thai and full-width digits are read as ordinary digits (13 Nov 2026).
+        $reply = Lang::digits($reply);
         // Any three-letter currency code the agent may not quote.
         foreach (self::FORBIDDEN_CURRENCIES as $ccy) {
             if (preg_match('/(?:^|[^A-Z])' . $ccy . '(?:[^A-Z]|$)/', strtoupper($reply))) {
                 return $ccy;
             }
         }
-        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ', '¥', '￥', '₩', '₽', '₺'] as $symbol) {
+        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ', '¥', '￥', '₩', '₽', '₺', '฿'] as $symbol) {
             if (str_contains($reply, $symbol)) {
                 return $symbol;
             }
@@ -765,7 +769,7 @@ final class PricingEngine
         // and companies in Pakistan are never given a price anyway.
         if (preg_match('/(?<![\p{L}])(?:euros?|liras?|yuan|renminbi|dirhams?|riyals?|rials?|dinars?|'
             . 'pounds?\s+sterling|рубл\w*|евро|лир\w*|юан\w*|дирхам\w*|يورو|درهم|دراهم|ريال|جنيه|'
-            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로)(?![\p{L}])/iu', $reply, $cm)
+            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로|تومان|ریال|یورو|บาท|ユーロ|ยูโร|euro)(?![\p{L}])/iu', $reply, $cm)
             || preg_match('/\d\s*(?<!美)(?:元|円|엔|원)(?!\p{L})/u', $reply, $cm)) {
             return trim($cm[0]);
         }
@@ -781,7 +785,7 @@ final class PricingEngine
         // before or after the figure, must be one of the approved amounts:
         // "USD 6,750", "$6,750", "6,750 dollars", "6.750 dólares", "6 750 долларов", "6,750美元".
         $num   = '(\d{1,3}(?:[ \x{00A0}\x{202F}\x{2009}.,\']\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)';
-        $marks = 'USD|US\$|\$|美元|美金|دولار|دولارات|dollars?|dólares|dolares|dólar|dolar|dolları|доллар\w*|долл\.?|dollari|달러';
+        $marks = 'USD|US\$|\$|美元|美金|دولار|دولارات|دلار|dollars?|dólares|dolares|dólar|dolar|dolları|доллар\w*|долл\.?|dollari|달러|米ドル|ドル|ดอลลาร์';
         $found = [];
         if (preg_match_all('/(?:' . $marks . ')\s*' . $num . '/iu', $reply, $m1)) {
             $found = array_merge($found, $m1[1]);

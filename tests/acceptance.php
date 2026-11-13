@@ -5925,7 +5925,8 @@ db()->exec('DELETE FROM company_research WHERE id IN (?, ?)', [(int)$rwA, (int)$
 // =====================================================================
 T::group('Languages: the chat card, the words the program listens for, the price guard');
 
-T::equals(10, count(Lang::LANGUAGES), 'Ten languages: English and nine more');
+T::equals(14, count(Lang::LANGUAGES), 'Fourteen languages: English and thirteen more');
+T::ok(isset(Lang::LANGUAGES['it'], Lang::LANGUAGES['ja'], Lang::LANGUAGES['fa'], Lang::LANGUAGES['th']), 'Including Italian, Japanese, Persian and Thai');
 T::ok(isset(Lang::LANGUAGES['zh'], Lang::LANGUAGES['ur']) && Lang::LANGUAGES['ur'][0] === 'Urdu (Roman)', 'Chinese and Roman Urdu are among them');
 T::equals(null, Lang::valid('xx'), 'An unknown language is refused');
 T::equals('en', Lang::of([]), 'English when nothing was chosen');
@@ -5938,6 +5939,19 @@ foreach (['展位多少钱？', 'Stall ki qeemat kya hai?', 'كم سعر الج�
           '¿Cuánto cuesta un stand?', 'Quel est le prix d\'un stand ?', 'Was kostet ein Stand?', '부스 가격이 얼마예요?'] as $lq) {
     T::ok(ChatOrchestrator::detectPricingRequest($lq, ConversationState::NEW_CONVERSATION), 'A price question is recognised: ' . $lq);
 }
+foreach (['Quanto costa uno stand?', 'ブースの料金はいくらですか？', 'قیمت غرفه چقدر است؟', 'ราคาบูธเท่าไหร่'] as $lq) {
+    T::ok(ChatOrchestrator::detectPricingRequest($lq, ConversationState::NEW_CONVERSATION), 'A price question is recognised: ' . $lq);
+}
+T::ok(Quotation::wants('Mi mandi un preventivo') && Quotation::wants('見積書を送ってください') && Quotation::wants('لطفا پیش‌فاکتور بفرستید')
+    && Quotation::wants('ขอใบเสนอราคา'), 'A quotation request in Italian, Japanese, Persian and Thai');
+T::equals(null, PersonRequest::detect('لطفا پیش‌فاکتور بفرستید'), 'A Persian pro forma request is not read as an invoice question');
+T::ok(Lang::has('Posso inviarle una quotazione ufficiale?', 'quote'), 'An Italian offer worded "quotazione" is recognised, so it is not offered twice');
+T::ok(Quotation::saysYes('はい') && Quotation::saysYes('بله') && Quotation::saysYes('ใช่') && Quotation::saysYes('Certo'), 'A yes in the four new languages');
+T::equals(18.0, PricingEngine::requestedSize('۱۸ متر مربع'), 'A size written with Persian digits');
+T::equals(null, PricingEngine::findUnauthorisedPrice('قیمت غرفه ۶٬۷۵۰ دلار است', ['USD 6,750']), 'An approved price in Persian digits passes');
+T::ok(PricingEngine::findUnauthorisedPrice('قیمت غرفه ۵٬۰۰۰ دلار است', ['USD 6,750']) !== null, 'An invented price in Persian digits is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('価格は5,000ドルです', ['USD 6,750']) !== null && PricingEngine::findUnauthorisedPrice('ราคา 200,000 บาท', ['USD 6,750']) !== null,
+    'And in Japanese, and in Thai baht');
 T::ok(!ChatOrchestrator::detectPricingRequest('我们生产泵和传感器。', ConversationState::NEW_CONVERSATION), 'An ordinary Chinese sentence is not a price question');
 T::ok(Quotation::wants('请把报价单发给我') && Quotation::wants('Bize fiyat teklifi gönderin') && Quotation::wants('Envíeme una cotización')
     && Quotation::wants('Quotation bhej dein please'), 'A quotation request is recognised in other languages');

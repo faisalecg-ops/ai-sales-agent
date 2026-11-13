@@ -115,3 +115,93 @@ Replies passed: 3   failed: 0
   (research: done, poor)
 
 Replies passed: 4   failed: 0
+
+==================================================================
+Italian, Japanese, Persian and Thai added (owner, 13 Nov 2026):
+
+=== 28. Italian: price and quotation offer
+  (introduction card: {"first_name":"Marco","company":"Valvole Italia SpA","country":"IT","interest":"exhibit","language":"it"}, answered in 15.7 s)
+  ASSISTANT: Piacere, Marco. Per capire come Pharma Asia 2027 potrebbe essere utile a Valvole Italia SpA, quale risultato vorreste ottenere partecipando alla fiera?
+  PASS
+  VISITOR: Quanto costa uno stand shell scheme di 18 metri quadrati?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 con 15% VAT)
+             Lo Shell Scheme Stall di 18 sqm include:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Posso anche inviarle una quotazione ufficiale per questa opzione: desidera riceverla via email?
+             Posso anche inviarle via e-mail un preventivo ufficiale. Basta rispondere "sì".
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 29. Japanese: price and quotation offer
+  (introduction card: {"first_name":"Kenji","company":"Osaka Tablet Systems","country":"JP","interest":"exhibit","language":"ja"}, answered in 15.3 s)
+  ASSISTANT: Kenji様、出展にご関心をお寄せいただきありがとうございます。Osaka Tablet Systemsでは、どのような製品を製造されていますか？
+  PASS
+  VISITOR: 18平方メートルのシェルスキームブースはいくらですか？
+  ASSISTANT: 18 sqmのShell Scheme Stallは、壁と社名入りの fascia board、カーペット、テーブル1台と椅子2脚、照明と電源ソケットが含まれます。公式見積書をメールでお送りできます。メールアドレスを教えていただけますか？
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 2   failed: 0
+
+=== 30. Persian: price, right to left, right figures
+  (introduction card: {"first_name":"Reza","company":"Tehran Pharma Machinery","country":"TR","interest":"exhibit","language":"fa"}, answered in 15.5 s)
+  ASSISTANT: خوشحالم که به‌عنوان غرفه‌دار به Pharma Asia 2027 علاقه‌مندید، Reza. برای اینکه ببینیم نمایشگاه چطور می‌تواند به کسب‌وکارتان کمک کند، مهم‌ترین دستاوردی که از حضور در نمایشگاه می‌خواهید چیست؟
+  PASS
+  VISITOR: قیمت غرفه shell scheme با ۱۸ متر مربع چقدر است؟
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 با 15% VAT)
+             برای Shell Scheme Stall، اندازهٔ ۱۸ sqm در دسترس است. این گزینه شامل موارد زیر است:
+             - دیوارها و تابلوی پیشانی با نام شرکت
+             - فرش
+             - یک میز و دو صندلی
+             - چراغ‌ها و یک پریز برق
+             آیا مایلید برای این گزینه یک پیش‌فاکتور رسمی برایتان ایمیل کنم؟
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 31. Thai: price and quotation offer
+  (introduction card: {"first_name":"Somchai","company":"Bangkok Pharma Pack","country":"TH","interest":"exhibit","language":"th"}, answered in 15.5 s)
+  ASSISTANT: ยินดีที่ได้รู้จักครับ Somchai การออกบูธที่ Pharma Asia เหมาะสำหรับบริษัทที่ต้องการพบผู้ผลิต ผู้ซื้อ และผู้จัดจำหน่ายในอุตสาหกรรมยา เพื่อช่วยแนะนำแนวทางที่เหมาะสม คุณผลิตหรือจำหน่ายสินค้าอะไรครับ
+  PASS
+  VISITOR: บูธ shell scheme ขนาด 18 ตารางเมตร ราคาเท่าไหร่
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             สิ่งที่รวมอยู่:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             ต้องการให้ฉันส่งใบเสนอราคาอย่างเป็นทางการสำหรับรายการนี้ทางอีเมลไหมครับ
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 2   failed: 0
+
+----- after adding the Italian word 'quotazione' (the offer was made twice) -----
+
+=== 28. Italian: price and quotation offer
+  (introduction card: {"first_name":"Marco","company":"Valvole Italia SpA","country":"IT","interest":"exhibit","language":"it"}, answered in 13.3 s)
+  ASSISTANT: Piacere, Marco. Valvole Italia realizza valvole idrauliche e soluzioni idrauliche ed elettroniche plug-and-play; per Pharma Asia potrebbe essere utile mostrare quelle applicabili agli impianti o alle attrezzature farmaceutiche. Quali prodotti vorreste presentare in fiera?
+  PASS
+  VISITOR: Quanto costa uno stand shell scheme di 18 metri quadrati?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 con 15% VAT)
+             Lo Shell Scheme Stall da 18 sqm include:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Vuoi che ti invii via email un preventivo ufficiale per questa opzione?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0

@@ -104,8 +104,10 @@
   var LANGS = [
     ['en', 'English'], ['zh', '中文 (Chinese)'], ['ur', 'Urdu (Roman)'], ['ar', 'العربية (Arabic)'],
     ['tr', 'Türkçe (Turkish)'], ['ru', 'Русский (Russian)'], ['es', 'Español (Spanish)'], ['fr', 'Français (French)'],
-    ['de', 'Deutsch (German)'], ['ko', '한국어 (Korean)']
+    ['de', 'Deutsch (German)'], ['ko', '한국어 (Korean)'], ['it', 'Italiano (Italian)'], ['ja', '日本語 (Japanese)'],
+    ['fa', 'فارسی (Persian)'], ['th', 'ไทย (Thai)']
   ];
+  var RTL = { ar: true, fa: true };
   var TEXT = {
     en: {
       lead: "So we can help you properly, tell us a little about yourself.", language: "Language",
@@ -292,6 +294,82 @@
       f_name: "성함", f_company: "회사", f_email: "이메일 주소", f_phone: "전화번호", f_note: "알려 주실 내용",
       f_send: "내 정보 보내기", f_sending: "보내는 중", f_need: "팀이 연락드릴 수 있도록 이메일 또는 전화번호를 입력해 주세요.",
       f_thanks: "감사합니다. 담당자가 곧 연락드리겠습니다.", not_you: "본인이 아니신가요? 새 채팅 시작"
+    },
+    it: {
+      lead: "Per aiutarla al meglio, ci dica qualcosa di lei.", language: "Lingua",
+      first: "Nome", company: "Azienda", website: "Sito web dell'azienda (facoltativo)", country: "Paese in cui ha sede la sua azienda",
+      choose: "Scelga un paese", interest: "Sono interessato a", exhibit: "Esporre", visit: "Visitare", cont: "Continua",
+      skip: "Salta — fai una domanda", wait: "Un momento",
+      e_name: "Indichi il suo nome, per favore.", e_interest: "Scelga esporre o visitare.",
+      e_company: "Per aiutarla a esporre ci serve il nome della sua azienda.", e_country: "Per aiutarla a esporre, scelga il paese della sua azienda.",
+      e_timeout: "La chat è scaduta. Ricarichi la pagina per ricominciare.", e_generic: "Invio non riuscito. Controlli la connessione e riprovi.",
+      said_name: "Mi chiamo {name}.", said_from_country: "Lavoro per {org}, con sede in {country}.", said_from: "Lavoro per {org}.",
+      said_country: "Mi trovo in {country}.", said_exhibit: "Sono interessato a esporre.", said_visit: "Sono interessato a visitare.",
+      placeholder: "Scriva il suo messaggio", send: "Invia", person: "Parlare con una persona", still: "Stiamo preparando la risposta…",
+      busy: "Ci scusi — in questo momento siamo molto impegnati. ", retry: "Riprova", retrying: "Nuovo tentativo…",
+      many: "Molte richieste in questo momento — la risposta è in arrivo…",
+      n_fast: "Sta inviando messaggi troppo velocemente. Attenda un momento e riprovi.", n_long: "Il messaggio è troppo lungo. Lo accorci e lo invii di nuovo.",
+      n_fail: "Invio non riuscito. Riprovi tra un momento.", n_conn: "Invio non riuscito. Controlli la connessione e riprovi.",
+      f_name: "Il suo nome", f_company: "Azienda", f_email: "Indirizzo e-mail", f_phone: "Numero di telefono", f_note: "Altro che dovremmo sapere",
+      f_send: "Invia i miei dati", f_sending: "Invio in corso", f_need: "Inserisca un'e-mail o un numero di telefono perché il team possa contattarla.",
+      f_thanks: "Grazie. Un membro del team la contatterà.", not_you: "Non è lei? Inizi una nuova chat"
+    },
+    ja: {
+      lead: "より適切にご案内するため、簡単にご紹介ください。", language: "言語",
+      first: "お名前（名）", company: "会社名", website: "会社のウェブサイト（任意）", country: "会社の所在国",
+      choose: "国を選択", interest: "ご関心", exhibit: "出展", visit: "来場", cont: "次へ",
+      skip: "スキップして質問する", wait: "少々お待ちください",
+      e_name: "お名前をご入力ください。", e_interest: "出展か来場をお選びください。",
+      e_company: "出展のご案内には会社名が必要です。", e_country: "出展のご案内のため、会社の所在国をお選びください。",
+      e_timeout: "チャットの有効期限が切れました。ページを再読み込みしてください。", e_generic: "送信できませんでした。接続をご確認のうえ、もう一度お試しください。",
+      said_name: "{name}と申します。", said_from_country: "{country}の{org}の者です。", said_from: "{org}の者です。",
+      said_country: "{country}におります。", said_exhibit: "出展に関心があります。", said_visit: "来場に関心があります。",
+      placeholder: "メッセージを入力", send: "送信", person: "担当者と話す", still: "回答を準備しています…",
+      busy: "申し訳ございません。ただいま大変混み合っております。", retry: "再試行", retrying: "再試行しています…",
+      many: "ただいまお問い合わせが多くなっております。まもなく回答いたします…",
+      n_fast: "送信が早すぎます。少し待ってからもう一度お試しください。", n_long: "メッセージが長すぎます。短くしてもう一度送信してください。",
+      n_fail: "送信できませんでした。しばらくしてからお試しください。", n_conn: "送信できませんでした。接続をご確認のうえ、もう一度お試しください。",
+      f_name: "お名前", f_company: "会社名", f_email: "メールアドレス", f_phone: "電話番号", f_note: "その他お伝えいただきたいこと",
+      f_send: "情報を送信", f_sending: "送信中", f_need: "担当者からご連絡できるよう、メールアドレスまたは電話番号をご入力ください。",
+      f_thanks: "ありがとうございます。担当者よりご連絡いたします。", not_you: "ご本人ではありませんか？新しいチャットを始める"
+    },
+    fa: {
+      lead: "برای اینکه بهتر کمکتان کنیم، کمی درباره خودتان بگویید.", language: "زبان",
+      first: "نام", company: "شرکت", website: "وب‌سایت شرکت (اختیاری)", country: "کشور محل شرکت شما",
+      choose: "انتخاب کشور", interest: "علاقه‌مندم به", exhibit: "شرکت به‌عنوان غرفه‌دار", visit: "بازدید", cont: "ادامه",
+      skip: "رد شدن — مستقیم بپرسید", wait: "لحظه‌ای صبر کنید",
+      e_name: "لطفاً نام خود را بنویسید.", e_interest: "لطفاً غرفه‌داری یا بازدید را انتخاب کنید.",
+      e_company: "برای راهنمایی درباره غرفه، نام شرکت لازم است.", e_country: "برای راهنمایی درباره غرفه، کشور محل شرکت را انتخاب کنید.",
+      e_timeout: "زمان گفتگو به پایان رسید. برای شروع دوباره صفحه را بارگذاری کنید.", e_generic: "ارسال نشد. اتصال را بررسی کنید و دوباره تلاش کنید.",
+      said_name: "نام من {name} است.", said_from_country: "از شرکت {org} هستم که در {country} مستقر است.", said_from: "از شرکت {org} هستم.",
+      said_country: "من در {country} هستم.", said_exhibit: "به شرکت در نمایشگاه به‌عنوان غرفه‌دار علاقه دارم.", said_visit: "به بازدید از نمایشگاه علاقه دارم.",
+      placeholder: "پیام خود را بنویسید", send: "ارسال", person: "صحبت با یک نفر", still: "در حال آماده کردن پاسخ…",
+      busy: "پوزش می‌خواهیم — در حال حاضر درخواست‌ها زیاد است. ", retry: "تلاش دوباره", retrying: "در حال تلاش دوباره…",
+      many: "در حال حاضر سؤال‌ها زیاد است — پاسخ شما در راه است…",
+      n_fast: "پیام‌ها را خیلی سریع می‌فرستید. کمی صبر کنید و دوباره تلاش کنید.", n_long: "پیام خیلی طولانی است. کوتاه‌ترش کنید و دوباره بفرستید.",
+      n_fail: "ارسال نشد. کمی بعد دوباره تلاش کنید.", n_conn: "ارسال نشد. اتصال را بررسی کنید و دوباره تلاش کنید.",
+      f_name: "نام شما", f_company: "شرکت", f_email: "ایمیل", f_phone: "شماره تلفن", f_note: "نکته دیگری که باید بدانیم",
+      f_send: "ارسال اطلاعات من", f_sending: "در حال ارسال", f_need: "یک ایمیل یا شماره تلفن وارد کنید تا تیم بتواند با شما تماس بگیرد.",
+      f_thanks: "سپاسگزاریم. یکی از اعضای تیم با شما تماس خواهد گرفت.", not_you: "شما نیستید؟ گفتگوی جدید را شروع کنید"
+    },
+    th: {
+      lead: "เพื่อให้เราช่วยคุณได้ดีขึ้น กรุณาแนะนำตัวสั้นๆ", language: "ภาษา",
+      first: "ชื่อ", company: "บริษัท", website: "เว็บไซต์บริษัท (ไม่บังคับ)", country: "ประเทศที่ตั้งของบริษัท",
+      choose: "เลือกประเทศ", interest: "ฉันสนใจ", exhibit: "ออกบูธ", visit: "เข้าชมงาน", cont: "ต่อไป",
+      skip: "ข้าม — ถามคำถามเลย", wait: "รอสักครู่",
+      e_name: "กรุณากรอกชื่อของคุณ", e_interest: "กรุณาเลือกออกบูธหรือเข้าชมงาน",
+      e_company: "สำหรับการออกบูธ เราต้องการชื่อบริษัทของคุณ", e_country: "สำหรับการออกบูธ กรุณาเลือกประเทศที่ตั้งของบริษัท",
+      e_timeout: "แชทหมดเวลาแล้ว กรุณาโหลดหน้าใหม่เพื่อเริ่มอีกครั้ง", e_generic: "ส่งไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      said_name: "ฉันชื่อ {name}", said_from_country: "ฉันมาจาก {org} ซึ่งตั้งอยู่ที่ {country}", said_from: "ฉันมาจาก {org}",
+      said_country: "ฉันอยู่ที่ {country}", said_exhibit: "ฉันสนใจเข้าร่วมออกบูธ", said_visit: "ฉันสนใจเข้าชมงาน",
+      placeholder: "พิมพ์ข้อความของคุณ", send: "ส่ง", person: "คุยกับเจ้าหน้าที่", still: "กำลังเตรียมคำตอบให้คุณ…",
+      busy: "ขออภัย — ขณะนี้มีผู้ติดต่อจำนวนมาก ", retry: "ลองอีกครั้ง", retrying: "กำลังลองอีกครั้ง…",
+      many: "ขณะนี้มีคำถามจำนวนมาก — คำตอบกำลังมา…",
+      n_fast: "คุณส่งข้อความเร็วเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง", n_long: "ข้อความยาวเกินไป กรุณาย่อแล้วส่งใหม่",
+      n_fail: "ส่งไม่สำเร็จ กรุณาลองใหม่ในอีกสักครู่", n_conn: "ส่งไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      f_name: "ชื่อของคุณ", f_company: "บริษัท", f_email: "อีเมล", f_phone: "หมายเลขโทรศัพท์", f_note: "ข้อมูลอื่นที่เราควรทราบ",
+      f_send: "ส่งข้อมูลของฉัน", f_sending: "กำลังส่ง", f_need: "กรุณากรอกอีเมลหรือหมายเลขโทรศัพท์เพื่อให้ทีมงานติดต่อกลับ",
+      f_thanks: "ขอบคุณ ทีมงานจะติดต่อกลับโดยเร็ว", not_you: "ไม่ใช่คุณใช่ไหม? เริ่มแชทใหม่"
     }
   };
   var LANG = 'en';
@@ -317,7 +395,7 @@
     BOUND.forEach(function (b) {
       if (b[2]) { b[0].setAttribute(b[2], t(b[1])); } else { b[0].textContent = t(b[1]); }
     });
-    if (typeof panel !== 'undefined' && panel) { panel.setAttribute('dir', LANG === 'ar' ? 'rtl' : 'ltr'); }
+    if (typeof panel !== 'undefined' && panel) { panel.setAttribute('dir', RTL[LANG] ? 'rtl' : 'ltr'); }
   }
   function setLang(code) {
     if (!TEXT[code]) { return; }
@@ -716,7 +794,7 @@
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'false');
   panel.setAttribute('aria-label', 'Chat with our sales assistant');
-  panel.setAttribute('dir', LANG === 'ar' ? 'rtl' : 'ltr');
+  panel.setAttribute('dir', RTL[LANG] ? 'rtl' : 'ltr');
   root.appendChild(panel);
 
   // Header

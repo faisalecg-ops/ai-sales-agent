@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 27 for languages (13 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 31 for languages (13 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -309,6 +309,42 @@ return [
             ['say' => null, 'must' => ['Arabic' => '/\p{Arabic}{4}/u']],
             ['say' => 'كم سعر جناح بمساحة 27 متر مربع؟',
                 'must' => ['Arabic' => '/\p{Arabic}{4}/u', 'the price' => '/10,125|11,643\.75/']],
+        ],
+    ],
+    [
+        'name'  => '28. Italian: price and quotation offer',
+        'intro' => ['first_name' => 'Marco', 'company' => 'Valvole Italia SpA', 'country' => 'IT', 'interest' => 'exhibit', 'language' => 'it'],
+        'turns' => [
+            ['say' => null, 'must' => ['Italian' => '/\b(?:il|la|che|per|di|con)\b/i']],
+            ['say' => 'Quanto costa uno stand shell scheme di 18 metri quadrati?',
+                'must' => ['the price' => '/6[.,]750|7[.,]762/', 'offers a quotation' => '/preventivo/i']],
+        ],
+    ],
+    [
+        'name'  => '29. Japanese: price and quotation offer',
+        'intro' => ['first_name' => 'Kenji', 'company' => 'Osaka Tablet Systems', 'country' => 'JP', 'interest' => 'exhibit', 'language' => 'ja'],
+        'turns' => [
+            ['say' => null, 'must' => ['Japanese' => '/[\p{Hiragana}\p{Katakana}]{3}/u']],
+            ['say' => '18平方メートルのシェルスキームブースはいくらですか？',
+                'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/見積/u']],
+        ],
+    ],
+    [
+        'name'  => '30. Persian: price, right to left, right figures',
+        'intro' => ['first_name' => 'Reza', 'company' => 'Tehran Pharma Machinery', 'country' => 'TR', 'interest' => 'exhibit', 'language' => 'fa'],
+        'turns' => [
+            ['say' => null, 'must' => ['Persian' => '/\p{Arabic}{4}/u']],
+            ['say' => 'قیمت غرفه shell scheme با ۱۸ متر مربع چقدر است؟',
+                'must' => ['the price' => '/6,750|7,762\.50|۶٬۷۵۰/u', 'Persian' => '/\p{Arabic}{4}/u']],
+        ],
+    ],
+    [
+        'name'  => '31. Thai: price and quotation offer',
+        'intro' => ['first_name' => 'Somchai', 'company' => 'Bangkok Pharma Pack', 'country' => 'TH', 'interest' => 'exhibit', 'language' => 'th'],
+        'turns' => [
+            ['say' => null, 'must' => ['Thai' => '/\p{Thai}{4}/u']],
+            ['say' => 'บูธ shell scheme ขนาด 18 ตารางเมตร ราคาเท่าไหร่',
+                'must' => ['the price' => '/6,750|7,762\.50/', 'offers a quotation' => '/ใบเสนอราคา/u']],
         ],
     ],
 ];

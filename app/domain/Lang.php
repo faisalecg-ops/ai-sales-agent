@@ -29,6 +29,11 @@ final class Lang
         'fr' => ['French', 'Français', false],
         'de' => ['German', 'Deutsch', false],
         'ko' => ['Korean', '한국어', false],
+        // Added 13 Nov 2026 (owner): big industrial and manufacturing countries.
+        'it' => ['Italian', 'Italiano', false],
+        'ja' => ['Japanese', '日本語', false],
+        'fa' => ['Persian', 'فارسی', true],
+        'th' => ['Thai', 'ไทย', false],
     ];
 
     public static function valid(?string $code): ?string
@@ -205,10 +210,134 @@ final class Lang
         ],
     ];
 
+    // -----------------------------------------------------------------
+    // Italian, Japanese, Persian and Thai (owner, 13 Nov 2026)
+    // -----------------------------------------------------------------
+
+    private const TEXT_MORE = [
+        'quote_offer' => [
+            'it' => 'Posso anche inviarle via e-mail un preventivo ufficiale. Basta rispondere "sì".',
+            'ja' => 'こちらの正式なお見積書をメールでお送りすることもできます。「はい」とご返信ください。',
+            'fa' => 'می‌توانم یک پیش‌فاکتور رسمی هم برایتان ایمیل کنم. فقط بنویسید «بله».',
+            'th' => 'เราสามารถส่งใบเสนอราคาอย่างเป็นทางการทางอีเมลให้คุณได้ เพียงตอบว่า "ใช่"',
+        ],
+        'quote_sent' => [
+            'it' => 'Il preventivo {number} è in arrivo a {email}. È valido fino al {date}.',
+            'ja' => 'お見積書 {number} を {email} にお送りしています。有効期限は {date} です。',
+            'fa' => 'پیش‌فاکتور {number} به {email} ارسال می‌شود و تا {date} معتبر است.',
+            'th' => 'ใบเสนอราคา {number} กำลังส่งไปที่ {email} ใช้ได้ถึงวันที่ {date}',
+        ],
+        'rep_one' => [
+            'it' => 'Può anche contattarli direttamente:', 'ja' => '担当者に直接ご連絡いただくこともできます：',
+            'fa' => 'می‌توانید مستقیماً هم با ایشان تماس بگیرید:', 'th' => 'คุณสามารถติดต่อโดยตรงได้ที่:',
+        ],
+        'rep_both' => [
+            'it' => 'Può contattare direttamente il nostro team:', 'ja' => '弊社チームに直接ご連絡いただけます：',
+            'fa' => 'می‌توانید مستقیماً با تیم ما تماس بگیرید:', 'th' => 'คุณสามารถติดต่อทีมของเราได้โดยตรง:',
+        ],
+        'rep_local' => [
+            'it' => 'Per le aziende con sede in Pakistan', 'ja' => 'パキスタン国内の企業様',
+            'fa' => 'برای شرکت‌های مستقر در پاکستان', 'th' => 'สำหรับบริษัทที่ตั้งอยู่ในปากีสถาน',
+        ],
+        'rep_intl' => [
+            'it' => 'Per le aziende con sede fuori dal Pakistan', 'ja' => 'パキスタン国外の企業様',
+            'fa' => 'برای شرکت‌های خارج از پاکستان', 'th' => 'สำหรับบริษัทที่ตั้งอยู่นอกปากีสถาน',
+        ],
+        'mobile'   => ['it' => 'Cellulare', 'ja' => '携帯', 'fa' => 'موبایل', 'th' => 'มือถือ'],
+        'email'    => ['it' => 'E-mail', 'ja' => 'メール', 'fa' => 'ایمیل', 'th' => 'อีเมล'],
+        'with_tax' => ['it' => 'con', 'ja' => 'incl.', 'fa' => 'با', 'th' => 'รวม'],
+        'link_quote' => [
+            'it' => 'Salve {name}, grazie per aver dato seguito al preventivo {number}. Come posso aiutarla ancora?',
+            'ja' => '{name}様、おかえりなさいませ。お見積書 {number} についてご連絡いただきありがとうございます。ほかに何かお手伝いできることはございますか？',
+            'fa' => '{name} عزیز، خوش آمدید. از پیگیری پیش‌فاکتور {number} سپاسگزاریم. چه کمک دیگری از دستم برمی‌آید؟',
+            'th' => 'ยินดีต้อนรับกลับมา คุณ{name} ขอบคุณที่ติดตามใบเสนอราคา {number} มีอะไรให้เราช่วยเพิ่มเติมไหม',
+        ],
+        'link_prospect' => [
+            'it' => 'Salve {name}, grazie per aver risposto alla nostra e-mail su {exhibition}. Come posso aiutarla?',
+            'ja' => '{name}様、ようこそ。{exhibition}に関する弊社メールにご返信いただきありがとうございます。どのようなご用件でしょうか？',
+            'fa' => '{name} عزیز، خوش آمدید. از پاسخ شما به ایمیل ما درباره {exhibition} سپاسگزاریم. چطور می‌توانم کمک کنم؟',
+            'th' => 'ยินดีต้อนรับ คุณ{name} ขอบคุณที่ตอบกลับอีเมลของเราเกี่ยวกับ {exhibition} มีอะไรให้เราช่วยไหม',
+        ],
+        'link_whatsapp' => [
+            'it' => "Salve {name}, grazie per l'interesse per {exhibition}. Come posso aiutarla?",
+            'ja' => '{name}様、ようこそ。{exhibition}にご関心をお寄せいただきありがとうございます。どのようなご用件でしょうか？',
+            'fa' => '{name} عزیز، خوش آمدید. از علاقه شما به {exhibition} سپاسگزاریم. چطور می‌توانم کمک کنم؟',
+            'th' => 'ยินดีต้อนรับ คุณ{name} ขอบคุณที่สนใจ {exhibition} มีอะไรให้เราช่วยไหม',
+        ],
+        'said_name' => ['it' => 'Mi chiamo {name}.', 'ja' => '{name}と申します。', 'fa' => 'نام من {name} است.', 'th' => 'ฉันชื่อ {name}'],
+        'said_from_country' => [
+            'it' => 'Lavoro per {org}, con sede in {country}.', 'ja' => '{country}の{org}の者です。',
+            'fa' => 'از شرکت {org} هستم که در {country} مستقر است.', 'th' => 'ฉันมาจาก {org} ซึ่งตั้งอยู่ที่ {country}',
+        ],
+        'said_from' => ['it' => 'Lavoro per {org}.', 'ja' => '{org}の者です。', 'fa' => 'از شرکت {org} هستم.', 'th' => 'ฉันมาจาก {org}'],
+        'said_country' => ['it' => 'Mi trovo in {country}.', 'ja' => '{country}におります。', 'fa' => 'من در {country} هستم.', 'th' => 'ฉันอยู่ที่ {country}'],
+        'said_exhibit' => [
+            'it' => 'Sono interessato a esporre.', 'ja' => '出展に関心があります。',
+            'fa' => 'به شرکت در نمایشگاه به‌عنوان غرفه‌دار علاقه دارم.', 'th' => 'ฉันสนใจเข้าร่วมออกบูธ',
+        ],
+        'said_visit' => [
+            'it' => 'Sono interessato a visitare.', 'ja' => '来場に関心があります。',
+            'fa' => 'به بازدید از نمایشگاه علاقه دارم.', 'th' => 'ฉันสนใจเข้าชมงาน',
+        ],
+    ];
+
+    private const WORDS_MORE = [
+        'price' => ['prezzo', 'prezzi', 'costo', 'quanto costa', 'tariffa', 'tariffe', 'قیمت', 'هزینه', 'چقدر', 'نرخ',
+                    '価格', '料金', '費用', 'いくら', '値段', 'ราคา', 'ค่าใช้จ่าย', 'เท่าไร', 'เท่าไหร่', 'ค่าบูธ'],
+        'quote' => ['preventivo', 'quotazione', 'offerta economica', 'proposta', 'پیش‌فاکتور', 'پیش فاکتور', 'پیشنهاد قیمت', 'استعلام قیمت',
+                    '見積書', '見積もり', '御見積', 'ใบเสนอราคา'],
+        'yes' => ['certo', 'va bene', 'volentieri', 'بله', 'آره', 'باشه', 'حتما', 'لطفا', 'はい', 'お願いします', '送ってください',
+                  'ใช่', 'ได้', 'ตกลง', 'ส่งมาเลย'],
+        'next' => ['prossimo passo', 'come prenotare', 'prenotare', 'come procedere', 'مرحله بعد', 'چطور رزرو', 'رزرو',
+                   '次のステップ', '予約', '申し込み', 'ขั้นตอนต่อไป', 'จองบูธ', 'วิธีจอง'],
+        'person' => ['parlare con una persona', 'parlare con qualcuno', 'mi chiami', 'با یک نفر صحبت', 'با کارشناس', 'با من تماس',
+                     '担当者と話', '人と話', '電話してください', 'คุยกับเจ้าหน้าที่', 'ติดต่อเจ้าหน้าที่', 'โทรหาฉัน'],
+        'money' => ['sconto', 'contratto', 'fattura', 'pagamento', 'تخفیف', 'قرارداد', 'صورتحساب', 'پرداخت',
+                    '割引', '契約', '請求書', '支払', 'ส่วนลด', 'สัญญา', 'ใบแจ้งหนี้', 'ชำระเงิน'],
+        'decline' => ['no grazie', 'preferisco di no', 'non ora', 'نه', 'خیر', 'نه ممنون', 'لازم نیست', 'いいえ', '結構です', '不要です',
+                      'ไม่ต้อง', 'ไม่เป็นไร', 'ไม่'],
+        'stand' => ['spazio espositivo', 'غرفه', 'ブース', '小間', 'บูธ'],
+        'sponsor' => ['sponsorizzazione', 'اسپانسر', 'スポンサー', '協賛', 'สปอนเซอร์', 'ผู้สนับสนุน'],
+    ];
+
+    /** All the words of one kind, in every language. */
+    private static function words(string $kind): array
+    {
+        return array_merge(self::WORDS[$kind] ?? [], self::WORDS_MORE[$kind] ?? []);
+    }
+
+    /**
+     * Digits from other scripts as ordinary digits: Arabic ٠-٩, Persian ۰-۹, Thai ๐-๙, full-width ０-９,
+     * and the Arabic thousands and decimal marks. Used before reading sizes and checking prices.
+     */
+    public static function digits(string $text): string
+    {
+        static $map = null;
+        if ($map === null) {
+            $map = ["\u{066C}" => ',', "\u{066B}" => '.'];
+            foreach ([0x0660, 0x06F0, 0x0E50, 0xFF10] as $base) {
+                for ($d = 0; $d <= 9; $d++) {
+                    $map[mb_chr($base + $d, 'UTF-8')] = (string)$d;
+                }
+            }
+        }
+        return strtr($text, $map);
+    }
+
+    /** The message with the words of one kind taken out (so "pro forma" is not read as "invoice"). */
+    public static function without(string $message, string $kind): string
+    {
+        $text = mb_strtolower($message);
+        foreach (self::words($kind) as $word) {
+            $text = str_replace(mb_strtolower($word), ' ', $text);
+        }
+        return $text;
+    }
+
     /** A line in the visitor's language, with {placeholders} filled in. */
     public static function t(?string $code, string $key, array $vars = []): string
     {
-        $row  = self::TEXT[$key] ?? [];
+        $row  = array_merge(self::TEXT[$key] ?? [], self::TEXT_MORE[$key] ?? []);
         $text = (string)($row[self::valid($code) ?? 'en'] ?? $row['en'] ?? $key);
         foreach ($vars as $k => $v) {
             $text = str_replace('{' . $k . '}', (string)$v, $text);
@@ -314,7 +443,7 @@ final class Lang
     public static function has(string $message, string $kind): bool
     {
         $text = mb_strtolower($message);
-        foreach (self::WORDS[$kind] ?? [] as $word) {
+        foreach (self::words($kind) as $word) {
             if (self::contains($text, mb_strtolower($word))) {
                 return true;
             }
@@ -329,7 +458,7 @@ final class Lang
         if ($text === '' || mb_strlen($text) > 40) {
             return false;
         }
-        foreach (self::WORDS[$kind] ?? [] as $word) {
+        foreach (self::words($kind) as $word) {
             $w = mb_strtolower($word);
             if (str_starts_with($text, $w)) {
                 // A Latin word must end there ("si" is not "simple"); Chinese,

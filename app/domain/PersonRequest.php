@@ -94,7 +94,8 @@ final class PersonRequest
         if (Lang::has($body, 'person')) {
             return 'Asked for a person';
         }
-        if (Lang::has($body, 'money')) {
+        // "Pro forma" in some languages contains the word for invoice; a quotation request is not a payment question.
+        if (Lang::has(Lang::without($body, 'quote'), 'money')) {
             return 'A contract, payment or discount question';
         }
 
