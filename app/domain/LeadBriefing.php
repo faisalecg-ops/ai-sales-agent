@@ -181,11 +181,20 @@ final class LeadBriefing
             'Website'        => trim((string)($lead['website'] ?? '')),
             'Status'         => LeadManager::STATUS_LABELS[(string)$lead['status']] ?? (string)$lead['status'],
             'Quotations'     => self::quotationLine($lead),
+            'Chat language'  => self::languageLine($lead),
             'Lead score'     => self::scoreLine($lead),
             'Qualification'  => self::qualificationLine($lead),
             'First seen'     => self::localTime($lead['created_at'] ?? null, $tz),
             'Page'           => trim((string)($lead['source_url'] ?? '')),
         ], static fn($v) => $v !== '' && $v !== null);
+    }
+
+    /** The language the visitor chose on the chat card, when it is not English. */
+    private static function languageLine(array $lead): string
+    {
+        $state = db()->value('SELECT lead_state FROM conversations WHERE lead_id = ? ORDER BY id DESC LIMIT 1', [(int)$lead['id']]);
+        $code  = Lang::of((array)json_decode((string)$state, true));
+        return $code === 'en' ? '' : Lang::name($code) . ' (the transcript below is in that language)';
     }
 
     /** "PA27-Q-0003: Shell Scheme Stall, 18 sqm, USD 7,762.50, emailed 12 Nov (PDF attached)". */

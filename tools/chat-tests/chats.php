@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, and 20 to 24 for quotations, Stage B (12-13 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), and 25 to 27 for languages (13 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -278,6 +278,37 @@ return [
                 'must' => ['the price' => ANY_PRICE]],
             ['say' => 'Sounds good. How do we go ahead?',
                 'must' => ['offers a quotation' => '/quotation/']],
+        ],
+    ],
+    // ---- Languages (13 Nov 2026) ----
+    [
+        'name'  => '25. Chinese: a price, the quotation offer, "好的" sends it',
+        'intro' => ['first_name' => 'Wei', 'company' => 'Zhejiang Capsule Machinery Co', 'country' => 'CN', 'interest' => 'exhibit', 'language' => 'zh'],
+        'turns' => [
+            ['say' => null, 'must' => ['Chinese' => '/\p{Han}{4}/u']],
+            ['say' => '18平方米的标准展位多少钱？我的邮箱是 wei@zjcapsule.example',
+                'must' => ['Chinese' => '/\p{Han}{4}/u', 'the price' => '/USD\s?6,750|6,750\s?美元/u', 'offers a quotation' => '/报价/u']],
+            ['say' => '好的',
+                'must' => ['the quotation is on its way' => '/PA27-Q-\d{4}/', 'Chinese' => '/\p{Han}{4}/u']],
+        ],
+    ],
+    [
+        'name'  => '26. Roman Urdu: a company in Pakistan asks the rate, gets the local rep, no price',
+        'intro' => ['first_name' => 'Bilal', 'company' => 'Lahore Packaging Works', 'country' => 'PK', 'interest' => 'exhibit', 'language' => 'ur'],
+        'turns' => [
+            ['say' => null, 'must_not' => ['Urdu script' => '/\p{Arabic}/u']],
+            ['say' => 'Shell scheme stall ka rate kya hai?',
+                'must' => ['the local rep' => '/Farhan|team|representative|rabta|raabta/i'],
+                'must_not' => ['a price' => ANY_PRICE, 'Urdu script' => '/\p{Arabic}/u']],
+        ],
+    ],
+    [
+        'name'  => '27. Arabic: what is included and the price, right figures',
+        'intro' => ['first_name' => 'Omar', 'company' => 'Gulf Pharma Packaging LLC', 'country' => 'AE', 'interest' => 'exhibit', 'language' => 'ar'],
+        'turns' => [
+            ['say' => null, 'must' => ['Arabic' => '/\p{Arabic}{4}/u']],
+            ['say' => 'كم سعر جناح بمساحة 27 متر مربع؟',
+                'must' => ['Arabic' => '/\p{Arabic}{4}/u', 'the price' => '/10,125|11,643\.75/']],
         ],
     ],
 ];

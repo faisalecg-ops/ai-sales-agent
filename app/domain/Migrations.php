@@ -870,6 +870,17 @@ final class Migrations
                             ADD COLUMN attachment_name VARCHAR(120) NULL",
                 ])),
             ],
+            [
+                'key'   => '2026_11_personal_links',
+                'label' => 'Personal chat links in prospect emails, quotation emails and WhatsApp messages',
+                'check' => static fn(): bool => self::columnExists('agents', 'chat_link_quote'),
+                'sql'   => [
+                    "ALTER TABLE agents
+                        ADD COLUMN chat_link_prospect TINYINT(1) NOT NULL DEFAULT 1,
+                        ADD COLUMN chat_link_quote TINYINT(1) NOT NULL DEFAULT 1,
+                        ADD COLUMN chat_link_whatsapp TINYINT(1) NOT NULL DEFAULT 1",
+                ],
+            ],
         ];
     }
 

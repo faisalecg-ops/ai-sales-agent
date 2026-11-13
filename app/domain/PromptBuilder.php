@@ -42,6 +42,8 @@ final class PromptBuilder
         $sections[] = self::turnGuidance($ctx);
         // A quotation request: what the system still needs, or that it is being sent.
         $sections[] = (string)($ctx['quotation'] ?? '');
+        // The visitor's language (13 Nov 2026).
+        $sections[] = Lang::promptBlock((string)($ctx['language'] ?? 'en'));
         $sections[] = LlmContract::instructions();
 
         $system = implode("\n\n", array_filter($sections, static fn($s) => trim((string)$s) !== ''));

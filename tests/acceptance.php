@@ -5921,6 +5921,227 @@ T::equals($rwC, $rwD, 'The same name and the same website reuses that one');
 db()->exec('DELETE FROM company_research WHERE id IN (?, ?)', [(int)$rwA, (int)$rwC]);
 
 // =====================================================================
+// Languages (owner, 13 Nov 2026)
+// =====================================================================
+T::group('Languages: the chat card, the words the program listens for, the price guard');
+
+T::equals(10, count(Lang::LANGUAGES), 'Ten languages: English and nine more');
+T::ok(isset(Lang::LANGUAGES['zh'], Lang::LANGUAGES['ur']) && Lang::LANGUAGES['ur'][0] === 'Urdu (Roman)', 'Chinese and Roman Urdu are among them');
+T::equals(null, Lang::valid('xx'), 'An unknown language is refused');
+T::equals('en', Lang::of([]), 'English when nothing was chosen');
+T::equals('报价单 PA27-Q-0001 正在发送至 a@b.example，有效期至 1 Dec 2026。',
+    Lang::t('zh', 'quote_sent', ['number' => 'PA27-Q-0001', 'email' => 'a@b.example', 'date' => '1 Dec 2026']), 'Program-written lines come in the chosen language');
+T::ok(str_contains(Lang::promptBlock('ur'), 'Roman Urdu') && str_contains(Lang::promptBlock('ur'), 'Never use Urdu script'), 'Roman Urdu is written in Latin letters');
+T::ok(str_contains(Lang::promptBlock('zh'), 'untranslated'), 'Prices, option names and addresses stay as given');
+
+foreach (['展位多少钱？', 'Stall ki qeemat kya hai?', 'كم سعر الجناح؟', 'Stand fiyatı ne kadar?', 'Сколько стоит стенд?',
+          '¿Cuánto cuesta un stand?', 'Quel est le prix d\'un stand ?', 'Was kostet ein Stand?', '부스 가격이 얼마예요?'] as $lq) {
+    T::ok(ChatOrchestrator::detectPricingRequest($lq, ConversationState::NEW_CONVERSATION), 'A price question is recognised: ' . $lq);
+}
+T::ok(!ChatOrchestrator::detectPricingRequest('我们生产泵和传感器。', ConversationState::NEW_CONVERSATION), 'An ordinary Chinese sentence is not a price question');
+T::ok(Quotation::wants('请把报价单发给我') && Quotation::wants('Bize fiyat teklifi gönderin') && Quotation::wants('Envíeme una cotización')
+    && Quotation::wants('Quotation bhej dein please'), 'A quotation request is recognised in other languages');
+T::ok(Quotation::saysYes('好的') && Quotation::saysYes('Haan ji') && Quotation::saysYes('نعم') && Quotation::saysYes('Evet')
+    && Quotation::saysYes('Да') && Quotation::saysYes('Sí, por favor') && Quotation::saysYes('Oui') && Quotation::saysYes('Ja, gerne') && Quotation::saysYes('네'),
+    'A short "yes" is recognised in every language');
+T::ok(!Quotation::saysYes('Simple question about the venue') && !Quotation::saysYes('Japan is our main market'), 'Words that only start like "si" or "ja" are not a yes');
+T::equals('Asked for a person', PersonRequest::detect('我想找人工客服'), 'Asking for a person, in Chinese');
+T::equals('Asked for a person', PersonRequest::detect('Kisi insaan se baat karein'), 'In Roman Urdu');
+T::equals('Asked for a person', PersonRequest::detect('Связаться с человеком'), 'In Russian (the window\'s own button)');
+T::equals(null, PersonRequest::detect('Я экспорт-менеджер компании'), 'But "I am the export manager" is not a request for a person');
+T::equals('A contract, payment or discount question', PersonRequest::detect('Können Sie uns einen Rabatt geben?'), 'A discount, in German');
+T::ok(Qualification::asksNextStep('下一步怎么做？') && Qualification::asksNextStep('Aage kaise barhein?'), '"What is the next step?" in Chinese and Roman Urdu');
+T::ok(ChatGuide::isDecline('不用了') && ChatGuide::isDecline('Nahi, shukriya') && ChatGuide::isDecline('Nein danke'), 'A short "no" in other languages');
+T::equals(18.0, PricingEngine::requestedSize('我想要18平方米的标准展位'), 'A size in Chinese');
+T::equals(18.0, PricingEngine::requestedSize('18 metrekare stand'), 'In Turkish');
+T::equals(27.0, PricingEngine::requestedSize('Стенд 27 кв. м'), 'In Russian');
+T::equals(36.0, PricingEngine::requestedSize('Un stand de 36 mètres carrés'), 'In French');
+
+// The price guard: a price written any way must be one of the approved prices.
+$lgOk = ['USD 6,750', 'USD 7,762.50'];
+T::equals(null, PricingEngine::findUnauthorisedPrice('展位价格为6,750美元，含税7,762.50美元。', $lgOk), 'An approved price in Chinese passes');
+T::equals(null, PricingEngine::findUnauthorisedPrice('El precio es 6.750 dólares (7.762,50 USD con IVA).', $lgOk), 'And in the Spanish way of writing numbers');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Стоимость 6 750 долларов.', $lgOk), 'And the Russian way');
+T::ok(PricingEngine::findUnauthorisedPrice('展位价格为5,000美元。', $lgOk) !== null, 'An invented price in Chinese is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('It costs 6000 dollars.', $lgOk) !== null, 'And "6000 dollars" in English, which was not caught before');
+T::ok(PricingEngine::findUnauthorisedPrice('Le stand coûte 500 euros.', $lgOk) !== null, 'Another currency, written as a word, is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('展位价格为40000元。', $lgOk) !== null, 'Yuan after a number is caught');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Retail medicine sales reached 1.049 trillion rupees.', $lgOk), 'Market facts in rupees are not blocked');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Visitors: 35,000. Exhibitors: 800.', $lgOk), 'Numbers that are not money pass');
+
+// The chat card and the chat itself.
+$mock->reset();
+$mock->push(['reply' => '您好，欢迎！', 'intent' => 'exhibitor']);
+$lgSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$lgIntro = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgSt['conversation']['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'first_name' => 'Wei', 'company' => 'Shanghai Pumps', 'country' => 'CN', 'interest' => 'exhibit', 'language' => 'zh']);
+T::ok(!empty($lgIntro['ok']), 'The card is accepted with a language');
+$lgConv = reload_conversation($lgSt['conversation']);
+T::equals('zh', ConversationStore::leadState($lgConv)['language'] ?? null, 'The chosen language is kept');
+T::ok(str_contains($mock->lastSystemPrompt(), 'The visitor chose Chinese'), 'The assistant is told to reply in Chinese');
+T::ok(str_contains((string)db()->value("SELECT content FROM messages WHERE conversation_id = ? AND role = 'visitor' ORDER BY id LIMIT 1", [(int)$lgConv['id']]), '我叫Wei'),
+    'What the card said is recorded in Chinese too');
+$mock->push(['reply' => 'Theek hai.', 'intent' => 'exhibitor']);
+ChatOrchestrator::handle($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgConv['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'message' => 'Shukriya', 'origin' => 'www.buildasia.net', 'language' => 'ur']);
+T::equals('ur', ConversationStore::leadState(reload_conversation($lgConv))['language'] ?? null, 'Changing the language later is kept from that message on');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Roman Urdu'), 'And the assistant follows it');
+$mock->push(['reply' => 'Hello.', 'intent' => 'exhibitor']);
+ChatOrchestrator::handle($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgConv['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'message' => 'Hi', 'origin' => 'www.buildasia.net', 'language' => 'klingon']);
+T::equals('ur', ConversationStore::leadState(reload_conversation($lgConv))['language'] ?? null, 'An unknown language changes nothing');
+T::ok(Lang::has('您希望我通过电子邮件发送这项方案的正式报价吗？', 'quote'), 'An offer the AI writes in Chinese is recognised, so the program does not add a second one');
+SalesReps::save((int)$agent['id'], 'local', ['name' => 'Farhan Mobeen', 'mobile' => '+923001112223', 'email' => 'farhan@buildasia.example']);
+$lgRep = SalesReps::textFor((int)$agent['id'], 'pakistan', 'web', 'ur');
+T::ok(str_contains($lgRep, 'seedha') && str_contains($lgRep, 'Farhan Mobeen') && str_contains($lgRep, '+923001112223'), 'The sales rep\'s details come in the chosen language, with the details unchanged');
+db()->exec('DELETE FROM agent_sales_reps WHERE agent_id = ?', [(int)$agent['id']]);
+$mock->reset();
+
+// =====================================================================
+// Personal chat links (owner, 13 Nov 2026)
+// =====================================================================
+T::group('Personal chat links: made, signed, opened as the person');
+
+$plId = (int)$agent['id'];
+db()->update('agents', ['event_starts_on' => date('Y-m-d', time() + 30 * 86400), 'event_ends_on' => date('Y-m-d', time() + 32 * 86400),
+    'chat_link_prospect' => 1, 'chat_link_quote' => 1, 'chat_link_whatsapp' => 1], 'id = ?', [$plId]);
+$plAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$plId]);
+T::ok(PersonalLink::ready() && PersonalLink::enabled($plAgent, 'quote'), 'All three kinds are on after the upgrade');
+
+$plLeadId = db()->insert('leads', ['agent_id' => $plId, 'reference' => 'L-PL-1', 'name' => 'Anna Weber', 'company' => 'Rhein Beton GmbH',
+    'email' => 'anna@rhein-beton.example', 'company_country' => 'Germany', 'pricing_country' => 'international', 'status' => 'new']);
+$plOld = ConversationStore::start($plAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+db()->update('conversations', ['lead_id' => $plLeadId, 'summary' => 'They asked about an 18 sqm shell scheme stall.',
+    'lead_state' => json_encode(['language' => 'de', 'offer_focus' => ['Shell Scheme 18 sqm'], 'quotes_sent' => ['BA27-Q-0042']])],
+    'id = ?', [(int)$plOld['conversation']['id']]);
+$plQuoteId = db()->insert('quotations', ['agent_id' => $plId, 'lead_id' => $plLeadId, 'seq' => 42, 'number' => 'BA27-Q-0042',
+    'to_name' => 'Anna Weber', 'to_company' => 'Rhein Beton GmbH', 'to_country' => 'Germany', 'to_email' => 'anna@rhein-beton.example',
+    'package_type' => 'stall', 'package_id' => 1, 'title' => 'Shell Scheme', 'total_text' => 'USD 7,762.50', 'status' => 'sent']);
+
+$plUrl = PersonalLink::url($plAgent, 'quote', $plQuoteId);
+T::ok($plUrl !== null && str_starts_with($plUrl, 'https://www.buildasia.net/?aisa_p='), 'The link opens the exhibition\'s website');
+T::ok(str_contains($plUrl, 'utm_source=email') && str_contains($plUrl, 'utm_medium=personal-link') && str_contains($plUrl, 'utm_campaign=quotation'),
+    'It is tagged, so the conversation page shows where they came from');
+T::ok(!str_contains($plUrl, 'anna') && !str_contains($plUrl, 'Weber'), 'It carries no name or address');
+parse_str((string)parse_url($plUrl, PHP_URL_QUERY), $plQ);
+$plToken = (string)$plQ['aisa_p'];
+$plRead = PersonalLink::read($plToken);
+T::ok($plRead !== null && $plRead['kind'] === 'quote' && $plRead['id'] === $plQuoteId, 'The link is read back');
+T::ok(abs($plRead['expires'] - strtotime(date('Y-m-d', time() + 32 * 86400) . ' 23:59:59 Asia/Karachi')) < 2, 'It works until the end of the exhibition\'s last day');
+T::equals(null, PersonalLink::read($plToken, $plRead['expires'] + 1), 'After that it no longer works');
+[$plPay, $plSig] = explode('.', $plToken);
+$plForged = rtrim(strtr(base64_encode(json_encode(['k' => 'quote', 'i' => $plQuoteId + 1, 'a' => $plId, 'e' => $plRead['expires']])), '+/', '-_'), '=') . '.' . $plSig;
+T::equals(null, PersonalLink::read($plForged), 'A link changed to point at someone else does not work');
+T::equals(null, PersonalLink::read('nonsense'), 'Nor does a made-up one');
+
+db()->update('agents', ['event_ends_on' => date('Y-m-d', time() - 86400)], 'id = ?', [$plId]);
+T::equals(null, PersonalLink::url(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), 'quote', $plQuoteId), 'Once the exhibition is over, no new links are made');
+db()->update('agents', ['event_ends_on' => date('Y-m-d', time() + 32 * 86400), 'chat_link_quote' => 0], 'id = ?', [$plId]);
+T::equals(null, PersonalLink::url(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), 'quote', $plQuoteId), 'Switched off: no link');
+T::equals(null, PersonalLink::open(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]),
+    ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'], $plToken),
+    'And a link already sent opens the normal chat');
+db()->update('agents', ['chat_link_quote' => 1], 'id = ?', [$plId]);
+
+// Opening it.
+$plNew = ConversationStore::start($plAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$plOpen = PersonalLink::open($plAgent, $plNew['conversation'], $plToken);
+T::ok($plOpen !== null && str_contains($plOpen['text'], 'Anna') && str_contains($plOpen['text'], 'BA27-Q-0042'), 'They are welcomed by name, with their quotation');
+T::equals('de', $plOpen['language'] ?? null, 'In the language they chose before (German here)');
+$plConv = reload_conversation($plNew['conversation']);
+$plState = ConversationStore::leadState($plConv);
+T::equals($plLeadId, (int)$plConv['lead_id'], 'The conversation is recorded on their lead');
+T::ok(!empty($plState['intro_done']) && ($plState['company'] ?? '') === 'Rhein Beton GmbH' && ($plState['email'] ?? '') === 'anna@rhein-beton.example',
+    'The first card is skipped: what we know is already there');
+T::ok(($plState['offer_focus'] ?? []) === ['Shell Scheme 18 sqm'] && str_contains((string)$plConv['summary'], '18 sqm'), 'And so is what they discussed last time');
+T::ok((string)$plConv['pricing_country'] === 'international' && (string)$plConv['country_source'] === 'visitor_disclosed', 'Their country is known, so prices can be shown');
+T::equals('exhibitor', (string)$plConv['intent'], 'They are treated as a possible exhibitor');
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM messages WHERE conversation_id = ?', [(int)$plConv['id']]), 'A note for the team and the welcome are recorded');
+T::ok((int)db()->value("SELECT COUNT(*) FROM audit_log WHERE event = 'personal_link_opened' AND entity_id = ?", [(int)$plConv['id']]) === 1, 'And the opening is in the activity log');
+T::equals(null, PersonalLink::open(db()->one("SELECT * FROM agents WHERE id <> ? AND status <> 'deleted' LIMIT 1", [$plId]) ?? ['id' => 0],
+    $plNew['conversation'], $plToken), 'A link from one exhibition does not work on another');
+
+// A prospect email and a WhatsApp registration.
+$plCo = CompanyStore::findOrCreate($plId, ['name' => 'Nord Stahl AS', 'website' => 'nordstahl.example', 'country' => 'Norway'], 'manual')['company'];
+$plOut = db()->insert('outreach_emails', ['agent_id' => $plId, 'campaign_id' => 1, 'target_id' => 1, 'company_id' => (int)$plCo['id'],
+    'to_email' => 'tom@nordstahl.example', 'to_name' => 'Tom Berg', 'subject' => 'S', 'body' => 'B', 'status' => 'sent', 'dedupe_key' => 'pl-test-1']);
+parse_str((string)parse_url((string)PersonalLink::url($plAgent, 'prospect', $plOut), PHP_URL_QUERY), $plQ2);
+$plC2 = ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null]);
+$plOpen2 = PersonalLink::open($plAgent, $plC2['conversation'], (string)$plQ2['aisa_p']);
+T::ok($plOpen2 !== null && str_contains($plOpen2['text'], 'Tom') && str_contains($plOpen2['text'], (string)$plAgent['name']), 'A prospect is welcomed by name, about our email');
+$plC2r = reload_conversation($plC2['conversation']);
+$plLead2 = db()->one('SELECT * FROM leads WHERE id = ?', [(int)$plC2r['lead_id']]);
+T::ok($plLead2 !== null && (string)$plLead2['email'] === 'tom@nordstahl.example' && (string)$plLead2['company'] === 'Nord Stahl AS',
+    'A lead is made for the prospect who came to talk');
+T::equals('Norway', (string)$plC2r['disclosed_company_country'], 'Their company\'s country comes from the company record');
+
+$plRegId = db()->insert('registrations', ['agent_id' => $plId, 'source_id' => 1, 'name' => 'Sana Iqbal', 'company_name' => 'City Hospital Pharmacy',
+    'email' => 'sana@cityhospital.example', 'phone_e164' => '+923001234500', 'country' => 'Pakistan', 'consent_whatsapp' => 'yes', 'whatsapp_state' => 'sent']);
+parse_str((string)parse_url((string)PersonalLink::url($plAgent, 'whatsapp', $plRegId), PHP_URL_QUERY), $plQ3);
+T::equals('whatsapp', $plQ3['utm_source'] ?? null, 'A WhatsApp link is tagged as WhatsApp');
+$plC3 = ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null]);
+$plOpen3 = PersonalLink::open($plAgent, $plC3['conversation'], (string)$plQ3['aisa_p']);
+T::ok($plOpen3 !== null && str_contains($plOpen3['text'], 'Sana'), 'A registered visitor is welcomed by name');
+$plC3r = reload_conversation($plC3['conversation']);
+T::equals('pakistan', (string)$plC3r['pricing_country'], 'A company in Pakistan stays local: still no prices');
+T::equals((int)$plC3r['lead_id'], (int)db()->value('SELECT lead_id FROM registrations WHERE id = ?', [$plRegId]), 'The registration is linked to the new lead');
+
+// Do not contact, and blocked countries.
+Suppression::add($plId, 'email', 'tom@nordstahl.example', 'Asked not to be contacted', 'manual', 'tester');
+T::equals(null, PersonalLink::open($plAgent, ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'],
+    (string)$plQ2['aisa_p']), 'Someone on the do-not-contact list gets the normal chat');
+BlockedCountries::save(['DE']);
+T::equals(null, PersonalLink::open($plAgent, ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'],
+    $plToken), 'So does someone from a blocked country');
+BlockedCountries::save([]);
+
+// In the quotation email.
+db()->update('agents', ['mail_from_email' => 'info@buildasia.example', 'mail_smtp_host' => 'mail.buildasia.example'], 'id = ?', [$plId]);
+$plAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$plId]);
+@mkdir(STORAGE_PATH . '/quotations/' . $plId, 0750, true);
+file_put_contents(STORAGE_PATH . '/quotations/' . $plId . '/BA27-Q-0042.pdf', '%PDF-test');
+db()->update('quotations', ['file_path' => 'quotations/' . $plId . '/BA27-Q-0042.pdf', 'status' => 'queued', 'detail' => json_encode(['event' => ['Build Asia'], 'valid' => '1 Jan 2027'])],
+    'id = ?', [$plQuoteId]);
+$plMail = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html = null, array $headers = [], array $att = []) use (&$plMail): array {
+    $plMail[] = compact('body', 'html');
+    return ['ok' => true];
+};
+Quotation::send($plAgent, db()->one('SELECT * FROM quotations WHERE id = ?', [$plQuoteId]));
+T::ok(str_contains($plMail[0]['body'] ?? '', "Let's discuss more — click here: https://www.buildasia.net/?aisa_p="), 'The quotation email carries the personal link');
+T::ok(str_contains($plMail[0]['html'] ?? '', '>Let\'s discuss more — click here</a>'), 'As a link in the formatted email');
+db()->update('agents', ['chat_link_quote' => 0], 'id = ?', [$plId]);
+$plMail = [];
+db()->update('quotations', ['status' => 'queued', 'attempts' => 0], 'id = ?', [$plQuoteId]);
+Quotation::send(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), db()->one('SELECT * FROM quotations WHERE id = ?', [$plQuoteId]));
+T::ok(!str_contains($plMail[0]['body'] ?? '', 'aisa_p'), 'Switched off, the email goes without it');
+Mailer::$testTransport = null;
+
+// In a WhatsApp opening message to a registered visitor.
+MessagingProviderFactory::setTestProvider($waMock);
+$waMock->reset();
+$plWaAgent = array_merge(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), ['whatsapp_enabled' => 1, 'whatsapp_number' => '+923008618299', 'whatsapp_approve_first' => 0, 'whatsapp_daily_cap' => 100,
+    'whatsapp_send_from' => '00:00:00', 'whatsapp_send_to' => '23:59:59']);
+db()->update('registrations', ['whatsapp_state' => 'queued'], 'id = ?', [$plRegId]);
+WhatsAppOutbox::queue($plWaAgent, ['phone_e164' => '+923001234500', 'body' => 'Thank you for registering, Sana.',
+    'kind' => 'opening', 'registration_id' => $plRegId, 'dedupe_key' => 'test:pl:open:1']);
+$plWaRun = WhatsAppEngine::sendDue($plWaAgent, 25);
+T::ok(str_starts_with($waMock->lastBody(), 'Thank you for registering, Sana.') && str_contains($waMock->lastBody(), "Let's discuss more here: https://www.buildasia.net/?aisa_p="),
+    'A WhatsApp opening message carries the link', 'run: ' . json_encode($plWaRun) . ' body: ' . $waMock->lastBody());
+
+// Tidy up.
+foreach (['quotations' => $plQuoteId, 'registrations' => $plRegId, 'outreach_emails' => $plOut, 'leads' => $plLeadId] as $plT => $plRow) {
+    db()->exec('DELETE FROM ' . $plT . ' WHERE id = ?', [$plRow]);
+}
+db()->exec("DELETE FROM whatsapp_outbox WHERE dedupe_key = 'test:pl:open:1'");
+MessagingProviderFactory::setTestProvider(null);
+db()->exec('DELETE FROM suppression_list WHERE agent_id = ?', [$plId]);
+@unlink(STORAGE_PATH . '/quotations/' . $plId . '/BA27-Q-0042.pdf');
+db()->update('agents', ['chat_link_quote' => 1, 'mail_from_email' => $agent['mail_from_email'] ?? null, 'mail_smtp_host' => $agent['mail_smtp_host'] ?? null,
+    'event_starts_on' => $agent['event_starts_on'] ?? null, 'event_ends_on' => $agent['event_ends_on'] ?? null], 'id = ?', [$plId]);
+$mock->reset();
+
+// =====================================================================
 // Blocked countries (owner, 12 Nov 2026)
 // =====================================================================
 T::group('Blocked countries: one list, closed in every part');

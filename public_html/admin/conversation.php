@@ -44,11 +44,14 @@ echo '<div class="card"><h2>About this conversation</h2><table class="table"><tb
    . '<tr><td>What they wanted</td><td>' . e(ucfirst((string)$conversation['intent'])) . '</td></tr>'
    . '<tr><td>Pricing region</td><td>' . e(ucfirst((string)$conversation['pricing_country'])) . '</td></tr>'
    . '<tr><td>How we knew</td><td>' . e(match ((string)$conversation['country_source']) {
-        'visitor_disclosed' => 'They told us',
+        'visitor_disclosed' => !empty(ConversationStore::leadState($conversation)['country_from'])
+            ? 'From ' . ConversationStore::leadState($conversation)['country_from'] . ' (personal chat link)' : 'They told us',
         'ip_geo'            => 'From their IP address',
         default             => 'Never established',
      }) . '</td></tr>'
    . ($conversation['disclosed_company_country'] ? '<tr><td>Company based in</td><td>' . e((string)$conversation['disclosed_company_country']) . '</td></tr>' : '')
+   . (Lang::of(ConversationStore::leadState($conversation)) !== 'en'
+        ? '<tr><td>Chat language</td><td>' . e(Lang::name(Lang::of(ConversationStore::leadState($conversation)))) . '</td></tr>' : '')
    . (BlockedCountries::blocksConversation($conversation)
         ? '<tr><td>Blocked country</td><td><span class="pill pill-bad">Blocked</span> <span class="small muted">Only the standard reply is given. No lead, no email to the team.</span></td></tr>' : '')
    . ($conversation['requested_sqm'] ? '<tr><td>Size asked about</td><td>' . e(rtrim(rtrim(number_format((float)$conversation['requested_sqm'], 2), '0'), '.')) . ' sqm</td></tr>' : '')

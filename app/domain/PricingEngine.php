@@ -329,6 +329,13 @@ final class PricingEngine
             $v = (float)$m[1];
             return $v > 0 ? $v : null;
         }
+        // The same in the chat's other languages: 18平方米, 18 متر مربع, 18 metrekare, 18 кв. м, 18 metros cuadrados,
+        // 18 mètres carrés, 18 Quadratmeter, 18 제곱미터 (13 Nov 2026).
+        if (preg_match('/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:平方米|平米|平方|㎡|متر\s*مربع|مترا\s*مربعا|م2|metrekare|кв\.?\s*м\w*|квадратн\w*\s+метр\w*|'
+            . 'metros?\s+cuadrados?|m[eè]tres?\s+carr[ée]s?|quadratmeter|qm|제곱미터|murabba\s+met(?:er|re))/iu', $message, $m)) {
+            $v = (float)str_replace(',', '.', $m[1]);
+            return $v > 0 ? $v : null;
+        }
         // Dimensions: "6m x 6m", "3 x 6", "6 by 9"
         if (preg_match('/\b(\d{1,3}(?:\.\d{1,2})?)\s*(?:m|meters?|metres?)?\s*(?:x|×|by)\s*(\d{1,3}(?:\.\d{1,2})?)\s*(?:m|meters?|metres?)?\b/i', $message, $m)) {
             $area = (float)$m[1] * (float)$m[2];
@@ -748,36 +755,88 @@ final class PricingEngine
                 return $ccy;
             }
         }
-        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ'] as $symbol) {
+        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ', '¥', '￥', '₩', '₽', '₺'] as $symbol) {
             if (str_contains($reply, $symbol)) {
                 return $symbol;
             }
         }
+        // Other currencies, written as words in the chat's languages (13 Nov 2026).
+        // Rupees are left out: the Pakistan market article quotes medicine sales in rupees,
+        // and companies in Pakistan are never given a price anyway.
+        if (preg_match('/(?<![\p{L}])(?:euros?|liras?|yuan|renminbi|dirhams?|riyals?|rials?|dinars?|'
+            . 'pounds?\s+sterling|рубл\w*|евро|лир\w*|юан\w*|дирхам\w*|يورو|درهم|دراهم|ريال|جنيه|'
+            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로)(?![\p{L}])/iu', $reply, $cm)
+            || preg_match('/\d\s*(?<!美)(?:元|円|엔|원)(?!\p{L})/u', $reply, $cm)) {
+            return trim($cm[0]);
+        }
 
-        // Any monetary amount must match one of the approved price strings.
-        $allowedNumbers = [];
+        $allowed = [];
         foreach ($allowedPriceStrings as $p) {
-            $digits = preg_replace('/[^0-9]/', '', $p) ?? '';
-            if ($digits !== '') {
-                $allowedNumbers[$digits] = true;
+            if (preg_match('/\d[\d.,]*/', (string)$p, $pm)) {
+                $allowed[] = self::amountOf($pm[0]);
             }
         }
 
-        if (preg_match_all('/(?:USD|\$)\s*([0-9][0-9,\.]*[0-9])/i', $reply, $m)) {
-            foreach ($m[1] as $found) {
-                $digits = preg_replace('/[^0-9]/', '', $found) ?? '';
-                // Trailing ".00" is equivalent to the whole-number form.
-                $trimmed = rtrim($digits, '0');
-                if (!isset($allowedNumbers[$digits])
-                    && !isset($allowedNumbers[rtrim($digits, '0')])
-                    && !isset($allowedNumbers[$digits . '00'])
-                    && $trimmed !== '') {
-                    return 'USD ' . $found;
+        // Any amount written with dollars, in any of the chat's languages,
+        // before or after the figure, must be one of the approved amounts:
+        // "USD 6,750", "$6,750", "6,750 dollars", "6.750 dólares", "6 750 долларов", "6,750美元".
+        $num   = '(\d{1,3}(?:[ \x{00A0}\x{202F}\x{2009}.,\']\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)';
+        $marks = 'USD|US\$|\$|美元|美金|دولار|دولارات|dollars?|dólares|dolares|dólar|dolar|dolları|доллар\w*|долл\.?|dollari|달러';
+        $found = [];
+        if (preg_match_all('/(?:' . $marks . ')\s*' . $num . '/iu', $reply, $m1)) {
+            $found = array_merge($found, $m1[1]);
+        }
+        if (preg_match_all('/' . $num . '\s*(?:' . $marks . ')/iu', $reply, $m2)) {
+            $found = array_merge($found, $m2[1]);
+        }
+        foreach ($found as $amount) {
+            $value = self::amountOf($amount);
+            if ($value <= 0) {
+                continue;
+            }
+            $ok = false;
+            foreach ($allowed as $a) {
+                if (abs($a - $value) < 0.005) {
+                    $ok = true;
+                    break;
                 }
+            }
+            if (!$ok) {
+                return 'USD ' . trim($amount);
             }
         }
 
         return null;
+    }
+
+    /**
+     * The value of an amount written in any common style: 7,762.50 (English),
+     * 7.762,50 (German, Spanish), 7 762,50 (French, Russian), 7'762.50.
+     */
+    public static function amountOf(string $text): float
+    {
+        $t = preg_replace('/[\s\x{00A0}\x{202F}\x{2009}\']/u', '', trim($text)) ?? '';
+        if ($t === '') {
+            return 0.0;
+        }
+        $lastDot = strrpos($t, '.');
+        $lastComma = strrpos($t, ',');
+        if ($lastDot !== false && $lastComma !== false) {
+            $dec = $lastDot > $lastComma ? '.' : ',';
+        } elseif ($lastDot !== false || $lastComma !== false) {
+            $sep = $lastDot !== false ? '.' : ',';
+            $after = strlen($t) - (int)strrpos($t, $sep) - 1;
+            // One separator followed by one or two digits is a decimal point; otherwise thousands.
+            $dec = (substr_count($t, $sep) === 1 && $after >= 1 && $after <= 2) ? $sep : null;
+        } else {
+            $dec = null;
+        }
+        if ($dec === null) {
+            return (float)preg_replace('/[^0-9]/', '', $t);
+        }
+        $whole = substr($t, 0, (int)strrpos($t, $dec));
+        $frac  = substr($t, (int)strrpos($t, $dec) + 1);
+        return (float)(preg_replace('/[^0-9]/', '', $whole) . '.' . preg_replace('/[^0-9]/', '', $frac));
     }
 
     /** Split a newline/semicolon separated field into clean lines. */

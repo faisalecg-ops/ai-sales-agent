@@ -41,6 +41,7 @@ try {
         'first_name'     => $input['first_name'] ?? null,
         'company'        => $input['company'] ?? null,
         'website'        => $input['website'] ?? null,
+        'language'       => $input['language'] ?? null,
         'country'        => $input['country'] ?? null,
         'interest'       => $input['interest'] ?? null,
         'origin'         => $ctx['origin'],

@@ -69,6 +69,10 @@ final class ChatIntro
             $conversation = ChatOrchestrator::applyFormCountry($agent, $conversation, $country);
         }
 
+        $lang = Lang::valid($input['language'] ?? null);
+        if ($lang !== null) {
+            $leadState['language'] = $lang;     // chosen on the card (13 Nov 2026)
+        }
         $leadState['intro_done'] = true;
         $leadState['name']       = $firstName;
         if ($company !== null) {
@@ -116,12 +120,13 @@ final class ChatIntro
      */
     private static function visiting(array $agent, array $conversation, string $firstName, ?string $company, ?string $country): array
     {
-        ConversationStore::appendMessage($conversation, 'visitor', self::summary('visit', $firstName, $company, $country), [
+        ConversationStore::appendMessage($conversation, 'visitor', self::summary('visit', $firstName, $company, $country, Lang::of(ConversationStore::leadState($conversation))), [
             'response_status' => 'intro_form',
         ]);
 
         // What the chat told us, in the shape the relevance rules read.
-        $person  = ['name' => $firstName, 'company_name' => (string)$company, 'country' => (string)$country];
+        $person  = ['name' => $firstName, 'company_name' => (string)$company, 'country' => (string)$country,
+                    'language' => Lang::of(ConversationStore::leadState($conversation))];
         $profile = VisitorProfile::fromRegistration($person, $agent);
         $case    = ValueProposition::build($agent, $profile, []);
 
@@ -211,7 +216,8 @@ final class ChatIntro
             'request_id'     => (string)($input['request_id'] ?? ('intro' . bin2hex(random_bytes(8)))),
             'session_id'     => (string)$conversation['session_id'],
             'session_secret' => (string)($input['session_secret'] ?? ''),
-            'message'        => self::summary('exhibit', $firstName, $company, $country),
+            'message'        => self::summary('exhibit', $firstName, $company, $country, Lang::of(ConversationStore::leadState($conversation))),
+            'language'       => Lang::of(ConversationStore::leadState($conversation)),
             'origin'         => $input['origin'] ?? null,
             'known_contact'  => array_filter([
                 'name'            => $firstName,
@@ -227,17 +233,17 @@ final class ChatIntro
      * What the visitor said, in their own words, for the conversation record
      * and — when exhibiting — for the assistant.
      */
-    private static function summary(string $interest, string $firstName, ?string $company, ?string $country): string
+    private static function summary(string $interest, string $firstName, ?string $company, ?string $country, string $lang = 'en'): string
     {
-        $parts = ['My name is ' . $firstName . '.'];
+        $parts = [Lang::t($lang, 'said_name', ['name' => $firstName])];
         if ($company !== null) {
-            $parts[] = 'I am from ' . $company . ($country !== null ? ', based in ' . $country : '') . '.';
+            $parts[] = $country !== null
+                ? Lang::t($lang, 'said_from_country', ['org' => $company, 'country' => $country])
+                : Lang::t($lang, 'said_from', ['org' => $company]);
         } elseif ($country !== null) {
-            $parts[] = 'I am based in ' . $country . '.';
+            $parts[] = Lang::t($lang, 'said_country', ['country' => $country]);
         }
-        $parts[] = $interest === 'exhibit'
-            ? 'I am interested in exhibiting.'
-            : 'I am interested in visiting.';
+        $parts[] = Lang::t($lang, $interest === 'exhibit' ? 'said_exhibit' : 'said_visit');
         return implode(' ', $parts);
     }
 

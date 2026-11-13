@@ -22,6 +22,16 @@ final class Crypto
         return $key;
     }
 
+    /**
+     * A signature for a value the platform hands out and later reads back
+     * (the personal chat links, 13 Nov 2026). Made with a key derived from
+     * the encryption key, so it cannot be forged and the key itself is never used twice.
+     */
+    public static function sign(string $value): string
+    {
+        return hash_hmac('sha256', $value, hash('sha256', 'aisa-sign|' . self::key(), true), true);
+    }
+
     public static function isConfigured(): bool
     {
         try {

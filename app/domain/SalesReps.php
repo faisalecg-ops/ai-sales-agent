@@ -142,7 +142,7 @@ final class SalesReps
      * the chat window renders). Empty when no rep is set up, so the caller's
      * message simply goes without it.
      */
-    public static function textFor(int $agentId, ?string $pricingCountry, string $channel): string
+    public static function textFor(int $agentId, ?string $pricingCountry, string $channel, string $lang = 'en'): string
     {
         $entries = self::forVisitor($agentId, $pricingCountry);
         if (!$entries) {
@@ -157,20 +157,24 @@ final class SalesReps
             $lines = [];
 
             if ($entry['label'] !== null) {
-                $lines[] = $entry['label'] . ':';
+                $label = (string)$entry['label'];
+                if ($lang !== 'en') {
+                    $label = str_contains($label, 'outside') ? Lang::t($lang, 'rep_intl') : Lang::t($lang, 'rep_local');
+                }
+                $lines[] = $label . ':';
             }
 
             $lines[] = $bold((string)$rep['name'])
                      . ($rep['designation'] !== null ? ', ' . $rep['designation'] : '');
 
             if ($rep['mobile'] !== null) {
-                $lines[] = 'Mobile: ' . $rep['mobile'];
+                $lines[] = Lang::t($lang, 'mobile') . ': ' . $rep['mobile'];
             }
             if ($rep['whatsapp'] !== null) {
                 $lines[] = 'WhatsApp: ' . $rep['whatsapp'];
             }
             if ($rep['email'] !== null) {
-                $lines[] = 'Email: ' . $rep['email'];
+                $lines[] = Lang::t($lang, 'email') . ': ' . $rep['email'];
             }
             if ($rep['wechat'] !== null) {
                 $lines[] = 'WeChat: ' . $rep['wechat'];
@@ -179,7 +183,7 @@ final class SalesReps
             $parts[] = implode("\n", $lines);
         }
 
-        $intro = count($entries) === 1 ? 'You can also reach them directly:' : 'You can reach our team directly:';
+        $intro = Lang::t($lang, count($entries) === 1 ? 'rep_one' : 'rep_both');
 
         return $intro . "\n\n" . implode("\n\n", $parts);
     }

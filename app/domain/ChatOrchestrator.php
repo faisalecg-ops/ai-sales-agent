@@ -108,6 +108,16 @@ final class ChatOrchestrator
 
         $leadState = ConversationStore::leadState($conversation);
 
+        // The language chosen on the chat card (13 Nov 2026). The widget sends
+        // it with every message, so a change is kept from that message on.
+        $chosenLang = Lang::valid($input['language'] ?? null);
+        if ($chosenLang !== null && ($leadState['language'] ?? null) !== $chosenLang) {
+            $leadState['language'] = $chosenLang;
+            $conversation['lead_state'] = json_encode($leadState, JSON_UNESCAPED_UNICODE);
+            ConversationStore::update($conversation, ['lead_state' => $conversation['lead_state']]);
+        }
+        $lang = Lang::of($leadState);
+
         // ---- 3. Store the visitor's message ------------------------------
         // Trying again after a busy AI: the message is already stored and
         // still unanswered, so it is answered rather than stored twice.
@@ -347,6 +357,7 @@ final class ChatOrchestrator
 
         $promptCtx = [
             'quotation'         => $quoteNote,
+            'language'          => $lang,
             'quotation_on'      => $quoteOn,
             'sales_path'        => $salesPath,
             'site_pages'        => $sitePages,
@@ -483,7 +494,7 @@ final class ChatOrchestrator
                         break 2;                    // that size cannot be booked: no figure
                     }
                     $card  = PricingEngine::toCard($rec, $type, $perSqm ? $requestedSqm : null);
-                    $reply = ChatGuide::quoteLine($card) . "\n\n" . ltrim($reply);
+                    $reply = ChatGuide::quoteLine($card, $lang) . "\n\n" . ltrim($reply);
                     if (!$cards) {
                         $cards[] = $card;
                     }
@@ -704,7 +715,7 @@ final class ChatOrchestrator
             }
             if ((string)($conversation['channel'] ?? 'web') !== 'whatsapp'
                 && ($personReason !== null || $pakistanAsk)) {
-                $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web');
+                $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web', Lang::of($leadState));
                 if ($repText !== '') {
                     $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . $repText;
                     $leadState['rep_given'] = true;
@@ -722,8 +733,9 @@ final class ChatOrchestrator
                 // program adds one line. "Yes" to it then sends the quotation.
                 if (!empty($quote['can_offer']) && !$turn['is_fallback'] && empty($quote['wanted'])
                     && ($turn['cards'] || !empty($quote['next_step']))) {
-                    if (!$leadState['quote_offered'] && !preg_match('/\bquot(?:ation|e)\b/i', (string)$turn['reply'])) {
-                        $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . 'I can also email you an official quotation for this. Just reply "yes".';
+                    if (!$leadState['quote_offered'] && !preg_match('/\bquot(?:ation|e)\b/i', (string)$turn['reply'])
+                        && !Lang::has((string)$turn['reply'], 'quote')) {
+                        $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . Lang::t(Lang::of($leadState), 'quote_offer');
                     }
                     $leadState['quote_offered'] = true;
                     $leadState['quote_offers']  = (int)($leadState['quote_offers'] ?? 0) + 1;
@@ -745,9 +757,10 @@ final class ChatOrchestrator
                     if ($assess['missing'] === null) {
                         try {
                             $quoteRow = Quotation::prepare($agent, $lead, $conversation, $assess['record'], $assess['sqm']);
-                            $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . 'Quotation ' . $quoteRow['number']
-                                . ' is on its way to ' . $quoteRow['to_email'] . '. It is valid until '
-                                . (string)((array)json_decode((string)$quoteRow['detail'], true))['valid'] . '.';
+                            $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . Lang::t(Lang::of($leadState), 'quote_sent', [
+                                'number' => $quoteRow['number'], 'email' => $quoteRow['to_email'],
+                                'date'   => (string)((array)json_decode((string)$quoteRow['detail'], true))['valid'],
+                            ]);
                             $leadState['quote_wanted'] = false;
                             $leadState['quote_waits']  = 0;
                             $leadState['quote_offered'] = false;
@@ -760,7 +773,7 @@ final class ChatOrchestrator
                     } elseif (in_array($assess['missing'], ['pakistan', 'limit'], true)) {
                         $leadState['quote_wanted'] = false;
                         if ($assess['missing'] === 'limit' && empty($leadState['rep_given'])) {
-                            $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web');
+                            $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web', Lang::of($leadState));
                             if ($repText !== '') {
                                 $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . $repText;
                                 $leadState['rep_given'] = true;
@@ -1250,6 +1263,10 @@ final class ChatOrchestrator
                 return true;
             }
         }
+        // The same question in the chat's other languages (13 Nov 2026).
+        if (Lang::has($message, 'price')) {
+            return true;
+        }
         // A bare size mention counts once the conversation has reached the
         // point where stand size is what is actually being discussed.
         if (in_array($state, [
@@ -1472,7 +1489,8 @@ final class ChatOrchestrator
         // The assistant cannot answer, so a person is needed: on the website,
         // say who to contact. (WhatsApp hands over and adds this itself.)
         if ((string)($conversation['channel'] ?? 'web') !== 'whatsapp') {
-            $repText = SalesReps::textFor((int)$agent['id'], (string)($conversation['pricing_country'] ?? ''), 'web');
+            $repText = SalesReps::textFor((int)$agent['id'], (string)($conversation['pricing_country'] ?? ''), 'web',
+                Lang::of(ConversationStore::leadState($conversation)));
             if ($repText !== '') {
                 $text .= "\n\n" . $repText;
             }

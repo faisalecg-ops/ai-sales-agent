@@ -408,7 +408,15 @@ final class WhatsAppEngine
         $provider = MessagingProviderFactory::make($agent);
 
         try {
-            $result = $provider->send((string)$message['phone_e164'], (string)$message['body']);
+            $body = (string)$message['body'];
+            // The personal chat link (13 Nov 2026): first messages and follow-ups to a registered visitor.
+            if (in_array((string)($message['kind'] ?? ''), ['opening', 'followup'], true) && !empty($message['registration_id'])) {
+                $chatLink = PersonalLink::url($agent, 'whatsapp', (int)$message['registration_id']);
+                if ($chatLink !== null) {
+                    $body = rtrim($body) . "\n\n" . PersonalLink::line($chatLink, true);
+                }
+            }
+            $result = $provider->send((string)$message['phone_e164'], $body);
         } catch (Throwable $ex) {
             // Thrown before a request could complete, so nothing went out.
             app_log('whatsapp', 'send threw', ['agent' => $agentId, 'error' => $ex->getMessage()]);

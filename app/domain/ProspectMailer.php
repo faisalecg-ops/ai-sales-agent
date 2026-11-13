@@ -236,7 +236,10 @@ final class ProspectMailer
         }
 
         $unsubscribe = self::unsubscribeUrl($agentId, (string)$email['to_email']);
-        $body = rtrim((string)$email['body']) . "\n" . OutreachWriter::footer($agent, $target ?? [], $unsubscribe);
+        $chatLink = PersonalLink::url($agent, 'prospect', (int)$email['id']);
+        $body = rtrim((string)$email['body'])
+              . ($chatLink !== null ? "\n\n" . PersonalLink::line($chatLink) . "\n" : '')
+              . "\n" . OutreachWriter::footer($agent, $target ?? [], $unsubscribe);
 
         $result = Mailer::sendWith(MailProfile::forAgent($agent), (string)$email['to_email'], (string)$email['subject'], $body, null, [
             'List-Unsubscribe'      => '<' . $unsubscribe . '>',

@@ -90,6 +90,14 @@ final class PersonRequest
             return 'A contract, payment or discount question';
         }
 
+        // The same requests in the chat's other languages (13 Nov 2026).
+        if (Lang::has($body, 'person')) {
+            return 'Asked for a person';
+        }
+        if (Lang::has($body, 'money')) {
+            return 'A contract, payment or discount question';
+        }
+
         return null;
     }
 }

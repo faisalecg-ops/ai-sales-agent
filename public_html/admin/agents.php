@@ -206,6 +206,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $values['site_pages_enabled'] = !empty($_POST['site_pages_enabled']) ? 1 : 0;
         $values['site_sitemap_url']   = Validator::url($_POST['site_sitemap_url'] ?? null);
     }
+    // Personal chat links (13 Nov 2026); saved once that upgrade has run.
+    if (Migrations::columnExists('agents', 'chat_link_quote')) {
+        foreach (array_keys(PersonalLink::KINDS) as $kind) {
+            $values['chat_link_' . $kind] = !empty($_POST['chat_link_' . $kind]) ? 1 : 0;
+        }
+    }
     // Quotations (plan part 3); saved once that upgrade has run.
     $quoteLogoNote = null;
     if (Migrations::columnExists('agents', 'quote_enabled')) {
@@ -515,6 +521,16 @@ if ($editId > 0 || $isNew) {
                   . ($set['logo'] !== null ? f_check('quote_logo_remove', 'Remove the saved logo', false) : '');
             return $out . admin_card_close();
         })() : '')
+       . (Migrations::columnExists('agents', 'chat_link_quote') ? (static function () use ($a): string {
+            $out = admin_card_open('set-links', 'Personal chat links',
+                    '"Let\'s discuss more — click here": opens the chat on your website as that person, skipping the first questions.')
+                 . '<p class="hint">The link opens the exhibition\'s website address (above), so the chat must be on that page. '
+                 . 'It works until the last day of the exhibition, then opens the normal chat.</p>';
+            foreach (PersonalLink::KINDS as $kind => $label) {
+                $out .= f_check('chat_link_' . $kind, 'Add it to ' . lcfirst($label), (int)($a['chat_link_' . $kind] ?? 1) === 1);
+            }
+            return $out . admin_card_close();
+        })() : '')
        . admin_card_open('set-voice', 'How the assistant talks', 'Who it is, what it is trying to achieve, and how it should sell.')
        . f_area('persona', 'Who the assistant is', $v('persona'), ['rows' => 5])
        . f_area('sales_objectives', 'What it is trying to achieve', $v('sales_objectives'), ['rows' => 7])
@@ -747,7 +763,7 @@ admin_layout_end();
 function admin_settings_nav(array $a): string
 {
     $links = [
-        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-score' => 'Lead score', 'set-website' => 'Website answers', 'set-quotations' => 'Quotations', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
+        'set-event' => 'Exhibition', 'set-show' => 'Dates & venue', 'set-covers' => 'Sectors', 'set-score' => 'Lead score', 'set-website' => 'Website answers', 'set-quotations' => 'Quotations', 'set-links' => 'Chat links', 'set-voice' => 'Voice', 'set-chat' => 'Website chat',
         'set-disclosure' => 'AI notice', 'set-leads' => 'Leads', 'set-reps' => 'Sales reps', 'set-whatsapp' => 'WhatsApp',
     ];
     if (array_key_exists('mail_from_email', $a) || ($a === [] && Migrations::columnExists('agents', 'mail_from_email'))) {

@@ -1,0 +1,117 @@
+Test chats — 13 Nov 2026 — Pharma Asia — openai / gpt-6-luna — languages
+
+=== 25. Chinese: a price, the quotation offer, "好的" sends it
+  (introduction card: {"first_name":"Wei","company":"Zhejiang Capsule Machinery Co","country":"CN","interest":"exhibit","language":"zh"}, answered in 16.2 s)
+  ASSISTANT: Wei，欢迎了解2027年12月7日至9日在Karachi Expo Centre举行的第25届Pharma Asia。为了判断展会是否适合贵公司，您最希望通过参展实现什么？
+  PASS
+  VISITOR: 18平方米的标准展位多少钱？我的邮箱是 wei@zjcapsule.example
+  ASSISTANT: Shell Scheme Stall 的标准配置包含墙板和公司名称楣板、地毯、一张桌子和两把椅子、照明及电源插座。Shell Scheme Stall 的最小面积为 9 sqm，按 9 sqm 为单位提供；您询问的 18 sqm 可选。您希望我通过电子邮件发送这项方案的正式报价吗？
+             我也可以将正式报价单通过电子邮件发送给您。如需要，请回复"是"。
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: 好的
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 正式报价单现正发送至 wei@zjcapsule.example。
+             报价单 PA27-Q-0001 正在发送至 wei@zjcapsule.example，有效期至 13 Dec 2026。
+  PASS
+  (research: done, direct)
+
+Replies passed: 3   failed: 0
+
+=== 26. Roman Urdu: a company in Pakistan asks the rate, gets the local rep, no price
+  (introduction card: {"first_name":"Bilal","company":"Lahore Packaging Works","country":"PK","interest":"exhibit","language":"ur"}, answered in 15.8 s)
+  ASSISTANT: Shukriya, Bilal. Pharma Asia mein packaging machinery aur materials ke suppliers manufacturers se mil sakte hain jo packaging solutions dhoond rahe hain. Aap exhibition mein sab se zyada kya hasil karna chahenge—naye customers, distributors, ya brand awareness?
+  PASS
+  VISITOR: Shell scheme stall ka rate kya hai?
+  ASSISTANT: Shell Scheme Stall mein yeh cheezen shamil hain:
+             - Walls aur fascia board par company ka naam
+             - Carpet
+             - Ek table aur do chairs
+             - Lights aur power socket
+             Rate aur official proposal ke liye hamare sales representative aap ko sahi maloomat denge; unki contact details is paigham ke neeche hain.
+             Aap in se seedha bhi raabta kar sakte hain:
+             Farhan Mobeen, Senior Manager Sales
+             Mobile: +923152228225
+             WhatsApp: +923152228225
+             Email: farhan@ecgateway.info
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 27. Arabic: what is included and the price, right figures
+  (introduction card: {"first_name":"Omar","company":"Gulf Pharma Packaging LLC","country":"AE","interest":"exhibit","language":"ar"}, answered in 16.1 s)
+  ASSISTANT: أهلًا Omar، يسعدني اهتمام Gulf Pharma Packaging LLC بالمشاركة كعارض في Pharma Asia 2027. بما أن نشاطكم يتوافق مع مجال التعبئة والتغليف في المعرض، فما الذي تودون تحقيقه من المشاركة؟
+  PASS
+  VISITOR: كم سعر جناح بمساحة 27 متر مربع؟
+  ASSISTANT: تتوفر خيارات الأجنحة بمساحة 27 sqm التالية:
+             - Shell Scheme Stall، 27 sqm: USD 10,125 (USD 11,643.75 with 15% VAT)
+             - Bare Space Inside Halls، 27 sqm: USD 8,775 (USD 10,091.25 with 15% VAT)
+             أي الخيارين يهمكم؟
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+==================================================================
+After the fix (an offer written by the AI in Chinese is recognised, so the program does not add a second):
+
+=== 25. Chinese: a price, the quotation offer, "好的" sends it
+  (introduction card: {"first_name":"Wei","company":"Zhejiang Capsule Machinery Co","country":"CN","interest":"exhibit","language":"zh"}, answered in 12.7 s)
+  ASSISTANT: Wei，欢迎考虑参加 Pharma Asia 2027。根据现有资料，相关产品包括胶囊填充机、泡罩封口机、胶囊和片剂计数及抛光设备，以及压片机；这些设备可以面向寻找生产设备的制药企业展示。您最希望在展会上展示哪几类产品？
+  PASS
+  VISITOR: 18平方米的标准展位多少钱？我的邮箱是 wei@zjcapsule.example
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 报价为：Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)。我可以为您发送这项的正式报价 PDF，您希望我通过 wei@zjcapsule.example 发送吗？
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: 好的
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 报价单正在发送至 wei@zjcapsule.example。
+             报价单 PA27-Q-0001 正在发送至 wei@zjcapsule.example，有效期至 13 Dec 2026。
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, direct)
+
+Replies passed: 3   failed: 0
+
+=== 23. The assistant offers a quotation itself after a price, and "yes" sends it
+  (introduction card: {"first_name":"Lena","company":"Alpen Dosiertechnik GmbH","country":"AT","interest":"exhibit"}, answered in 15.5 s)
+  ASSISTANT: Thanks, Lena. What would you most want to achieve by exhibiting at Pharma Asia?
+  PASS
+  VISITOR: What does an 18 sqm shell scheme stall cost? My email is lena.huber@alpen-dosier.example
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             The Shell Scheme Stall is available in 18 sqm. It includes:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: yes
+  ASSISTANT: The quotation for the Shell Scheme Stall at 18 sqm is being emailed to lena.huber@alpen-dosier.example now.
+             Quotation PA27-Q-0001 is on its way to lena.huber@alpen-dosier.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 3   failed: 0
+
+=== 20. A quotation asked in one message, the email given in the next
+  (introduction card: {"first_name":"Klaus","company":"Sensorik Pumps GmbH","country":"DE","interest":"exhibit"}, answered in 16.6 s)
+  ASSISTANT: Thanks, Klaus. Pumps are relevant to the exhibition, as pharmaceutical manufacturers upgrading their plants need equipment, parts and service. What would you most want to achieve by exhibiting?
+  PASS
+  VISITOR: Please send me a quotation for an 18 sqm shell scheme stall.
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             I can arrange the quotation for the 18 sqm Shell Scheme Stall. What email address should it be sent to?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: klaus.meyer@sensorik-pumps.example
+  ASSISTANT: The quotation for Shell Scheme Stall at 18 sqm is being emailed to you now.
+             Quotation PA27-Q-0001 is on its way to klaus.meyer@sensorik-pumps.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: Thanks. Is the stand reserved for me now?
+  ASSISTANT: You’re welcome, Klaus. The quotation is an offer, not a reservation; a stand is booked only after the signed contract and payment. To proceed, please reply to the quotation email or contact your sales representative.
+  PASS
+  (research: done, poor)
+
+Replies passed: 4   failed: 0

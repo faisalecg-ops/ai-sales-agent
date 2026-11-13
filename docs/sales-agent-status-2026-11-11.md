@@ -99,3 +99,13 @@ Expert not yet connected to Pulse.
 - Open: the owner asked whether the chat can answer in Chinese or Urdu; answered (not reliably today),
   a small plan was offered, nothing built. Chinese names cannot be printed on the PDF yet.
 - Next: Stage C (email replies in the same thread), after the owner has tried Stage B.
+
+## 13 November 2026 — languages, personal chat links, quotation offer
+
+- The chat now offers a quotation itself (owner: "it does not offer the quotation on any stage").
+- Owner asked for: a language choice on the chat card (English default + 9, incl. Roman Urdu and Chinese);
+  quotation PDFs in English only; the personal "click here to chat" link in prospect, quotation and WhatsApp
+  messages, each on/off, valid until the exhibition ends. All built: `docs/upgrade-2026-11-languages-and-chat-links.md`.
+- One package for everything since the last install: `salesagent-update-2026-11-languages-links.zip`.
+- Tests 1,618 + 82; real-AI chats in Chinese, Roman Urdu and Arabic pass.
+- Next: Stage C (email replies in the same thread), after the owner has tried all this.

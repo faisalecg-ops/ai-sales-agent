@@ -65,10 +65,10 @@ final class ChatGuide
         $items = array_values(array_unique($items));
 
         $categories = [];
-        if (preg_match(self::CATEGORY_STAND, $message) || preg_match('/\b(?:shell|bare|outdoor)\b/i', $message)) {
+        if (preg_match(self::CATEGORY_STAND, $message) || preg_match('/\b(?:shell|bare|outdoor)\b/i', $message) || Lang::has($message, 'stand')) {
             $categories[] = 'stand';
         }
-        if (preg_match(self::CATEGORY_SPONSOR, $message)) {
+        if (preg_match(self::CATEGORY_SPONSOR, $message) || Lang::has($message, 'sponsor')) {
             $categories[] = 'sponsorship';
         }
         foreach ($offers as $o) {
@@ -267,7 +267,8 @@ final class ChatGuide
         $details = '(?:e-?mail|phone|number|contact|details|whatsapp)';
         return (bool)preg_match('/\b(?:(?:my|our)\s+(?:\w+\s+)?' . $details . '|(?:share|give|send|provide)\b.{0,20}' . $details . ')/u', $t)
             && (bool)preg_match('/\b(?:no|not|don\'?t|do\s+not|won\'?t|will\s+not|without|never|rather\s+not)\b/u', $t)
-            && !self::containsContact($text);
+            && !self::containsContact($text)
+            || Lang::startsWith($text, 'decline');
     }
 
     // -----------------------------------------------------------------
@@ -279,7 +280,7 @@ final class ChatGuide
      * assistant only has to copy it. For example:
      *   "Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)"
      */
-    public static function quoteLine(array $card): string
+    public static function quoteLine(array $card, string $lang = 'en'): string
     {
         $name = (string)$card['title'];
         if (!empty($card['sqm']) && (float)$card['sqm'] > 0) {
@@ -300,7 +301,7 @@ final class ChatGuide
 
         if ($total !== null && $tax !== null) {
             [$label, $rate] = explode('|', $tax, 2);
-            return $name . ': ' . $base . ' (' . $total . ' with ' . $rate . ' ' . ($label !== '' ? $label : 'tax') . ')';
+            return $name . ': ' . $base . ' (' . $total . ' ' . Lang::t($lang, 'with_tax') . ' ' . $rate . ' ' . ($label !== '' ? $label : 'tax') . ')';
         }
         return $name . ': ' . $base;
     }

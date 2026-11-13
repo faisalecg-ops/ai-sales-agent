@@ -443,6 +443,9 @@ final class Qualification
     /** Does the visitor ask for the next step: a quotation, a proposal, a call, a booking? */
     public static function asksNextStep(string $message): bool
     {
+        if (Lang::has($message, 'next')) {
+            return true;
+        }
         return (bool)preg_match(
             '/\b(?:quotation|quote|proposal|pro-?forma|invoice|contract|book(?:ing)?\b|reserve|sign\s+up|go\s+ahead|proceed|'
             . 'next\s+steps?|call\s+(?:me|us)|speak\s+to|talk\s+to|meeting|how\s+do\s+(?:we|i)\s+(?:book|apply|register\s+as))\b/i',

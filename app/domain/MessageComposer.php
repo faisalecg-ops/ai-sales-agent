@@ -175,6 +175,10 @@ final class MessageComposer
         $provider = LlmProviderFactory::make(($channel === 'chat' ? AiModels::live($agent) : AiModels::background($agent))['provider']);
 
         $system = self::systemPrompt($agent, $profile, $case, $channel);
+        // A website visitor who chose another language on the chat card (13 Nov 2026).
+        if ($channel === 'chat' && Lang::valid($person['language'] ?? null) !== null && $person['language'] !== 'en') {
+            $system .= "\n\n" . Lang::promptBlock((string)$person['language']) . "\nThe \"message\" is written in that language; any \"subject\" in English.";
+        }
         $user   = self::userPrompt($person, $profile, $case, $channel, $previousFault);
 
         $result = $provider->complete(

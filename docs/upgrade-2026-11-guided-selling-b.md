@@ -1,5 +1,8 @@
 # Sales agent update — 12 November 2026: guided selling, Stage B — the quotation PDF
 
+**Superseded package:** install `salesagent-update-2026-11-languages-links.zip` instead (it contains these files
+and the 13 November update). The steps below still apply.
+
 Part 3 of the plan the owner approved on 12 November 2026 (Claude doc "AI Sales Agent — Guided selling,
 quotations and email replies: plan", https://claude.ai/artifact/TVpaToSMHxL91yjL3SDpVC). Built by the
 AI Sales Agent chat on branch `pharma-asia-2027`.

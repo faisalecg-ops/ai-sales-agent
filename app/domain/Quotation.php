@@ -109,6 +109,9 @@ final class Quotation
     /** Does this message ask for a quotation in writing? */
     public static function wants(string $message): bool
     {
+        if (Lang::has($message, 'quote')) {
+            return true;            // the same request in the chat's other languages
+        }
         return (bool)preg_match(
             '/\b(?:quotation|quote|proposal|pro-?\s?forma|written\s+offer|offer\s+in\s+writing|'
             . '(?:send|e-?mail)\s+(?:me|us)\s+(?:the\s+|an?\s+|your\s+)?(?:offer|prices?|rates?|costs?|details)(?:\s+by\s+e-?mail)?)\b/i',
@@ -124,6 +127,9 @@ final class Quotation
 
     public static function saysYes(string $message): bool
     {
+        if (Lang::startsWith($message, 'yes')) {
+            return true;
+        }
         return (bool)preg_match(
             '/^\W*(?:yes|yeah|yep|sure|ok(?:ay)?|please(?:\s+do)?|go\s+ahead|that\s+would\s+be\s+(?:good|great|helpful)|sounds\s+good|'
             . 'yes\s+please|please\s+send(?:\s+it)?|send\s+it|please\s+(?:email|e-mail)\s+it|(?:email|e-mail)\s+it)\b/i',
@@ -542,13 +548,26 @@ final class Quotation
                 }
             }
         }
+        $chatLink = PersonalLink::url($agent, 'quote', (int)$row['id']);
+        if ($chatLink !== null) {
+            $lines[] = '';
+            $lines[] = PersonalLink::line($chatLink);
+        }
         $profile = MailProfile::forAgent($agent);
         $lines[] = '';
         $lines[] = 'Kind regards,';
         $lines[] = $profile['from_name'];
         $text = implode("\n", $lines);
         $html = '<div style="font:15px/1.55 Arial,Helvetica,sans-serif;color:#1a2233">'
-              . implode('', array_map(static fn(string $l): string => $l === '' ? '<div style="height:10px"></div>' : '<div>' . e($l) . '</div>', $lines))
+              . implode('', array_map(static function (string $l) use ($chatLink): string {
+                    if ($l === '') {
+                        return '<div style="height:10px"></div>';
+                    }
+                    if ($chatLink !== null && $l === PersonalLink::line($chatLink)) {
+                        return '<div><a href="' . e($chatLink) . '" style="color:#1E5AC8;font-weight:bold">Let\'s discuss more — click here</a></div>';
+                    }
+                    return '<div>' . e($l) . '</div>';
+                }, $lines))
               . '</div>';
 
         $result = Mailer::sendWith($profile, (string)$row['to_email'],
