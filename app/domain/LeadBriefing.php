@@ -46,6 +46,16 @@ final class LeadBriefing
         if ($concerns['labels']) {
             $summary['Concerns raised'] = implode('; ', $concerns['labels']);
         }
+        // Why the team is needed now (transcript review, 14 Nov 2026: a
+        // quotation the chat could not send must reach the team as a request).
+        if ($trigger === 'handoff') {
+            foreach ($conversations as $c) {
+                if (!empty($c['handoff_triggered']) && trim((string)($c['handoff_reason'] ?? '')) !== '') {
+                    $summary = ['Why they need you' => (string)$c['handoff_reason']] + $summary;
+                    break;
+                }
+            }
+        }
         $interest    = self::packageInterest($lead);
         $signals     = self::signalLabels($conversations);
         $unanswered  = self::unansweredQuestions($conversations);

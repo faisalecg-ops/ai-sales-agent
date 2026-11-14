@@ -92,7 +92,50 @@ final class ChatGuide
             $mode = 'list';
         }
 
-        return ['items' => $items, 'categories' => $categories, 'mode' => $mode];
+        return ['items' => $items, 'categories' => $categories, 'mode' => $mode, 'all' => self::asksForAll($message)];
+    }
+
+    /**
+     * "All the tiers", "every option", "all 4", "both" (transcript review,
+     * 14 Nov 2026): the visitor wants the whole set at once, never one by one.
+     */
+    public static function asksForAll(string $message): bool
+    {
+        return (bool)preg_match('/\b(?:all|every|each|both|whole\s+(?:list|range))\b(?!\s+(?:the\s+)?(?:best|the\s+best))|\ball\s*[2-9]\b|\b[2-9]\s+(?:quotations|quotes|options|tiers|packages)\b|'
+            . '\b(?:sab|saare|saray|sare|tamam)\b/iu', $message)
+            // The same word in the chat's other languages.
+            || (bool)preg_match('/所有|全部|كل\s|جميع|همه|ทั้งหมด|すべて|全て|모든|전부|(?<![\p{L}])(?:tüm|hepsi|все|всех|todos|todas|tous|toutes|alle|tutti|tutte|semua)(?![\p{L}])/u', $message);
+    }
+
+    /**
+     * Every option of the kind(s) named, by its exact name, cheapest kinds
+     * first as the price list orders them. No kind named: everything.
+     *
+     * @param string[] $categories 'stand' and/or 'sponsorship'
+     * @return string[]
+     */
+    public static function allOfKind(array $offers, array $categories): array
+    {
+        $out = [];
+        foreach ($offers as $o) {
+            $kind = str_starts_with((string)($o['kind'] ?? ''), 'Sponsorship') ? 'sponsorship' : 'stand';
+            if ($categories === [] || in_array($kind, $categories, true)) {
+                $out[] = (string)$o['name'];
+            }
+        }
+        return array_values(array_unique(array_filter($out, 'strlen')));
+    }
+
+    /** The kinds ('stand', 'sponsorship') the named options belong to. */
+    public static function kindsOf(array $offers, array $names): array
+    {
+        $out = [];
+        foreach ($offers as $o) {
+            if (in_array((string)$o['name'], $names, true)) {
+                $out[] = str_starts_with((string)($o['kind'] ?? ''), 'Sponsorship') ? 'sponsorship' : 'stand';
+            }
+        }
+        return array_values(array_unique($out));
     }
 
     /** Does this text name this offer? Matched on its distinctive words. */

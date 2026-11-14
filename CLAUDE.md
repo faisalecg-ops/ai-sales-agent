@@ -199,6 +199,13 @@ Read this before any task on this project.
   audience facts); a PHP-read opt-out puts the lead's email/phone on the Do-not-contact list (`Suppression`, source
   opt_out) and sets `lead_state.no_contact`; heard only by the AI → `no_contact_maybe` (asking stops, team checks).
   Rule 11 (no guaranteed results). Tests 1,682. Real-AI chats 34–41 written, not run (the test keys were rotated).
+  **Transcript review (owner, 14 Nov 2026: apply `docs/PHARMA_ASIA_CHAT_TRANSCRIPT_REVIEW_AND_RECOMMENDATIONS.md`
+  on main), BUILT, same final zip, no database step.** Read `docs/upgrade-2026-11-transcript-review.md`. Only PHP says
+  something was sent/passed on (`Quotation::stripClaims`, system rule 12); quotations off/limit/failure → team route
+  (handoff reason "Asked for a quotation…", briefing row "Why they need you", Lang `quote_team`/`quote_team_ask`/
+  `quote_failed`); one quotation holds up to 4 options (`detail.options`, `lead_state.quote_names`, `MAX_OPTIONS`);
+  sponsorship prices = every tier at once; "all" (`ChatGuide::asksForAll`); exact names; stand vs sponsorship;
+  machinery → largest unit first; stand page only for stands. Tests 1,710. Real-AI chats 42–48 written, not run.
   **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
   prospect-campaign replies left out for now. It waits for the owner to try Stage B.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links

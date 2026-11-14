@@ -10,6 +10,7 @@ you installed on 11 November 2026. Ignore all earlier November zips.
 | Quotation PDF, offered and sent by the chat, made by hand on the lead page | `docs/upgrade-2026-11-guided-selling-b.md` |
 | 16 chat languages, stronger price check, personal "Let's discuss more" links | `docs/upgrade-2026-11-languages-and-chat-links.md` |
 | Concerns answered with care ("too expensive", "ask my manager", "guarantee buyers"…), "don't contact me" respected | `docs/upgrade-2026-11-conversation-quality.md` |
+| The demo-chat review: no false "I'll send it", quotation requests reach the team, all tiers at once, up to 4 options in one quotation, machinery sizes | `docs/upgrade-2026-11-transcript-review.md` |
 
 Also needed, once: two SQL files for Pharma Asia, `pharmaasia-chat-fixes-2026-11.sql` and
 `pharmaasia-sectors-and-tier-guidance.sql`.
@@ -45,7 +46,8 @@ Also needed, once: two SQL files for Pharma Asia, `pharmaasia-chat-fixes-2026-11
     - type the footer lines: company name, address, phone, website;
     - leave the terms empty for the standard four;
     - tick **Let the chat email quotations by itself**.
-    The card shows **On**. Until it does, the chat never offers or sends a quotation.
+    The card shows **On**. Until it does, the chat never sends a quotation itself: a request goes to the
+    sales team, and the chat tells the visitor so.
 11. **Personal chat links:** all three boxes are ticked; untick any you do not want.
 12. **Sales reps → International** must be filled: that person is "Your contact" on every quotation.
 13. **Prospect emails** must have Pharma Asia's own mail account: quotations are sent through it.
@@ -86,6 +88,6 @@ Bahasa Melayu — 16 in all. Quotation PDFs and emails stay in English.
 
 ## Tests
 
-- `php tests/acceptance.php`: 1,682 pass. `php tests/access-http.php`: 82 pass.
+- `php tests/acceptance.php`: 1,710 pass. `php tests/access-http.php`: 82 pass.
 - Real GPT-6 Luna and Tavily (12–13 Nov 2026): the English test chats, quotation chats, and one or more
   chats in each new language. Transcripts in `docs/reference/`.

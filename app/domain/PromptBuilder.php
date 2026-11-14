@@ -106,6 +106,12 @@ final class PromptBuilder
         11. Results. Never promise or imply guaranteed buyers, orders, sales,
             leads, meetings, distributors or a return on investment. Say what
             exhibiting may or could do, never what it will do.
+        12. Actions. You cannot send, email, book, reserve, save or pass on
+            anything yourself. Never say that something has been sent,
+            emailed, passed to the team or recorded: the system adds that line
+            itself, only after it has really happened. Never ask for an email
+            address on the promise of sending something unless you are told
+            below that the system will send it.
 
         HOW YOU SOUND
         You are an experienced, friendly sales person for the exhibition,
@@ -227,7 +233,35 @@ final class PromptBuilder
         if (empty($ctx['catalogue']) && empty($ctx['pricing_facts'])) {
             return '';
         }
-        return "ANSWERING ABOUT THE OPTIONS\n" . self::offerGuidance($ctx['offer_question'] ?? null);
+        return "ANSWERING ABOUT THE OPTIONS\n" . self::offerGuidance($ctx['offer_question'] ?? null) . "\n"
+            // Transcript review (14 Nov 2026).
+            . "- Use each option's exact name as written above, every time (never your own variant of a tier's name).\n"
+            . "- A stand and sponsorship do different jobs and can go together: a stand is where they show their products and "
+            . "meet visitors; sponsorship adds visibility and the branding listed for the tier. Say a tier includes stand "
+            . "space, passes or anything else only when its Includes above say so. If something is not listed, say it is "
+            . "not stated and the team can confirm.\n"
+            . "- When they want both product display and branding, you may suggest a stand together with a tier, or a tier "
+            . "whose Includes already contain the space they need, saying why.\n"
+            . "- A link must fit what they want: the stand booking page is for stands. For sponsorship give a sponsorship "
+            . "page only if one is in what you know; otherwise the next step is a quotation or the sales team."
+            . self::equipmentNote($ctx);
+    }
+
+    /**
+     * Large machinery (transcript review, 14 Nov 2026): no definite stand
+     * size before the display is known.
+     */
+    private static function equipmentNote(array $ctx): string
+    {
+        $products = mb_strtolower(implode(' ', array_map('strval', (array)($ctx['known_products'] ?? []))));
+        if ($products === '' || !preg_match('/machin|reactor|vessel|tank|boiler|autoclave|dryer|mixer|granulat|compress|'
+            . 'press\b|line\b|plant|equipment|filling|packag|blister|steriliz|chiller|generator|conveyor|crane|vehicle/u', $products)) {
+            return '';
+        }
+        return "\n- They make large equipment (" . mb_substr(implode(', ', array_map('strval', (array)$ctx['known_products'])), 0, 120)
+            . "). Before recommending a stand size, find out, as your one question, the approximate size of the largest unit "
+            . "they would bring and whether it is full size or a model or pictures. Then suggest a fitting option (bare space or "
+            . "outdoor space suits heavy or tall machines) and say that floor load, power and access are confirmed with the organiser.";
     }
 
     /**
@@ -398,13 +432,17 @@ final class PromptBuilder
         if (in_array('stand', $cats, true)) {
             $out[] = "They asked about stand prices: give each stand option's Quote line, one per line.";
         }
+        // Every tier at once, never one by one (transcript review, 14 Nov 2026).
         if (in_array('sponsorship', $cats, true)) {
-            $out[] = "They asked about sponsorship prices: in one sentence give the range from the lowest tier to "
-                   . "the highest, using only figures from their Quote lines, then offer to compare tiers or ask which "
-                   . "one interests them. Give a tier's full Quote line once they name it.";
+            $out[] = "They asked about sponsorship prices: give every tier's Quote line, one per line, lowest first, all in "
+                   . "this reply. Then offer to compare what the tiers include or to recommend one.";
         }
         if ($out) {
             return implode("\n", $out);
+        }
+        if (!empty($q['all'])) {
+            return "They asked for the prices of all the options: give every stand option's Quote line and every sponsorship "
+                 . "tier's Quote line, one per line, grouped as stands and sponsorship, all in this reply. Then at most one question.";
         }
         if ($focus) {
             return "They did not name an option in this message, so they mean what you were discussing: "
@@ -634,8 +672,8 @@ final class PromptBuilder
             } elseif (($rule['why'] ?? '') === 'stopped') {
                 $book = trim((string)($ctx['agent']['book_stand_url'] ?? ''));
                 $lines[] = "They have chosen not to give contact details, so never ask again. If they want to go "
-                         . "ahead, point them to the Book a stand page"
-                         . ($book !== '' ? " (" . $book . ")" : '') . " or offer the sales team's details.";
+                         . "ahead with a stand, point them to the Book a stand page"
+                         . ($book !== '' ? " (" . $book . ")" : '') . "; for sponsorship or anything else, offer the sales team's details.";
             }
         } elseif (is_array($rule) && ($rule['why'] ?? '') === 'they_asked') {
             $lines[] = "They have asked for a call, a proposal or a person. Ask for their name and an email address "

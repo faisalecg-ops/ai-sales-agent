@@ -5620,7 +5620,8 @@ T::equals('pakistan', $qa(['pricing_country' => 'pakistan'] + $qConvBase, $qLead
 T::equals('country', $qa(['pricing_country' => 'undetermined', 'disclosed_company_country' => ''] + $qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'Country unknown: ask the country');
 T::equals('country', $qa(['country_source' => 'ip_geo'] + $qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'A country guessed from the IP address is not enough');
 T::equals('option', $qa($qConvBase, $qLeadOk, [], 18.0), 'No option named: ask which');
-T::equals('option', $qa($qConvBase, $qLeadOk, ['Corner Pavilion', 'Diamond Partner'], 18.0), 'Two options named: ask which one');
+T::equals(null, $qa($qConvBase, $qLeadOk, ['Corner Pavilion', 'Diamond Partner'], 18.0), 'Two options named: both go in one quotation (14 Nov 2026)');
+T::equals(2, count(Quotation::assess($qAgent, $qConvBase, $qLeadOk, ['Corner Pavilion', 'Diamond Partner'], null, 18.0)['records']), 'Both options are kept');
 T::equals('option', $qa($qConvBase, $qLeadOk, ['Garden Kiosk'], 9.0), 'An option that is not live: not quoted');
 T::equals('size', $qa($qConvBase, $qLeadOk, ['Corner Pavilion'], null), 'A stand with no size: ask the size');
 T::equals('size_unsellable', $qa($qConvBase, $qLeadOk, ['Corner Pavilion'], 20.0), 'A size that cannot be booked: offer the nearest sizes');
@@ -5629,7 +5630,7 @@ T::equals(null, $qa($qConvBase, $qLeadOk, [], 18.0, 'stall:' . $qStallId), 'The 
 T::equals('name', $qa($qConvBase, ['name' => ''] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No name: ask the name');
 T::equals('company', $qa($qConvBase, ['company' => ''] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No company: ask the company');
 T::equals('email', $qa($qConvBase, ['email' => 'not-an-address'] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No usable email: ask the email');
-T::ok(str_contains(Quotation::promptBlock(Quotation::assess($qAgent, $qConvBase, ['email' => ''] + $qLeadOk, ['Corner Pavilion'], null, 18.0)), 'email address to send it to'),
+T::ok(str_contains(Quotation::promptBlock(Quotation::assess($qAgent, $qConvBase, ['email' => ''] + $qLeadOk, ['Corner Pavilion'], null, 18.0)), 'email address the system will send it to'),
     'The assistant is told the one thing still missing');
 T::ok(str_contains(Quotation::promptBlock(Quotation::assess($qAgent, $qConvBase, $qLeadOk, ['Corner Pavilion'], null, 18.0)), 'never say a stand is booked'),
     'And never to say a stand is booked');
@@ -5863,12 +5864,77 @@ $mock->reset();
 $mock->push(['reply' => 'Our team will prepare a proposal for you.', 'intent' => 'exhibitor',
     'lead_fields' => ['name' => 'Eva Lind', 'company' => 'Lind Bygg AB', 'email' => 'eva@lindbygg.example']]);
 [$qConvOff, $qSecretOff] = start_conversation($qAgentOff);
-say($qAgentOff, $qConvOff, $qSecretOff, 'Lind Bygg AB, based in Sweden. I am Eva Lind, eva@lindbygg.example. Send me a quotation for 18 sqm Corner Pavilion.');
+$qOff1 = say($qAgentOff, $qConvOff, $qSecretOff, 'Lind Bygg AB, based in Sweden. I am Eva Lind, eva@lindbygg.example. Send me a quotation for 18 sqm Corner Pavilion.');
 T::equals($qCount, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Switched off: the chat sends no quotation');
-T::ok(!str_contains($mock->lastSystemPrompt(), "QUOTATION (this overrides"), 'And the assistant is not told about quotations');
+T::ok(!str_contains($mock->lastSystemPrompt(), "QUOTATION (this overrides"), 'And the assistant is not told the chat will send one');
+// Transcript review (14 Nov 2026): the request goes to the sales team, and the chat says only that.
+T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION (prepared by the sales team, not by this chat)')
+    && str_contains($mock->lastSystemPrompt(), 'Never say you will send, email, arrange or prepare one'),
+    'Switched off: the assistant is told the sales team prepares it and never to promise it');
+T::ok(str_contains(blocks_text($qOff1), 'I have passed your request for a quotation to our sales team. They will email it to eva@lindbygg.example.'),
+    'The program says the request went to the team, with the address');
+$qOffConv = reload_conversation($qConvOff);
+T::ok((int)$qOffConv['handoff_triggered'] === 1 && str_contains((string)$qOffConv['handoff_reason'], 'Asked for a quotation'),
+    'The request is recorded as a hand-over to the team');
+T::ok((int)db()->value("SELECT COUNT(*) FROM email_outbox WHERE body LIKE '%Asked for a quotation%' AND body LIKE '%eva@lindbygg.example%'") >= 1,
+    'And the team is emailed about it');
+
+// The AI promising to send it itself is taken out of the reply.
+$mock->reset();
+$mock->push(['reply' => 'I can arrange the Corner Pavilion quotation. What email address should I send it to?', 'intent' => 'exhibitor']);
+[$qConvOff2, $qSecretOff2] = start_conversation($qAgentOff);
+$qOff2 = say($qAgentOff, $qConvOff2, $qSecretOff2, 'Lind Bygg AB, based in Sweden. Can I get a quotation for the Corner Pavilion?');
+T::ok(!preg_match('/I can arrange|should I send/i', blocks_text($qOff2)) && str_contains(blocks_text($qOff2), 'Our sales team prepares official quotations'),
+    'A promise the chat cannot keep is replaced by the true line: the sales team prepares it');
+$mock->push(['reply' => 'Thank you. The quotation is being emailed to you now.', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Eva Lind', 'email' => 'eva2@lindbygg.example']]);
+$qOff3 = say($qAgentOff, reload_conversation($qConvOff2), $qSecretOff2, 'eva2@lindbygg.example');
+T::ok(!str_contains(blocks_text($qOff3), 'being emailed to you now') && str_contains(blocks_text($qOff3), 'passed your request for a quotation to our sales team'),
+    'An email address given afterwards: no false "being emailed", the team line instead');
 $mock->push(['reply' => 'It is USD 6,750 plus VAT.', 'intent' => 'exhibitor', 'package_reference' => 'stall:' . $qStallId]);
 $qOfOff = say($qAgentOff, reload_conversation($qConvOff), $qSecretOff, 'What does an 18 sqm Corner Pavilion cost?');
 T::ok(!str_contains(blocks_text($qOfOff), 'official quotation'), 'Switched off: no quotation is offered either');
+
+// Several options in one quotation (transcript review, 14 Nov 2026: "give all 4 quotations").
+db()->update('agents', ['quote_enabled' => 1], 'id = ?', [$qAgentId]);
+$qAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$qAgentId]);
+$qTier2 = db()->insert('sponsorship_packages', $qVat + ['agent_id' => $qAgentId, 'tier_name' => 'Ruby Partner', 'price' => 10000,
+    'benefits' => "Logo on the partner banner\nTwo booths, 18 sqm", 'sort_order' => 89]);
+$qSent = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html, array $headers, array $attachments = []) use (&$qSent): array {
+    $qSent[] = compact('profile', 'to', 'subject', 'body', 'headers', 'attachments');
+    return ['ok' => true];
+};
+$mock->reset();
+$mock->push(['reply' => 'Of course.', 'intent' => 'sponsor',
+    'lead_fields' => ['name' => 'Wei Chen', 'company' => 'Longqiang Machinery', 'email' => 'wei@longqiang.example']]);
+[$qConvM, $qSecretM] = start_conversation($qAgent);
+$qM = say($qAgent, $qConvM, $qSecretM, 'Longqiang Machinery, based in China. I am Wei Chen, wei@longqiang.example. Please send quotations for all the sponsorship tiers.');
+$qMRow = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+$qMDetail = (array)json_decode((string)($qMRow['detail'] ?? ''), true);
+$qMOptions = (array)($qMDetail['options'] ?? []);
+T::ok(count($qMOptions) >= 2 && count($qMOptions) <= Quotation::MAX_OPTIONS, 'All the tiers asked for go into ONE quotation (up to four)');
+T::ok(str_contains((string)$qMRow['title'], 'Ruby Partner') && str_contains((string)$qMRow['title'], 'Diamond Partner')
+    && preg_match('/^\d options, USD 11,500 to /', (string)$qMRow['total_text']), 'Its title names them, totals lowest first');
+T::ok(str_contains(blocks_text($qM), 'is on its way to wei@longqiang.example'), 'The program confirms it, once it is made');
+$qMMail = array_values(array_filter($qSent, static fn(array $m): bool => $m['to'] === 'wei@longqiang.example'))[0] ?? [];
+T::ok(str_contains((string)($qMMail['body'] ?? ''), '- Ruby Partner: USD 11,500') && str_contains((string)($qMMail['body'] ?? ''), '- Diamond Partner: USD 46,000'),
+    'The email lists each option with its own total');
+$qMPdf = (string)file_get_contents((string)Quotation::path($qMRow));
+T::ok(str_starts_with($qMPdf, '%PDF') && substr_count($qMPdf, '/Type /Page ') + substr_count($qMPdf, '/Type/Page ') >= 1, 'The PDF is made');
+T::ok(str_contains(Quotation::promptBlock(['missing' => 'option', 'record' => null, 'records' => [], 'sqm' => null, 'note' => null], ['Ruby Partner', 'Diamond Partner']),
+    '"Ruby Partner", "Diamond Partner"'), 'Asked which option, the assistant is given the exact names');
+db()->exec('DELETE FROM sponsorship_packages WHERE id = ?', [$qTier2]);
+
+// The honesty filter
+T::equals('Thanks, Kaleem.', Quotation::stripClaims('Thanks, Kaleem. The quotation is being emailed to you now.', true), 'A claim that it is being sent is taken out');
+T::equals('', Quotation::stripClaims('I can arrange the Platinum Partner quotation. What email address should I send it to?', false),
+    'A promise the chat cannot keep is taken out');
+T::equals('I can arrange the Platinum Partner quotation. What email address should I send it to?',
+    Quotation::stripClaims('I can arrange the Platinum Partner quotation. What email address should I send it to?', true),
+    'When the chat really sends quotations, asking for the address is fine');
+T::equals("Here are the tiers:\n- Silver: USD 10,000\n- Gold: USD 20,000\n\nWhich one interests you?",
+    Quotation::stripClaims("Here are the tiers:\n- Silver: USD 10,000\n- Gold: USD 20,000\n\nWhich one interests you?", false), 'Lists and line breaks are left as they were');
 
 // Tidy up, so later groups see the agent as before.
 Mailer::$testTransport = null;
@@ -6344,6 +6410,36 @@ T::ok(str_contains(Qualification::promptBlock(['products_made' => ['pumps']], 7,
 
 db()->exec('DELETE FROM suppression_list WHERE agent_id = ?', [(int)$agent['id']]);
 $mock->reset();
+
+// =====================================================================
+// Transcript review (14 Nov 2026): complete answers, the right advice
+// =====================================================================
+T::group('Transcript review: all tiers at once, stand and sponsorship, machinery');
+
+T::ok(ChatGuide::asksForAll('give the price and quotation of all options') && ChatGuide::asksForAll('give all 4 quotations')
+    && ChatGuide::asksForAll('所有赞助级别的价格') && ChatGuide::asksForAll('sab options ki price'), '"All" is understood, in other languages too');
+T::ok(!ChatGuide::asksForAll('What is the best option for us?') && !ChatGuide::asksForAll('How much is a 9 sqm stall?'), 'And not read into other questions');
+$trOffers = [['name' => 'Shell Scheme Stall', 'kind' => 'Participation option'], ['name' => 'Silver Partner', 'kind' => 'Sponsorship tier'],
+    ['name' => 'Gold Partner', 'kind' => 'Sponsorship tier']];
+T::equals(['Silver Partner', 'Gold Partner'], ChatGuide::allOfKind($trOffers, ['sponsorship']), 'All the tiers, by their exact names');
+T::equals(['sponsorship'], ChatGuide::kindsOf($trOffers, ['Gold Partner']), 'The kind of an option in view');
+
+$trMethod = new ReflectionMethod(PromptBuilder::class, 'priceScope');
+$trMethod->setAccessible(true);
+$trTiers = (string)$trMethod->invoke(null, ['pricing_requested' => true, 'offer_question' => ['items' => [], 'categories' => ['sponsorship'], 'mode' => 'list', 'all' => false]]);
+T::ok(str_contains($trTiers, "give every tier's Quote line") && !str_contains($trTiers, 'range'), 'Sponsorship prices: every tier in one reply, not a range');
+$trAll = (string)$trMethod->invoke(null, ['pricing_requested' => true, 'offer_question' => ['items' => [], 'categories' => [], 'mode' => null, 'all' => true]]);
+T::ok(str_contains($trAll, 'every stand option') && str_contains($trAll, 'every sponsorship tier'), '"All options": stands and tiers together');
+
+$trOffer = new ReflectionMethod(PromptBuilder::class, 'offerTurn');
+$trOffer->setAccessible(true);
+$trText = (string)$trOffer->invoke(null, ['catalogue' => [['name' => 'x']], 'offer_question' => null, 'known_products' => ['Stainless steel reactor tanks']]);
+T::ok(str_contains($trText, 'exact name') && str_contains($trText, 'only when its Includes above say so'), 'Exact names; a tier includes space only when its list says so');
+T::ok(str_contains($trText, 'the largest unit') && str_contains($trText, 'floor load'), 'For large machinery: the size of the largest unit first');
+T::ok(!str_contains((string)$trOffer->invoke(null, ['catalogue' => [['name' => 'x']], 'offer_question' => null, 'known_products' => ['Herbal supplements']]), 'the largest unit'),
+    'Not for small products');
+T::ok(str_contains($trText, 'stand booking page is for stands'), 'The link must fit: the stand page is for stands');
+T::equals(null, Concerns::detect('We are not ready to book yet. We are only comparing the options.'), '"Not ready to book yet" is still deciding, not a "no"');
 
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');

@@ -390,10 +390,73 @@ final class Lang
         return $text;
     }
 
+    /**
+     * Lines for a quotation the chat cannot send itself (transcript review,
+     * 14 Nov 2026). Written by PHP only after the request is saved on the
+     * lead, so the team's notification really goes.
+     */
+    private const TEXT_REVIEW = [
+        'quote_team' => [
+            'en' => 'I have passed your request for a quotation to our sales team. They will email it to {email}.',
+            'zh' => '我已将您的报价请求转交给我们的销售团队，他们会把报价单发送至 {email}。',
+            'ur' => 'Maine aap ki quotation ki request hamari sales team ko de di hai. Woh ise {email} par email karenge.',
+            'ar' => 'لقد أحلت طلب عرض السعر إلى فريق المبيعات لدينا، وسيرسله إلى {email}.',
+            'tr' => 'Teklif talebinizi satış ekibimize ilettim. Teklifi {email} adresine e-posta ile gönderecekler.',
+            'ru' => 'Я передал ваш запрос на коммерческое предложение нашему отделу продаж. Они отправят его на {email}.',
+            'es' => 'He pasado su solicitud de cotización a nuestro equipo de ventas. Se la enviarán a {email}.',
+            'fr' => 'J\'ai transmis votre demande de devis à notre équipe commerciale. Elle vous l\'enverra à {email}.',
+            'de' => 'Ich habe Ihre Angebotsanfrage an unser Vertriebsteam weitergegeben. Es sendet Ihnen das Angebot an {email}.',
+            'ko' => '견적 요청을 영업팀에 전달했습니다. 영업팀이 {email}(으)로 견적서를 보내드릴 것입니다.',
+            'it' => 'Ho inoltrato la sua richiesta di preventivo al nostro team commerciale, che lo invierà a {email}.',
+            'ja' => 'お見積りのご依頼を営業チームに伝えました。{email} 宛てにお送りします。',
+            'fa' => 'درخواست پیش‌فاکتور شما را به تیم فروش ما فرستادم. آن را به {email} ایمیل خواهند کرد.',
+            'th' => 'ได้ส่งคำขอใบเสนอราคาของคุณให้ทีมขายแล้ว ทีมขายจะส่งไปที่ {email}',
+            'id' => 'Permintaan penawaran harga Anda sudah saya teruskan ke tim penjualan kami. Mereka akan mengirimkannya ke {email}.',
+            'ms' => 'Permintaan sebut harga anda telah saya majukan kepada pasukan jualan kami. Mereka akan menghantarnya ke {email}.',
+        ],
+        'quote_team_ask' => [
+            'en' => 'Our sales team prepares official quotations. If you share your email address, they will email it to you.',
+            'zh' => '正式报价单由我们的销售团队出具。请留下您的电子邮箱，他们会发送给您。',
+            'ur' => 'Official quotation hamari sales team banati hai. Aap apna email address de dein to woh aap ko email kar denge.',
+            'ar' => 'يُعدّ فريق المبيعات لدينا عروض الأسعار الرسمية. إذا شاركتنا بريدك الإلكتروني فسيرسلونه إليك.',
+            'tr' => 'Resmi teklifleri satış ekibimiz hazırlar. E-posta adresinizi paylaşırsanız size gönderirler.',
+            'ru' => 'Официальные предложения готовит наш отдел продаж. Если вы укажете e-mail, они отправят его вам.',
+            'es' => 'Las cotizaciones oficiales las prepara nuestro equipo de ventas. Si nos deja su correo electrónico, se la enviarán.',
+            'fr' => 'Les devis officiels sont préparés par notre équipe commerciale. Si vous indiquez votre adresse e-mail, elle vous l\'enverra.',
+            'de' => 'Offizielle Angebote erstellt unser Vertriebsteam. Wenn Sie uns Ihre E-Mail-Adresse geben, sendet es Ihnen das Angebot.',
+            'ko' => '공식 견적서는 영업팀에서 작성합니다. 이메일 주소를 알려주시면 보내드립니다.',
+            'it' => 'I preventivi ufficiali li prepara il nostro team commerciale. Se ci lascia il suo indirizzo email, glielo invierà.',
+            'ja' => '正式なお見積りは営業チームが作成します。メールアドレスをお知らせいただければお送りします。',
+            'fa' => 'پیش‌فاکتور رسمی را تیم فروش ما آماده می‌کند. اگر ایمیل خود را بدهید، برایتان می‌فرستند.',
+            'th' => 'ใบเสนอราคาอย่างเป็นทางการจัดทำโดยทีมขายของเรา หากแจ้งอีเมลไว้ ทีมขายจะส่งให้คุณ',
+            'id' => 'Penawaran harga resmi disiapkan oleh tim penjualan kami. Jika Anda memberikan alamat email, mereka akan mengirimkannya.',
+            'ms' => 'Sebut harga rasmi disediakan oleh pasukan jualan kami. Jika anda berikan alamat e-mel, mereka akan menghantarnya kepada anda.',
+        ],
+        'quote_failed' => [
+            'en' => 'The quotation could not be prepared automatically just now, so I have passed your request to our sales team. They will email it to {email}.',
+            'zh' => '报价单暂时无法自动生成，我已将您的请求转交给销售团队，他们会发送至 {email}。',
+            'ur' => 'Quotation abhi khud se tayyar nahi ho saki, is liye maine aap ki request sales team ko de di hai. Woh ise {email} par email karenge.',
+            'ar' => 'تعذّر إعداد عرض السعر تلقائياً الآن، لذا أحلت طلبك إلى فريق المبيعات، وسيرسله إلى {email}.',
+            'tr' => 'Teklif şu anda otomatik olarak hazırlanamadı; talebinizi satış ekibimize ilettim. Teklifi {email} adresine gönderecekler.',
+            'ru' => 'Сейчас предложение не удалось подготовить автоматически, поэтому я передал запрос отделу продаж. Они отправят его на {email}.',
+            'es' => 'No se pudo preparar la cotización automáticamente en este momento, así que he pasado su solicitud al equipo de ventas. Se la enviarán a {email}.',
+            'fr' => 'Le devis n\'a pas pu être préparé automatiquement pour l\'instant ; j\'ai donc transmis votre demande à notre équipe commerciale, qui l\'enverra à {email}.',
+            'de' => 'Das Angebot konnte gerade nicht automatisch erstellt werden. Ich habe Ihre Anfrage an unser Vertriebsteam weitergegeben; es sendet das Angebot an {email}.',
+            'ko' => '지금은 견적서를 자동으로 만들 수 없어 요청을 영업팀에 전달했습니다. 영업팀이 {email}(으)로 보내드릴 것입니다.',
+            'it' => 'Al momento non è stato possibile preparare il preventivo automaticamente, quindi ho inoltrato la richiesta al team commerciale, che lo invierà a {email}.',
+            'ja' => '現在お見積りを自動で作成できなかったため、ご依頼を営業チームに伝えました。{email} 宛てにお送りします。',
+            'fa' => 'پیش‌فاکتور الان به‌طور خودکار آماده نشد، پس درخواست شما را به تیم فروش فرستادم. آن را به {email} ایمیل خواهند کرد.',
+            'th' => 'ขณะนี้ยังจัดทำใบเสนอราคาอัตโนมัติไม่ได้ จึงส่งคำขอให้ทีมขายแล้ว ทีมขายจะส่งไปที่ {email}',
+            'id' => 'Penawaran harga belum dapat dibuat otomatis saat ini, jadi permintaan Anda sudah saya teruskan ke tim penjualan. Mereka akan mengirimkannya ke {email}.',
+            'ms' => 'Sebut harga tidak dapat disediakan secara automatik buat masa ini, jadi permintaan anda telah saya majukan kepada pasukan jualan. Mereka akan menghantarnya ke {email}.',
+        ],
+    ];
+
+
     /** A line in the visitor's language, with {placeholders} filled in. */
     public static function t(?string $code, string $key, array $vars = []): string
     {
-        $row  = array_merge(self::TEXT[$key] ?? [], self::TEXT_MORE[$key] ?? [], self::TEXT_IDMS[$key] ?? []);
+        $row  = array_merge(self::TEXT[$key] ?? [], self::TEXT_MORE[$key] ?? [], self::TEXT_IDMS[$key] ?? [], self::TEXT_REVIEW[$key] ?? []);
         $text = (string)($row[self::valid($code) ?? 'en'] ?? $row['en'] ?? $key);
         foreach ($vars as $k => $v) {
             $text = str_replace('{' . $k . '}', (string)$v, $text);

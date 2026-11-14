@@ -115,3 +115,6 @@ Expert not yet connected to Pulse.
 - 13 Nov evening: the conversation-quality plan (owner's document on main) — concerns answered with care and
   remembered, "don't contact me" puts their details on Do-not-contact. Same final zip. Tests 1,682 + 82.
   Real-AI chats 34–41 wait for a working test key. See `docs/upgrade-2026-11-conversation-quality.md`.
+- 14 Nov: the owner's demo chat review applied (`docs/upgrade-2026-11-transcript-review.md`): honest quotation
+  handling (team route), all tiers at once, up to 4 options per quotation, machinery sizing. Same final zip.
+  Tests 1,710 + 82. Real-AI chats 34–48 wait for a working test key.

@@ -171,6 +171,14 @@ final class ChatOrchestrator
             unset($leadState['quote_declined']);        // they have asked again themselves
         }
         $quoteWanted = $quoteAsked || ($quoteOn && !empty($leadState['quote_wanted']));
+        // The chat cannot send quotations itself (switched off, no mail
+        // account, WhatsApp): a request goes to the sales team instead, and
+        // the chat says so honestly (transcript review, 14 Nov 2026).
+        $teamQuote = !$quoteOn && (Quotation::wants($message) || !empty($leadState['quote_team']))
+            && !ChatGuide::isDecline($message);
+        if (!$quoteOn && !empty($leadState['quote_team']) && ChatGuide::isDecline($message)) {
+            unset($leadState['quote_team']);
+        }
         // They would rather not give their details: the request is dropped,
         // never pressed. They are pointed to the booking page or the rep, as
         // for any visitor who declines (test chat 5, 12 Nov 2026).
@@ -193,7 +201,7 @@ final class ChatOrchestrator
             $contactRecord,
             $turnNo,
             self::hasContactInState($leadState),
-            self::asksForUs($message) || $quoteWanted
+            self::asksForUs($message) || $quoteWanted || $teamQuote
         );
         if ($optedOut && $contactRule['why'] === 'stopped') {
             $contactRule['why'] = 'opted_out';
@@ -313,6 +321,19 @@ final class ChatOrchestrator
 
         // What a quotation still needs, from what is known before this reply.
         $quoteNames  = $offerQ['items'] ?: $offerFocus;
+        // "All the tiers", "all 4 quotations": every option of that kind,
+        // in one quotation (transcript review, 14 Nov 2026).
+        if (($quoteWanted || $teamQuote) && !empty($offerQ['all'])) {
+            $kinds = $offerQ['categories'] ?: ChatGuide::kindsOf($offers, $offerFocus);
+            $quoteNames = ChatGuide::allOfKind($offers, $kinds) ?: $quoteNames;
+        } elseif (($quoteWanted || $teamQuote) && $offerQ['items'] === [] && count((array)($leadState['quote_names'] ?? [])) > 1) {
+            $quoteNames = (array)$leadState['quote_names'];     // several asked for earlier, details given since
+        }
+        // Several options in one quotation when they asked for several;
+        // otherwise the option just priced, as before.
+        $quoteMulti = count($quoteNames) > 1 && (!empty($offerQ['all']) || count($offerQ['items']) > 1
+            || $quoteNames === (array)($leadState['quote_names'] ?? []));
+        $quoteRef = $quoteNames === [] || (count($quoteNames) > 1 && !$quoteMulti) ? ($leadState['quote_last_ref'] ?? null) : null;
         $quoteAssess = null;
         if ($quoteWanted) {
             $known = !empty($conversation['lead_id'])
@@ -327,8 +348,7 @@ final class ChatOrchestrator
             if (trim((string)($known['email'] ?? '')) === '' && preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $message, $em)) {
                 $known['email'] = $em[0];
             }
-            $quoteAssess = Quotation::assess($agent, $conversation, $known, $quoteNames,
-                $quoteNames === [] || count($quoteNames) > 1 ? ($leadState['quote_last_ref'] ?? null) : null, $requestedSqm);
+            $quoteAssess = Quotation::assess($agent, $conversation, $known, $quoteNames, $quoteRef, $requestedSqm);
         }
 
         // A quotation already sent in this chat: the assistant knows, and
@@ -349,11 +369,21 @@ final class ChatOrchestrator
 
         $quoteNote = '';
         if ($quoteAssess !== null) {
-            $quoteNote = Quotation::promptBlock($quoteAssess);
+            $quoteNote = Quotation::promptBlock($quoteAssess, array_column($offers, 'name'));
+        } elseif ($teamQuote) {
+            $teamEmail = self::knownEmail($conversation, $leadState, $message);
+            $quoteNote = "QUOTATION (prepared by the sales team, not by this chat)\n"
+                . "This chat cannot make or email a quotation itself. Never say you will send, email, arrange or prepare one, "
+                . "and never say one has been sent. Still answer their question: give the Quote lines of the options they asked "
+                . "about, as the price rules allow, so they can compare now. "
+                . ($teamEmail !== ''
+                    ? "The system is passing the request to the sales team and adds a line saying so under your reply; do not ask for their email."
+                    : "If they want the official quotation, ask for their email address once, saying clearly that our sales team "
+                      . "will email it to them. If they give it, do not confirm anything yourself: the system adds the line.");
         } elseif ($quoteDropped) {
             $quoteNote = "QUOTATION\nThey asked for a quotation earlier but do not want to give the details it needs. Accept that in a few "
-                . "words and do not ask again. A quotation cannot be emailed without an address; they can go ahead through the Book "
-                . "a stand page or the sales representative whenever they wish. Keep helping with what they ask.";
+                . "words and do not ask again. A quotation cannot be emailed without an address; they can go ahead through the booking "
+                . "or sponsorship page that fits what they want, or the sales representative, whenever they wish. Keep helping with what they ask.";
         } elseif ($quoteOfferDue) {
             $quoteNote = "QUOTATION OFFER\nThe system can email them an official quotation (a PDF from the price list) for one option. "
                 . "End this reply by offering it, as your only question, in these words or close to them: "
@@ -568,12 +598,11 @@ final class ChatOrchestrator
             // What the next turn needs to remember (fix plan steps 1 and 2).
             'memory'            => [
                 'quote'         => ['on' => $quoteOn, 'wanted' => $quoteWanted, 'asked' => $quoteAsked, 'dropped' => $quoteDropped,
+                                    'team' => $teamQuote, 'multi' => $quoteMulti,
                                     'can_offer' => $quoteCanOffer, 'next_step' => $quoteNextStep,
                                     'names' => $quoteNames, 'sqm' => $requestedSqm,
                                     // This turn's option, or the one whose price card was shown last.
-                                    'reference' => $pricingAllowed
-                                        ? ($reference ?? ($quoteNames === [] || count($quoteNames) > 1 ? ($leadState['quote_last_ref'] ?? null) : null))
-                                        : null],
+                                    'reference' => $pricingAllowed && !$quoteMulti ? ($reference ?? $quoteRef) : null],
                 'on_path'       => $onPath,
                 // The concern PHP read, or else the one the assistant heard.
                 'concern'       => $concernNow ?? ($signals['concern'] ?? null),
@@ -772,6 +801,16 @@ final class ChatOrchestrator
             // Prepared here, inside the same save as the reply that announces
             // it; emailed after the save, so a slow mail server holds nothing up.
             $quoteRow = null;
+            $lang = Lang::of($leadState);
+            // Only the program says that something was sent or passed on
+            // (transcript review, 14 Nov 2026): such words from the AI are
+            // taken out, and promises too when the chat cannot send.
+            $replyBeforeCheck = (string)$turn['reply'];
+            if (!$turn['is_fallback']) {
+                $turn['reply'] = Quotation::stripClaims($replyBeforeCheck, !empty($quote['on']));
+            }
+            $leadEmail = $lead !== null ? trim((string)($lead['email'] ?? '')) : '';
+            $toTeam = null;     // why a quotation request goes to the sales team instead
             if (!empty($quote['on'])) {
                 $leadState['quote_offered'] = !$turn['is_fallback'] && Quotation::offered((string)$turn['reply']);
                 // The offer is certain: if a price was shown (or they asked how
@@ -802,8 +841,9 @@ final class ChatOrchestrator
                         $quote['reference'] ?? null, isset($quote['sqm']) ? (float)$quote['sqm'] : null);
                     if ($assess['missing'] === null) {
                         try {
-                            $quoteRow = Quotation::prepare($agent, $lead, $conversation, $assess['record'], $assess['sqm']);
-                            $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . Lang::t(Lang::of($leadState), 'quote_sent', [
+                            $quoteRow = Quotation::prepare($agent, $lead, $conversation, $assess['record'], $assess['sqm'],
+                                'chat', 'assistant', array_slice((array)($assess['records'] ?? []), 1));
+                            $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . Lang::t($lang, 'quote_sent', [
                                 'number' => $quoteRow['number'], 'email' => $quoteRow['to_email'],
                                 'date'   => (string)((array)json_decode((string)$quoteRow['detail'], true))['valid'],
                             ]);
@@ -811,13 +851,17 @@ final class ChatOrchestrator
                             $leadState['quote_waits']  = 0;
                             $leadState['quote_offered'] = false;
                             $leadState['quotes_sent'] = array_slice(array_merge((array)($leadState['quotes_sent'] ?? []), [$quoteRow['number']]), -5);
+                            unset($leadState['quote_names']);
                         } catch (Throwable $ex) {
                             app_log('quotation', 'could not prepare', ['error' => $ex->getMessage(), 'conversation' => (int)$conversation['id']]);
                             $leadState['quote_wanted'] = false;
-                            $handoffReason ??= 'Asked for a quotation; it could not be made automatically';
+                            $toTeam = ['failed', 'it could not be made automatically'];
                         }
                     } elseif (in_array($assess['missing'], ['pakistan', 'limit'], true)) {
                         $leadState['quote_wanted'] = false;
+                        if ($assess['missing'] === 'limit') {
+                            $toTeam = ['team', 'the chat\'s limit of quotations was reached'];
+                        }
                         if ($assess['missing'] === 'limit' && empty($leadState['rep_given'])) {
                             $repText = SalesReps::textFor($agentId, (string)($conversation['pricing_country'] ?? ''), 'web', Lang::of($leadState));
                             if ($repText !== '') {
@@ -832,8 +876,45 @@ final class ChatOrchestrator
                         $waits = !empty($quote['asked']) ? 1 : (int)($leadState['quote_waits'] ?? 0) + 1;
                         $leadState['quote_waits']  = $waits;
                         $leadState['quote_wanted'] = $waits <= 2;
+                        if (!empty($quote['multi'])) {
+                            $leadState['quote_names'] = array_values((array)($quote['names'] ?? []));
+                        }
                     }
                 }
+            } elseif (!empty($quote['team']) && !$turn['is_fallback']) {
+                // The chat cannot send quotations: the request goes to the team.
+                if ($leadEmail !== '') {
+                    $toTeam = ['team', 'the chat cannot send quotations for this exhibition'];
+                    unset($leadState['quote_team']);
+                } else {
+                    $waits = (int)($leadState['quote_team_waits'] ?? 0) + 1;
+                    $leadState['quote_team'] = $waits <= 2;
+                    $leadState['quote_team_waits'] = $waits;
+                    if ($waits > 2) {
+                        unset($leadState['quote_team'], $leadState['quote_team_waits']);
+                    }
+                }
+            }
+            // A request the team will handle: recorded on the lead, the team
+            // is notified (after the save), and only then does the chat say so.
+            if ($toTeam !== null && $lead !== null) {
+                $names = array_values(array_filter(array_map('strval', (array)($quote['names'] ?? []))));
+                // More useful to the team than "Interested in …", so it takes its place.
+                $handoffReason = mb_substr('Asked for a quotation' . ($names ? ' for ' . implode(', ', $names) : '')
+                    . ' by email to ' . ($leadEmail !== '' ? $leadEmail : 'them') . '; ' . $toTeam[1] . '. Please send it.', 0, 255);
+                if ($leadEmail !== '') {
+                    $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n"
+                        . Lang::t($lang, $toTeam[0] === 'failed' ? 'quote_failed' : 'quote_team', ['email' => $leadEmail]);
+                }
+                Audit::log('quotation_to_team', $agentId, 'lead', (int)$lead['id'], $handoffReason);
+            }
+            if (!empty($quote['team']) && $leadEmail === '' && $toTeam === null
+                && trim((string)$turn['reply']) !== trim(Quotation::stripClaims($replyBeforeCheck, true) ?: $replyBeforeCheck)) {
+                // A promise to send it was taken out: say who really prepares it.
+                $turn['reply'] = rtrim((string)$turn['reply']) . "\n\n" . Lang::t($lang, 'quote_team_ask');
+            } elseif (trim((string)$turn['reply']) === '') {
+                // Everything the AI wrote was a claim the program cannot stand behind.
+                $turn['reply'] = !empty($quote['team']) && $leadEmail === '' ? Lang::t($lang, 'quote_team_ask') : $replyBeforeCheck;
             }
 
             // Sanitised reply (Section 29).
@@ -1412,6 +1493,21 @@ final class ChatOrchestrator
             $leadState['contact_asks']['pending'] = false;
         }
         return $leadState;
+    }
+
+    /** An email address already known for this chat, or typed in this message. */
+    private static function knownEmail(array $conversation, array $leadState, string $message): string
+    {
+        $email = !empty($conversation['lead_id'])
+            ? trim((string)(db()->value('SELECT email FROM leads WHERE id = ?', [(int)$conversation['lead_id']]) ?? ''))
+            : '';
+        if ($email === '') {
+            $email = trim((string)($leadState['email'] ?? ''));
+        }
+        if ($email === '' && preg_match('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', $message, $m)) {
+            $email = $m[0];
+        }
+        return Validator::email($email) !== null ? $email : '';
     }
 
     /** Approved facts about who visits, for a concern from someone not (yet) on the exhibitor path. */

@@ -24,6 +24,8 @@ declare(strict_types=1);
 final class Quotation
 {
     public const MAX_PER_CONVERSATION = 3;
+    /** Options one quotation may hold (transcript review, 14 Nov 2026: "give all 4 quotations"). */
+    public const MAX_OPTIONS = 4;
     public const MAX_PER_EMAIL_PER_DAY = 5;
     private const MAX_SEND_TRIES = 4;
 
@@ -113,10 +115,47 @@ final class Quotation
             return true;            // the same request in the chat's other languages
         }
         return (bool)preg_match(
-            '/\b(?:quotation|quote|proposal|pro-?\s?forma|written\s+offer|offer\s+in\s+writing|'
+            '/\b(?:quotations?|quote|qoutations?|quatations?|proposals?|pro-?\s?forma|written\s+offer|offer\s+in\s+writing|'
             . '(?:send|e-?mail)\s+(?:me|us)\s+(?:the\s+|an?\s+|your\s+)?(?:offer|prices?|rates?|costs?|details)(?:\s+by\s+e-?mail)?)\b/i',
             $message
         ) && !preg_match('/\b(?:no|not|don.?t|do\s+not)\s+(?:need|want|send)\b[^.?!]{0,30}\b(?:quotation|quote|proposal)\b/i', $message);
+    }
+
+    /**
+     * Take out of the assistant's reply any sentence that says a quotation
+     * (or a proposal or request) has been sent, emailed or passed on, and,
+     * when the chat cannot send quotations itself, any sentence promising to
+     * send one (transcript review, 14 Nov 2026). The program adds the true
+     * line itself, after the action. English wording; the prompt covers the
+     * other languages.
+     */
+    public static function stripClaims(string $reply, bool $chatSends): string
+    {
+        $claim = '/\b(?:(?:is|are|has been|have been|was|were)\s+(?:now\s+)?(?:being\s+)?(?:sent|e-?mailed|emailed|forwarded|on\s+(?:its|their)\s+way)|'
+            . 'I(?:\'ve|\s+have)\s+(?:just\s+)?(?:sent|e-?mailed|forwarded|passed|shared|submitted)|'
+            . '(?:I|we)\s+(?:am|are)\s+(?:now\s+)?(?:sending|e-?mailing))\b[^.!?\n]*\b(?:quotation|quote|proposal|request|PDF)\b|'
+            . '\b(?:quotation|quote|proposal|PDF)\b[^.!?\n]{0,80}\b(?:is|are|has been|have been)\s+(?:now\s+)?(?:being\s+)?(?:sent|e-?mailed|on\s+(?:its|their)\s+way)\b/i';
+        $promise = '/\b(?:I(?:\'ll|\s+will|\s+can|\s+could|\s+am\s+going\s+to)|I\'m\s+going\s+to|let\s+me)\s+(?:now\s+)?(?:send|e-?mail|arrange|prepare|forward|issue)\b[^.!?\n]{0,90}\b(?:quotation|quote|proposal)\b|'
+            . '\b(?:what|which)\s+(?:e-?mail\s+)?address\s+should\s+I\s+(?:send|e-?mail)\b/i';
+        // Sentences, keeping the spaces and line breaks between them as they were.
+        $parts = preg_split('/((?<=[.!?])[ \t]+(?=\S)|\n+)/u', $reply, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$reply];
+        $out = '';
+        $changed = false;
+        for ($i = 0, $n = count($parts); $i < $n; $i += 2) {
+            $part = $parts[$i];
+            $sep  = $parts[$i + 1] ?? '';
+            if ($part !== '' && (preg_match($claim, $part) || (!$chatSends && preg_match($promise, $part)))) {
+                $changed = true;
+                $out .= str_contains($sep, "\n") ? $sep : '';
+                continue;
+            }
+            $out .= $part . $sep;
+        }
+        if (!$changed) {
+            return $reply;
+        }
+        // May be empty: the caller then puts the program's own line in its place.
+        return trim((string)preg_replace('/\n{3,}/', "\n\n", $out));
     }
 
     /** Does the assistant's reply offer one? */
@@ -170,7 +209,7 @@ final class Quotation
     public static function assess(array $agent, array $conversation, ?array $lead, array $optionNames,
                                   ?string $reference, ?float $sqm): array
     {
-        $none = ['missing' => null, 'record' => null, 'sqm' => null, 'note' => null];
+        $none = ['missing' => null, 'record' => null, 'records' => [], 'sqm' => null, 'note' => null];
 
         $class = (string)($conversation['pricing_country'] ?? GeoClassifier::UNDETERMINED);
         if ($class === GeoClassifier::PAKISTAN) {
@@ -185,59 +224,71 @@ final class Quotation
             return ['missing' => 'pakistan'] + $none;      // treated the same: no quotation
         }
 
-        // ---- One option ----
+        // ---- The option(s) ----
+        // One option, or several (up to four) in one quotation, so a visitor
+        // who asks for "all four tiers" gets them together.
         $options = self::options($agent);
-        $record = null;
+        $records = [];
         if ($reference !== null && preg_match('/^(stall|sponsorship):(\d+)$/', $reference, $m)) {
             foreach ($options as $o) {
                 if ($o['_type'] === $m[1] && (int)$o['id'] === (int)$m[2]) {
-                    $record = $o;
+                    $records[$o['_type'] . ':' . $o['id']] = $o;
                 }
             }
         }
-        if ($record === null) {
-            $named = [];
-            foreach ($options as $o) {
-                foreach ($optionNames as $name) {
+        if ($records === []) {
+            foreach ($optionNames as $name) {
+                foreach ($options as $o) {
                     if (strcasecmp(trim((string)$name), trim($o['_name'])) === 0) {
-                        $named[$o['_type'] . ':' . $o['id']] = $o;
+                        $records[$o['_type'] . ':' . $o['id']] = $o;
                     }
                 }
             }
-            if (count($named) === 1) {
-                $record = array_values($named)[0];
-            }
         }
-        if ($record === null) {
+        $records = array_slice(array_values($records), 0, self::MAX_OPTIONS);
+        if ($records === []) {
             return ['missing' => 'option'] + $none;
         }
 
-        // ---- A size that can be booked ----
+        // ---- A size that can be booked, for each stand priced by the square metre ----
         $useSqm = null;
-        if ((string)($record['pricing_mode'] ?? 'fixed') === 'per_sqm') {
+        $kept = [];
+        $sizeNote = null;
+        foreach ($records as $record) {
+            if ((string)($record['pricing_mode'] ?? 'fixed') !== 'per_sqm') {
+                $kept[] = $record;
+                continue;
+            }
             if ($sqm === null || $sqm <= 0) {
-                return ['missing' => 'size', 'record' => $record] + $none;
+                return ['missing' => 'size', 'record' => $record, 'records' => $records] + $none;
             }
             $check = PricingEngine::checkSize($record, $sqm);
-            if (!$check['ok']) {
-                return ['missing' => 'size_unsellable', 'record' => $record, 'note' => (string)($check['message'] ?? '')] + $none;
+            if ($check['ok']) {
+                $kept[] = $record;
+                $useSqm = $sqm;
+            } else {
+                $sizeNote ??= (string)($check['message'] ?? '');
             }
-            $useSqm = $sqm;
         }
+        if ($kept === []) {
+            return ['missing' => 'size_unsellable', 'record' => $records[0], 'records' => $records, 'note' => $sizeNote] + $none;
+        }
+        $records = $kept;
+        $record = $records[0];
 
         // ---- Who it is for ----
         foreach (['name', 'company', 'email'] as $field) {
             $value = trim((string)($lead[$field] ?? ''));
             if ($value === '' || ($field === 'email' && Validator::email($value) === null)) {
-                return ['missing' => $field, 'record' => $record, 'sqm' => $useSqm, 'note' => null];
+                return ['missing' => $field, 'record' => $record, 'records' => $records, 'sqm' => $useSqm, 'note' => null];
             }
         }
 
         if (self::limitReason((int)$agent['id'], (int)($conversation['id'] ?? 0), (string)$lead['email']) !== null) {
-            return ['missing' => 'limit', 'record' => $record, 'sqm' => $useSqm, 'note' => null];
+            return ['missing' => 'limit', 'record' => $record, 'records' => $records, 'sqm' => $useSqm, 'note' => null];
         }
 
-        return ['missing' => null, 'record' => $record, 'sqm' => $useSqm, 'note' => null];
+        return ['missing' => null, 'record' => $record, 'records' => $records, 'sqm' => $useSqm, 'note' => $sizeNote];
     }
 
     /**
@@ -370,22 +421,47 @@ final class Quotation
      * @param array $record a record from options()
      */
     public static function prepare(array $agent, array $lead, ?array $conversation, array $record, ?float $sqm,
-                                   string $source = 'chat', string $actor = 'assistant'): array
+                                   string $source = 'chat', string $actor = 'assistant', array $more = []): array
     {
         $agentId = (int)$agent['id'];
         $set     = self::settings($agent);
         $type    = (string)$record['_type'];
-        $card    = PricingEngine::toCard($record, $type, $sqm);
-        // The page lists everything the option includes, not only what fits on a chat card.
-        $full = PricingEngine::lines((string)($record[$type === PricingEngine::TYPE_STALL ? 'included_items' : 'benefits'] ?? ''));
-        if ($full) {
-            $card['items'] = array_slice($full, 0, 40);
-        }
-        $total   = (string)$card['price_text'];
-        foreach ((array)$card['price_lines'] as $line) {
-            if (!empty($line['emphasis'])) {
-                $total = (string)$line['value'];
+
+        // One block per option: its card (price, VAT, total) and everything it includes.
+        $blocks = [];
+        foreach (array_slice(array_merge([$record], $more), 0, self::MAX_OPTIONS) as $r) {
+            $t = (string)$r['_type'];
+            $useSqm = $t === PricingEngine::TYPE_STALL && (string)($r['pricing_mode'] ?? '') === 'per_sqm' ? $sqm : null;
+            $c = PricingEngine::toCard($r, $t, $useSqm);
+            // The page lists everything the option includes, not only what fits on a chat card.
+            $full = PricingEngine::lines((string)($r[$t === PricingEngine::TYPE_STALL ? 'included_items' : 'benefits'] ?? ''));
+            if ($full) {
+                $c['items'] = array_slice($full, 0, 40);
             }
+            $tot = (string)$c['price_text'];
+            foreach ((array)$c['price_lines'] as $line) {
+                if (!empty($line['emphasis'])) {
+                    $tot = (string)$line['value'];
+                }
+            }
+            $blocks[] = [
+                'card'  => $c,
+                'total' => $tot,
+                'rate'  => $t === PricingEngine::TYPE_STALL && (string)($r['pricing_mode'] ?? '') === 'per_sqm'
+                    ? PricingEngine::formatPrice((float)$r['rate_per_sqm'], strtoupper((string)$r['currency'])) . ' / sqm' : null,
+            ];
+        }
+        // Lowest first, so the page reads like a price list.
+        $amount = static fn(array $b): float => (float)preg_replace('/[^0-9.]/', '', str_replace(',', '', $b['total']));
+        if (count($blocks) > 1) {
+            usort($blocks, static fn(array $a, array $b): int => $amount($a) <=> $amount($b));
+        }
+        $card  = $blocks[0]['card'];
+        $total = $blocks[0]['total'];
+        $title = (string)$card['title'];
+        if (count($blocks) > 1) {
+            $title = implode(' / ', array_map(static fn(array $b): string => (string)$b['card']['title'], $blocks));
+            $total = count($blocks) . ' options, ' . $blocks[0]['total'] . ' to ' . $blocks[count($blocks) - 1]['total'];
         }
 
         $rep = SalesReps::get($agentId, 'international');
@@ -398,8 +474,9 @@ final class Quotation
             'to'       => ['name' => (string)$lead['name'], 'company' => (string)$lead['company'], 'country' => $country],
             'rep'      => SalesReps::isUsable($rep) ? $rep : null,
             'card'     => $card,
-            'rate'     => $type === PricingEngine::TYPE_STALL && (string)($record['pricing_mode'] ?? '') === 'per_sqm'
-                ? PricingEngine::formatPrice((float)$record['rate_per_sqm'], strtoupper((string)$record['currency'])) . ' / sqm' : null,
+            'rate'     => $blocks[0]['rate'],
+            // Several options in one quotation (14 Nov 2026); absent for one.
+            'options'  => count($blocks) > 1 ? $blocks : null,
             'terms'    => str_replace('{days}', (string)$set['days'], $set['terms']),
             'footer'   => $set['footer'],
             'date'     => $today->format('j M Y'),
@@ -425,9 +502,9 @@ final class Quotation
                     'to_email'        => strtolower(trim((string)$lead['email'])),
                     'package_type'    => $type,
                     'package_id'      => (int)$record['id'],
-                    'title'           => mb_substr((string)$card['title'], 0, 200),
+                    'title'           => mb_substr($title, 0, 200),
                     'sqm'             => $card['sqm'] ?: null,
-                    'total_text'      => $total,
+                    'total_text'      => mb_substr($total, 0, 64),
                     'detail'          => json_encode($detail, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                     'valid_until'     => $today->modify('+' . $set['days'] . ' days')->format('Y-m-d'),
                     'status'          => 'queued',
@@ -471,33 +548,45 @@ final class Quotation
      *
      * @param array{missing:?string,record:?array,sqm:?float,note:?string} $assess
      */
-    public static function promptBlock(array $assess): string
+    public static function promptBlock(array $assess, array $optionNames = []): string
     {
-        $what = $assess['record'] !== null
-            ? '"' . $assess['record']['_name'] . '"' . ($assess['sqm'] ? ' at ' . rtrim(rtrim(number_format((float)$assess['sqm'], 2), '0'), '.') . ' sqm' : '')
+        $records = (array)($assess['records'] ?? []);
+        if ($records === [] && $assess['record'] !== null) {
+            $records = [$assess['record']];
+        }
+        $names = array_map(static fn(array $r): string => '"' . $r['_name'] . '"', $records);
+        $what = $names
+            ? implode(', ', $names) . ($assess['sqm'] ? ' at ' . rtrim(rtrim(number_format((float)$assess['sqm'], 2), '0'), '.') . ' sqm' : '')
             : 'the option they choose';
+        // Transcript review (14 Nov 2026): the assistant never says that
+        // something has been sent. The program adds that line itself, and
+        // only after the quotation has really been made.
         $head = "QUOTATION (this overrides the contact rule above)\n"
               . "The visitor wants a quotation in writing. The system makes the PDF itself, from the price list, and emails it. "
-              . "You never write the quotation's figures, and you never say a stand is booked or reserved. "
+              . "One quotation can hold up to " . self::MAX_OPTIONS . " options. "
+              . "You never write the quotation's figures, you never say a stand is booked or reserved, and you never say yourself "
+              . "that a quotation has been or is being sent: the system adds that line under your reply only once it is really made. "
               . "If this message asks something else, answer that first, then deal with the quotation in one sentence.\n";
+        $choices = $optionNames ? ' The options, by their exact names: ' . implode(', ', array_map(static fn($n) => '"' . $n . '"', $optionNames)) . '.' : '';
         return $head . match ($assess['missing']) {
-            null => "Everything needed is known. Say in one sentence that the quotation for " . $what . " is being emailed to them now. "
-                  . "A line with its number is added under your reply. Do not ask for anything else in this reply.",
+            null => "Everything needed is known for " . $what . ". Do not ask for anything else, and do not confirm sending: the "
+                  . "system's line under your reply does that.",
             'pakistan' => "No quotation can be sent from this chat for this company. Do not promise one. The sales representative, "
                   . "whose details are added to your reply, will help them.",
             'country' => "Still missing: the country their company is based in. Ask for that one thing only.",
-            'option' => "Still missing: which ONE option the quotation is for (one stand type, or one sponsorship tier). "
-                  . "Ask which one, naming the options you have been discussing. Ask for nothing else.",
+            'option' => "Still missing: which option(s) the quotation is for. They may choose one, several, or all of a kind "
+                  . "(up to " . self::MAX_OPTIONS . " in one quotation)." . $choices . " Ask which, as your only question.",
             'size' => "It is for " . $what . ". Still missing: the stand size in square metres. Ask for that one thing only.",
             'size_unsellable' => "It is for " . $what . ", but the size they named cannot be booked. "
                   . ($assess['note'] !== null && $assess['note'] !== '' ? $assess['note'] . ' ' : '')
                   . "Offer the nearest sizes and ask which one the quotation should be for. Ask for nothing else.",
             'name' => "It is for " . $what . ". Still missing: their name, for the quotation. Ask for that one thing only.",
             'company' => "It is for " . $what . ". Still missing: their company's name, for the quotation. Ask for that one thing only.",
-            'email' => "It is for " . $what . ". Still missing: the email address to send it to. Ask for that one thing only. "
-                  . "If they give it in this message, say the quotation is being emailed to them now.",
-            'limit' => "This chat has already sent as many quotations as it may. Do not promise another. Say the sales "
-                  . "representative, whose details are added to your reply, will send any further quotation.",
+            'email' => "It is for " . $what . ". Still missing: the email address the system will send it to. Ask for that one "
+                  . "thing only. If they give it in this message, do not confirm anything: the system adds the line.",
+            'limit' => "The system cannot email another quotation from this chat today (the limit for this chat or this "
+                  . "address is reached). Do not promise one and do not say you will send it. The system passes the request "
+                  . "to the sales team and adds a line saying so.",
             default => '',
         };
     }
@@ -533,8 +622,14 @@ final class Quotation
             '',
             'Thank you for your interest in ' . $event . '.',
             '',
-            'Please find attached quotation ' . $row['number'] . ' for: ' . $what . '.',
-            'Total: ' . $row['total_text'] . '. The quotation is valid until ' . (string)($detail['valid'] ?? '') . '.',
+            ...(!empty($detail['options'])
+                ? array_merge(
+                    ['Please find attached quotation ' . $row['number'] . ' for these options, each with its own total:'],
+                    array_map(static fn(array $b): string => '- ' . (string)($b['card']['title'] ?? '') . ': ' . (string)($b['total'] ?? ''),
+                        (array)$detail['options']),
+                    ['The quotation is valid until ' . (string)($detail['valid'] ?? '') . '.'])
+                : ['Please find attached quotation ' . $row['number'] . ' for: ' . $what . '.',
+                   'Total: ' . $row['total_text'] . '. The quotation is valid until ' . (string)($detail['valid'] ?? '') . '.']),
             '',
             'This quotation is an offer; a stand is booked only after the signed contract and payment. '
             . 'To go ahead, or if you have any question, simply reply to this email.',
@@ -765,81 +860,104 @@ final class Quotation
         }
         $y = max($ly, $ry2) + 20;
 
-        // ---- The price table ----
-        $isStall = (string)($card['type'] ?? '') === PricingEngine::TYPE_STALL;
-        $cSize = $L + 230;
-        $cRate = $L + 300;
-        $pdf->box($L, $y, $R - $L, 22, $navy);
-        $white = [1.0, 1.0, 1.0];
-        $pdf->text($L + 8, $y + 6.5, 'Description', 9.5, true, 'L', $white);
-        if ($isStall) {
-            $pdf->text($cSize, $y + 6.5, 'Size', 9.5, true, 'L', $white);
-            $pdf->text($cRate, $y + 6.5, 'Rate', 9.5, true, 'L', $white);
-        }
-        $pdf->text($R - 8, $y + 6.5, 'Amount', 9.5, true, 'R', $white);
-        $y += 30;
-
-        $priceLines = array_values((array)($card['price_lines'] ?? []));
-        $titleLines = $pdf->wrap((string)($card['title'] ?? $row['title']), $isStall ? 215 : 330, 11, true);
-        $rowTop = $y;
-        foreach ($titleLines as $line) {
-            $pdf->text($L + 8, $y, $line, 11, true);
-            $y += 15;
-        }
-        if ($isStall) {
-            $sqm = (float)($card['sqm'] ?? 0);
-            if ($sqm > 0) {
-                $pdf->text($cSize, $rowTop, rtrim(rtrim(number_format($sqm, 2), '0'), '.') . ' sqm', 10.5);
-            }
-            if (!empty($d['rate'])) {
-                $pdf->text($cRate, $rowTop, (string)$d['rate'], 10.5);
-            }
-        }
-        $pdf->text($R - 8, $rowTop, (string)($priceLines[0]['value'] ?? ($card['price_text'] ?? '')), 11, false, 'R');
-        $y = max($y, $rowTop + 15) + 6;
-        $pdf->line($L, $y, $R, $y);
-        $y += 9;
-        foreach (array_slice($priceLines, 1) as $pl) {
-            $strong = !empty($pl['emphasis']);
-            if ($strong) {
-                $pdf->box($cRate - 10, $y - 4, $R - $cRate + 10, 22, [0.93, 0.95, 0.99]);
-            }
-            $pdf->text($cRate, $y + ($strong ? 2 : 0), (string)$pl['label'], $strong ? 11 : 10, $strong);
-            $pdf->text($R - 8, $y + ($strong ? 2 : 0), (string)$pl['value'], $strong ? 11.5 : 10.5, $strong, 'R', $strong ? $navy : [0.1, 0.12, 0.16]);
-            $y += $strong ? 26 : 17;
-        }
-        $taxNote = trim((string)($card['tax_note'] ?? ''));
-        if ($taxNote !== '') {
-            foreach ($pdf->wrap($taxNote, $R - $L, 8.5) as $line) {
-                $pdf->text($L, $y, $line, 8.5, false, 'L', $soft);
-                $y += 11.5;
-            }
-        }
-        $y += 14;
-
-        // ---- What is included, or the tier's benefits ----
+        // ---- The price table and what is included: one block per option ----
         $footerTop = PdfWriter::H - 92;
         $newPage = static function () use ($pdf, &$y): void {
             $pdf->addPage();
             $y = 56.0;
         };
-        $items = array_values(array_filter(array_map('strval', (array)($card['items'] ?? [])), 'strlen'));
-        if ($items) {
-            $pdf->text($L, $y, $isStall ? 'What is included' : 'What the partnership includes', 11, true, 'L', $navy);
-            $y += 18;
-            foreach ($items as $item) {
-                $wrapped = $pdf->wrap($item, $R - $L - 14, 10);
-                if ($y + count($wrapped) * 13.5 > $footerTop - 10) {
-                    $newPage();
-                }
-                $pdf->box($L + 2, $y + 4.2, 3, 3, $navy);
-                foreach ($wrapped as $line) {
-                    $pdf->text($L + 14, $y, $line, 10);
-                    $y += 13.5;
-                }
-                $y += 1.5;
+        $blocks = !empty($d['options']) && is_array($d['options'])
+            ? array_values($d['options'])
+            : [['card' => $card, 'rate' => $d['rate'] ?? null]];
+        if (count($blocks) > 1) {
+            foreach ($pdf->wrap(count($blocks) . ' options are quoted below. They are alternatives: each has its own total.', $R - $L, 10) as $line) {
+                $pdf->text($L, $y, $line, 10, false, 'L', $soft);
+                $y += 13.5;
             }
-            $y += 12;
+            $y += 8;
+        }
+        foreach ($blocks as $bi => $block) {
+            $card = (array)($block['card'] ?? []);
+            $rate = $block['rate'] ?? null;
+            // A new option starts on a new page when the price table would not fit.
+            if ($bi > 0 && $y + 120 > $footerTop - 10) {
+                $newPage();
+            }
+            $isStall = (string)($card['type'] ?? '') === PricingEngine::TYPE_STALL;
+            $cSize = $L + 230;
+            $cRate = $L + 300;
+            $pdf->box($L, $y, $R - $L, 22, $navy);
+            $white = [1.0, 1.0, 1.0];
+            $pdf->text($L + 8, $y + 6.5, 'Description', 9.5, true, 'L', $white);
+            if ($isStall) {
+                $pdf->text($cSize, $y + 6.5, 'Size', 9.5, true, 'L', $white);
+                $pdf->text($cRate, $y + 6.5, 'Rate', 9.5, true, 'L', $white);
+            }
+            $pdf->text($R - 8, $y + 6.5, 'Amount', 9.5, true, 'R', $white);
+            $y += 30;
+
+            $priceLines = array_values((array)($card['price_lines'] ?? []));
+            $titleLines = $pdf->wrap((string)($card['title'] ?? ''), $isStall ? 215 : 330, 11, true);
+            $rowTop = $y;
+            foreach ($titleLines as $line) {
+                $pdf->text($L + 8, $y, $line, 11, true);
+                $y += 15;
+            }
+            if ($isStall) {
+                $sqm = (float)($card['sqm'] ?? 0);
+                if ($sqm > 0) {
+                    $pdf->text($cSize, $rowTop, rtrim(rtrim(number_format($sqm, 2), '0'), '.') . ' sqm', 10.5);
+                }
+                if (!empty($rate)) {
+                    $pdf->text($cRate, $rowTop, (string)$rate, 10.5);
+                }
+            }
+            $pdf->text($R - 8, $rowTop, (string)($priceLines[0]['value'] ?? ($card['price_text'] ?? '')), 11, false, 'R');
+            $y = max($y, $rowTop + 15) + 6;
+            $pdf->line($L, $y, $R, $y);
+            $y += 9;
+            foreach (array_slice($priceLines, 1) as $pl) {
+                $strong = !empty($pl['emphasis']);
+                if ($strong) {
+                    $pdf->box($cRate - 10, $y - 4, $R - $cRate + 10, 22, [0.93, 0.95, 0.99]);
+                }
+                $pdf->text($cRate, $y + ($strong ? 2 : 0), (string)$pl['label'], $strong ? 11 : 10, $strong);
+                $pdf->text($R - 8, $y + ($strong ? 2 : 0), (string)$pl['value'], $strong ? 11.5 : 10.5, $strong, 'R', $strong ? $navy : [0.1, 0.12, 0.16]);
+                $y += $strong ? 26 : 17;
+            }
+            $taxNote = trim((string)($card['tax_note'] ?? ''));
+            if ($taxNote !== '') {
+                foreach ($pdf->wrap($taxNote, $R - $L, 8.5) as $line) {
+                    $pdf->text($L, $y, $line, 8.5, false, 'L', $soft);
+                    $y += 11.5;
+                }
+            }
+            $y += 14;
+
+            // ---- What is included, or the tier's benefits ----
+            $items = array_values(array_filter(array_map('strval', (array)($card['items'] ?? [])), 'strlen'));
+            if ($items) {
+                $pdf->text($L, $y, $isStall ? 'What is included' : 'What the partnership includes', 11, true, 'L', $navy);
+                $y += 18;
+                foreach ($items as $item) {
+                    $wrapped = $pdf->wrap($item, $R - $L - 14, 10);
+                    if ($y + count($wrapped) * 13.5 > $footerTop - 10) {
+                        $newPage();
+                        if (count($blocks) > 1) {
+                            // Which option this list belongs to, after a page break.
+                            $pdf->text($L, $y, (string)($card['title'] ?? '') . ' (continued)', 10, true, 'L', $soft);
+                            $y += 16;
+                        }
+                    }
+                    $pdf->box($L + 2, $y + 4.2, 3, 3, $navy);
+                    foreach ($wrapped as $line) {
+                        $pdf->text($L + 14, $y, $line, 10);
+                        $y += 13.5;
+                    }
+                    $y += 1.5;
+                }
+                $y += 12;
+            }
         }
 
         // ---- Terms ----

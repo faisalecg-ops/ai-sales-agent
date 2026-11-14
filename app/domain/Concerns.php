@@ -57,7 +57,9 @@ final class Concerns
             . '\banything cheaper\b|\bcheaper option\b|\b(?:bahut|bohat|kafi|zyada) (?:mehe?nga|mahe?nga)\b|\bmehe?nga hai\b/u', $t)) {
             return 'price';
         }
-        if (preg_match('/\b(?:not (?:this|the current) year|not ready|next year|next edition|future edition|following year|too early|'
+        // "Not ready to book yet, only comparing" is someone still deciding,
+        // not a "no" for this year (transcript review, test 7).
+        if (preg_match('/\b(?:not (?:this|the current) year|not ready(?! to (?:book|decide|commit|sign|confirm|order))(?! yet)|next year|next edition|future edition|following year|too early|'
             . 'budget (?:is |was )?(?:closed|finali[sz]ed|fixed|already (?:allocated|spent))|no budget (?:this|for this) year|'
             . 'maybe (?:in|for) (?:\d{4}|the next)|is saal nahi|agle saal)\b/u', $t)) {
             return 'not_ready';

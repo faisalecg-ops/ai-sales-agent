@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * The 15 written test chats of the chat fix plan, step 6 (owner, 11 Nov 2026),
- * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), 25 to 33 for languages, and 34 to 41 for concerns, an opt-out and a change of mind (13 Nov 2026).
+ * and chats 16 to 19 for guided selling, Stage A, 20 to 24 for quotations, Stage B (12-13 Nov 2026), 25 to 33 for languages, 34 to 41 for concerns, an opt-out and a change of mind (13 Nov 2026), and 42 to 48 for the transcript review (14 Nov 2026).
  *
  * Each chat is a list of visitor turns. Every reply is checked against:
  *   - the rules for every reply (EVERY_REPLY_MUST_NOT below), and
@@ -445,6 +445,71 @@ return [
             ['say' => 'Can you send me the details?',
                 'must' => ['asks which details or gives them' => '/visitor|audience|option|stand|sponsor|both|exhibition/'],
                 'must_not' => ['a price' => ANY_PRICE]],
+        ],
+    ],
+    [
+        'name'  => '42. All sponsorship tiers in one reply',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Please share all sponsorship packages with prices and benefits.',
+                'must' => ['Silver' => '/silver[^\n]{0,80}(?:10,000|11,500)/i', 'Gold' => '/gold[^\n]{0,80}(?:20,000|23,000)/i',
+                    'Platinum' => '/platinum[^\n]{0,80}(?:40,000|46,000)/i', 'Title' => '/title[^\n]{0,80}(?:75,000|86,250)/i']],
+        ],
+    ],
+    [
+        'name'  => '43. All the ways to take part: stand and sponsorship, side by side',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'What are all the ways my company can participate?',
+                'must' => ['stands' => '/shell|bare|outdoor|stand|stall/', 'sponsorship' => '/sponsor|partner/']],
+        ],
+    ],
+    [
+        'name'  => '44. Reactor tanks: the machine size before a stand size',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'We are a Chinese manufacturer of stainless-steel reactor tanks and pressure vessels. We want to meet Pakistani distributors and pharmaceutical companies.'],
+            ['say' => 'We want to display two full-size reactor tanks. Which stand do you recommend?',
+                'must' => ['asks the size or footprint' => '/size|dimension|footprint|how (?:large|big|tall|heavy)|height|weight|metres|meters/'],
+                'must_not' => ['a definite size without the facts' => '/(?:you (?:will )?need|book|go for) (?:a |an )?\d+\s?sqm\b(?![^.?]{0,40}(?:depend|confirm|once))/']],
+        ],
+    ],
+    [
+        'name'  => '45. All prices and a quotation; then the email address',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Please give me the prices for all sponsorship tiers and send me a quotation.',
+                'must' => ['several tiers priced' => '/(?:10,000|11,500)[\s\S]*(?:75,000|86,250)|(?:75,000|86,250)[\s\S]*(?:10,000|11,500)/']],
+            ['say' => 'Send it to procurement@longqiang-test.example',
+                'must' => ['a real outcome' => '/PA27-Q-\d{4}[^.]*on its way|passed your request for a quotation to our sales team/'],
+                'must_not' => ['a claim of its own' => '/being emailed to you now|I have (?:sent|emailed)/']],
+        ],
+    ],
+    [
+        'name'  => '46. "Not ready to book, only comparing": information, no pressure',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'We are not ready to book yet. We are only comparing the options.',
+                'must_not' => ['treats it as booked' => '/\b(?:booked|reserved)\b/', 'pushes' => '/(?:book|secure|reserve) (?:now|early|today)|limited (?:space|availability)/']],
+        ],
+    ],
+    [
+        'name'  => '47. Going ahead with Platinum: the right route, not the stand page',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'How can I proceed with the Platinum sponsorship?',
+                'must' => ['a sponsorship route' => '/quotation|sales team|representative|contract|our team/'],
+                'must_not' => ['the stand booking page' => '/book-a-stand/']],
+        ],
+    ],
+    [
+        'name'  => '48. Does Gold include a stand? Its list says',
+        'intro' => ['first_name' => 'Kaleem', 'company' => 'Wenzhou Longqiang Machinery Tech', 'country' => 'CN', 'interest' => 'exhibit'],
+        'turns' => [
+            ['say' => 'Does the Gold package include a stand?',
+                'must' => ['from its list' => '/36\s?sqm|4 booths|four booths/']],
+            ['say' => 'What is the final amount including VAT for the Gold Partner?',
+                'must' => ['the total with VAT' => '/23,000/']],
         ],
     ],
 ];
