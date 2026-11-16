@@ -290,11 +290,33 @@ function content_page(string $type, array $config): void
                 $value = ($col['value'])($item);
                 echo '<td' . (!empty($col['num']) ? ' class="num"' : '') . '>' . $value . '</td>';
             }
-            echo '<td>' . status_pill((string)$item['status']) . '</td>'
+            echo '<td>' . content_status_pill($item) . '</td>'
                . '<td><a href="' . e(url('admin/' . $config['file'] . '?edit=' . (int)$item['id'])) . '">Edit</a></td></tr>';
         }
         echo '</tbody></table></div></div>';
     }
 
     admin_layout_end();
+}
+
+/**
+ * The status shown in a list. A live price whose dates have run out is not
+ * live for visitors, so it says "Expired" (or "Not started yet") rather than
+ * "Live" (fix plan step 4, 11 Nov 2026; testing finding 3).
+ */
+function content_status_pill(array $item): string
+{
+    if ((string)($item['status'] ?? '') === 'approved'
+        && (array_key_exists('valid_until', $item) || array_key_exists('valid_from', $item))) {
+        $today = gmdate('Y-m-d');
+        $until = trim((string)($item['valid_until'] ?? ''));
+        $from  = trim((string)($item['valid_from'] ?? ''));
+        if ($until !== '' && $until < $today) {
+            return '<span class="pill pill-bad" title="Ended on ' . e($until) . '. Visitors are not offered it.">Expired</span>';
+        }
+        if ($from !== '' && $from > $today) {
+            return '<span class="pill pill-warn" title="Starts on ' . e($from) . '.">Not started yet</span>';
+        }
+    }
+    return status_pill((string)($item['status'] ?? ''));
 }

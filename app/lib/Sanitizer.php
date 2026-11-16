@@ -181,6 +181,14 @@ final class Sanitizer
 
             // Bare URL
             if (preg_match('~^(https?://[^\s<>"\']{4,400})~i', mb_substr($line, $i), $m)) {
+                // Punctuation after a link belongs to the sentence, not the
+                // link: "(https://…/book-a-stand/)?" links to …/book-a-stand/
+                // and keeps ")?" as text (test chat 5, 12 Nov 2026).
+                while ($m[1] !== '' && (preg_match('~[.,;:!?]$~', $m[1])
+                    || (str_ends_with($m[1], ')') && substr_count($m[1], '(') < substr_count($m[1], ')'))
+                    || (str_ends_with($m[1], ']') && substr_count($m[1], '[') < substr_count($m[1], ']')))) {
+                    $m[1] = substr($m[1], 0, -1);
+                }
                 $href = self::safeHref($m[1], $approvedDomains);
                 if ($buf !== '') {
                     $spans[] = ['t' => 'text', 'v' => $buf];

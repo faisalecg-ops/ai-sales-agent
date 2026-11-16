@@ -90,6 +90,15 @@ final class PersonRequest
             return 'A contract, payment or discount question';
         }
 
+        // The same requests in the chat's other languages (13 Nov 2026).
+        if (Lang::has($body, 'person')) {
+            return 'Asked for a person';
+        }
+        // "Pro forma" in some languages contains the word for invoice; a quotation request is not a payment question.
+        if (Lang::has(Lang::without($body, 'quote'), 'money')) {
+            return 'A contract, payment or discount question';
+        }
+
         return null;
     }
 }

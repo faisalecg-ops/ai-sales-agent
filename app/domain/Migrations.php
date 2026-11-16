@@ -744,6 +744,143 @@ final class Migrations
                         ADD KEY idx_conv_campaign (agent_id, utm_campaign, utm_content)",
                 ],
             ],
+
+            // Outdoor exhibit space as its own kind of stand (approved by the
+            // owner, 10 November 2026, for Pharma Asia's tariff). Outdoor space
+            // is floor area in the open, sold per square metre, and a tariff
+            // may publish no minimum size for it.
+            [
+                'key'   => '2026_11_outdoor_package',
+                'label' => 'Outdoor exhibit space as a third kind of stand',
+                'check' => static fn(): bool => self::enumAllows('stall_packages', 'package_type', 'outdoor'),
+                'sql'   => [
+                    "ALTER TABLE stall_packages
+                        MODIFY COLUMN package_type ENUM('shell','bare','outdoor') NOT NULL DEFAULT 'shell'",
+                ],
+            ],
+
+            // ---- 12 November 2026: guided selling, stage A -----------
+            // Owner's plan "Guided selling, quotations and email replies":
+            // the qualification record and lead score (parts 1 and 2) and
+            // the website's pages for answers with links (part 5).
+            [
+                'key'   => '2026_11_qualification',
+                'label' => 'Qualification record, lead score and sales path step for each chat and lead',
+                'check' => static fn(): bool => self::columnExists('conversations', 'lead_label')
+                    && self::columnExists('leads', 'lead_label') && self::columnExists('agents', 'score_weights'),
+                'sql'   => array_values(array_filter([
+                    self::columnExists('conversations', 'lead_label') ? null :
+                        "ALTER TABLE conversations
+                            ADD COLUMN qual_pct TINYINT UNSIGNED NULL,
+                            ADD COLUMN lead_score DECIMAL(5,2) NULL,
+                            ADD COLUMN lead_label VARCHAR(16) NULL,
+                            ADD COLUMN path_step TINYINT UNSIGNED NULL",
+                    self::columnExists('leads', 'lead_label') ? null :
+                        "ALTER TABLE leads
+                            ADD COLUMN qualification TEXT NULL,
+                            ADD COLUMN qual_pct TINYINT UNSIGNED NULL,
+                            ADD COLUMN lead_score DECIMAL(5,2) NULL,
+                            ADD COLUMN lead_label VARCHAR(16) NULL,
+                            ADD KEY idx_lead_label (agent_id, lead_label)",
+                    self::columnExists('agents', 'score_weights') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN score_weights VARCHAR(500) NULL,
+                            ADD COLUMN target_countries TEXT NULL",
+                ])),
+            ],
+            [
+                'key'   => '2026_11_site_pages',
+                'label' => 'The exhibition website\'s pages, for answers with links',
+                'check' => static fn(): bool => self::tableExists('site_pages') && self::columnExists('agents', 'site_pages_enabled'),
+                'sql'   => array_values(array_filter([
+                    "CREATE TABLE IF NOT EXISTS site_pages (
+                        id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        agent_id      INT UNSIGNED NOT NULL,
+                        url           VARCHAR(500) NOT NULL,
+                        url_hash      CHAR(40) NOT NULL,
+                        title         VARCHAR(250) NOT NULL DEFAULT '',
+                        body          MEDIUMTEXT NULL,
+                        content_hash  CHAR(40) NULL,
+                        active        TINYINT(1) NOT NULL DEFAULT 1,
+                        note          VARCHAR(255) NULL,
+                        fetched_at    DATETIME NULL,
+                        created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_site_page (agent_id, url_hash),
+                        KEY idx_site_agent (agent_id, active)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                    self::columnExists('agents', 'site_pages_enabled') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN site_pages_enabled TINYINT(1) NOT NULL DEFAULT 1,
+                            ADD COLUMN site_sitemap_url VARCHAR(255) NULL",
+                ])),
+            ],
+            [
+                'key'   => '2026_11_quotations',
+                'label' => 'Quotations: the PDF emailed from the chat or made from the lead page',
+                'check' => static fn(): bool => self::tableExists('quotations') && self::columnExists('agents', 'quote_enabled')
+                    && self::columnExists('email_outbox', 'attachment_path'),
+                'sql'   => array_values(array_filter([
+                    "CREATE TABLE IF NOT EXISTS quotations (
+                        id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        agent_id        INT UNSIGNED NOT NULL,
+                        lead_id         INT UNSIGNED NULL,
+                        conversation_id INT UNSIGNED NULL,
+                        seq             INT UNSIGNED NOT NULL,
+                        number          VARCHAR(40) NOT NULL,
+                        to_name         VARCHAR(160) NOT NULL DEFAULT '',
+                        to_company      VARCHAR(200) NOT NULL DEFAULT '',
+                        to_country      VARCHAR(96) NOT NULL DEFAULT '',
+                        to_email        VARCHAR(255) NOT NULL,
+                        package_type    VARCHAR(16) NOT NULL,
+                        package_id      INT UNSIGNED NOT NULL,
+                        title           VARCHAR(200) NOT NULL,
+                        sqm             DECIMAL(8,2) NULL,
+                        total_text      VARCHAR(64) NOT NULL DEFAULT '',
+                        detail          MEDIUMTEXT NULL,
+                        valid_until     DATE NULL,
+                        file_path       VARCHAR(255) NULL,
+                        status          ENUM('queued','sent','failed') NOT NULL DEFAULT 'queued',
+                        attempts        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                        last_error      VARCHAR(400) NULL,
+                        message_id      VARCHAR(255) NULL,
+                        source          ENUM('chat','staff') NOT NULL DEFAULT 'chat',
+                        created_by      VARCHAR(64) NULL,
+                        created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        sent_at         DATETIME NULL,
+                        PRIMARY KEY (id),
+                        UNIQUE KEY uq_quote_seq (agent_id, seq),
+                        UNIQUE KEY uq_quote_number (agent_id, number),
+                        KEY idx_quote_lead (lead_id),
+                        KEY idx_quote_conversation (conversation_id),
+                        KEY idx_quote_email (to_email, created_at),
+                        KEY idx_quote_status (status, created_at)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+                    self::columnExists('agents', 'quote_enabled') ? null :
+                        "ALTER TABLE agents
+                            ADD COLUMN quote_enabled TINYINT(1) NOT NULL DEFAULT 0,
+                            ADD COLUMN quote_prefix VARCHAR(12) NULL,
+                            ADD COLUMN quote_valid_days SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+                            ADD COLUMN quote_terms TEXT NULL,
+                            ADD COLUMN quote_logo VARCHAR(120) NULL,
+                            ADD COLUMN quote_footer VARCHAR(500) NULL",
+                    self::columnExists('email_outbox', 'attachment_path') ? null :
+                        "ALTER TABLE email_outbox
+                            ADD COLUMN attachment_path VARCHAR(255) NULL,
+                            ADD COLUMN attachment_name VARCHAR(120) NULL",
+                ])),
+            ],
+            [
+                'key'   => '2026_11_personal_links',
+                'label' => 'Personal chat links in prospect emails, quotation emails and WhatsApp messages',
+                'check' => static fn(): bool => self::columnExists('agents', 'chat_link_quote'),
+                'sql'   => [
+                    "ALTER TABLE agents
+                        ADD COLUMN chat_link_prospect TINYINT(1) NOT NULL DEFAULT 1,
+                        ADD COLUMN chat_link_quote TINYINT(1) NOT NULL DEFAULT 1,
+                        ADD COLUMN chat_link_whatsapp TINYINT(1) NOT NULL DEFAULT 1",
+                ],
+            ],
         ];
     }
 

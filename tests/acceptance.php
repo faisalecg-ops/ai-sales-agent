@@ -711,6 +711,82 @@ T::equals('USD 7,245', PricingEngine::toCard($bareRow, 'stall', 18)['price_lines
 
 db()->exec('DELETE FROM stall_packages WHERE id = ?', [$bareId]);
 
+// Outdoor exhibit space (approved 10 November 2026): a third kind of stand,
+// sold per square metre, that a tariff may publish with no minimum size.
+T::ok(Migrations::enumAllows('stall_packages', 'package_type', 'outdoor'),
+    'The stand pricing table accepts outdoor space as a kind of stand');
+T::equals('Outdoor space', PricingEngine::kindLabel('outdoor'), 'Outdoor space has its own name');
+T::equals('Shell scheme', PricingEngine::kindLabel('shell'), 'Shell scheme keeps its name');
+T::equals('Bare space', PricingEngine::kindLabel('bare'), 'Bare space keeps its name');
+
+$outdoorId = db()->insert('stall_packages', [
+    'agent_id' => (int)$agent['id'], 'package_name' => 'Outdoor Exhibit Space', 'package_type' => 'outdoor',
+    'stall_size' => 'Open area outside the halls', 'size_sqm' => null,
+    'pricing_mode' => 'per_sqm', 'rate_per_sqm' => 150.00,
+    'min_sqm' => null, 'increment_sqm' => null, 'max_sqm' => null,
+    'price' => 150.00, 'price_basis' => 'per_sqm', 'currency' => 'USD',
+    'region_group' => 'international', 'active' => 1, 'status' => 'approved',
+    'tax_included' => 'no', 'tax_rate_percent' => 15.00, 'tax_label' => 'VAT',
+]);
+$outdoorRow = db()->one('SELECT * FROM stall_packages WHERE id = ?', [$outdoorId]);
+
+T::ok(PricingEngine::recordIsValid($outdoorRow, 'stall'), 'An outdoor record with no minimum can be shown');
+$outdoorCard = PricingEngine::toCard($outdoorRow, 'stall');
+T::ok(in_array('Outdoor space', $outdoorCard['meta'], true), 'The card names it as outdoor space, not bare space');
+T::equals(1.0, (float)$outdoorCard['sqm'], 'With no minimum and no size asked, it is shown per single square metre');
+T::equals('USD 150', $outdoorCard['price_lines'][0]['value'], 'Which is the published rate itself');
+T::equals('VAT at 15%', $outdoorCard['price_lines'][1]['label'], 'The tax line carries the tariff\'s own name for the tax');
+T::equals('USD 22.50', $outdoorCard['price_lines'][1]['value'], 'Tax on one square metre is calculated');
+T::equals('USD 172.50', $outdoorCard['price_lines'][2]['value'], 'And so is the total');
+T::ok(PricingEngine::checkSize($outdoorRow, 4)['ok'], 'With no minimum, a small outdoor area is quotable');
+T::equals('USD 3,450', PricingEngine::toCard($outdoorRow, 'stall', 20)['price_lines'][2]['value'],
+    'Outdoor space at 20 sqm totals correctly with tax');
+$outdoorFacts = PricingEngine::factsForPrompt([$outdoorRow], 'stall');
+T::ok(str_contains((string)$outdoorFacts[0]['sold_as'], 'No minimum size is published'),
+    'The assistant is told no minimum is published, never "Minimum 0 sqm"');
+T::ok(!str_contains((string)$outdoorFacts[0]['sold_as'], 'Minimum 0'), 'No zero minimum appears in the facts');
+T::equals('stall_package:outdoor', FindingExtractor::subjectKey('stall_package', 'Outdoor Exhibit Space'),
+    'A document\'s outdoor space is recognised as outdoor');
+T::equals('stall_package:bare', FindingExtractor::subjectKey('stall_package', 'Bare Space Inside Halls'),
+    'Bare space inside halls is still bare space');
+
+// What is on offer, described without prices (approved 11 November 2026).
+T::ok(ChatOrchestrator::detectCatalogueRequest('brief me the participantion packages and sponsorship options of the event'),
+    'Asking to be briefed on packages and sponsorship is recognised');
+T::ok(!ChatOrchestrator::detectPricingRequest('brief me the participation packages and sponsorship options of the event', 'education'),
+    'And it is still not treated as a price request');
+T::ok(ChatOrchestrator::detectCatalogueRequest('Is outdoor possible?') && ChatOrchestrator::detectCatalogueRequest('tell me about your stalls'),
+    'Stands and outdoor space are recognised too');
+T::ok(!ChatOrchestrator::detectCatalogueRequest('I understand, thank you') && !ChatOrchestrator::detectCatalogueRequest('When is the show?'),
+    'Ordinary messages are not ("understand" does not count as "stand")');
+$catalogue = PricingEngine::catalogueForPrompt((int)$agent['id']);
+T::ok(count($catalogue) >= 1, 'Live packages are listed for the assistant to describe');
+$catalogueText = json_encode($catalogue);
+T::ok(!preg_match('/(USD|PKR|EUR|GBP|Rs\.?|\$)\s?\d/', (string)$catalogueText), 'The list carries no figure of money');
+$outdoorEntry = array_values(array_filter($catalogue, static fn($c) => $c['name'] === 'Outdoor Exhibit Space'))[0] ?? null;
+T::ok($outdoorEntry !== null && !str_contains($outdoorEntry['details'], '1 sqm'), 'Outdoor space is not described as a 1 sqm stand');
+$cataloguePrompt = PromptBuilder::build([
+    'agent' => $agent, 'message' => 'what packages do you have', 'state' => 'education', 'intent' => 'exhibitor',
+    'knowledge' => ['faqs' => [], 'articles' => []], 'pricing_facts' => [], 'catalogue' => $catalogue,
+    'pricing_allowed' => true, 'pricing_requested' => false, 'pricing_country' => 'international',
+    'lead_state' => [], 'recent_messages' => [],
+])['system'];
+T::ok(str_contains($cataloguePrompt, 'WHAT IS ON OFFER (names and what each includes, no prices)'), 'The assistant is given the list');
+T::ok(!str_contains($cataloguePrompt, 'No package matches what they have described'),
+    'And is no longer told that no package matches when nobody asked a price');
+$plainPrompt = PromptBuilder::build([
+    'agent' => $agent, 'message' => 'hello', 'state' => 'education', 'intent' => 'exhibitor',
+    'knowledge' => ['faqs' => [], 'articles' => []], 'pricing_facts' => [], 'catalogue' => [],
+    'pricing_allowed' => true, 'pricing_requested' => false, 'pricing_country' => 'international',
+    'lead_state' => [], 'recent_messages' => [],
+])['system'];
+T::ok(!str_contains($plainPrompt, 'WHAT IS ON OFFER'), 'Without such a question the prompt is unchanged');
+db()->exec('DELETE FROM stall_packages WHERE id = ?', [$outdoorId]);
+
+// A bare record with no minimum behaves as before: nothing is assumed for it.
+T::equals(0.0, PricingEngine::referenceSize(['package_type' => 'bare', 'min_sqm' => null]),
+    'Only outdoor space is referenced per single square metre');
+
 // A sponsorship tier with no remaining inventory is not offered.
 $soldOutId = db()->insert('sponsorship_packages', [
     'agent_id' => (int)$agent['id'], 'tier_name' => 'Title Sponsor', 'currency' => 'USD',
@@ -1181,6 +1257,24 @@ T::equals('AnthropicLlmProvider', get_class(LlmProviderFactory::make('anthropic'
     'Claude uses its own request format');
 T::equals('GeminiLlmProvider', get_class(LlmProviderFactory::make('gemini')),
     'Gemini uses its own request format');
+// OpenAI's GPT-6 family takes different request settings (10 November 2026).
+$chatMsgs = [['role' => 'system', 'content' => 's'], ['role' => 'user', 'content' => 'u']];
+$oaMeta   = LlmCatalogue::meta('openai');
+$old = OpenAiCompatibleProvider::requestBody('openai', 'gpt-4o', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::ok(isset($old['max_tokens'], $old['temperature']) && !isset($old['reasoning_effort'], $old['max_completion_tokens']),
+    'Earlier OpenAI models are asked exactly as before');
+$luna = OpenAiCompatibleProvider::requestBody('openai', 'gpt-6-luna', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::equals('none', $luna['reasoning_effort'] ?? null, 'GPT-6 Luna answers a live chat without a reasoning delay');
+T::equals(700, $luna['max_completion_tokens'] ?? null, 'GPT-6 Luna gets its length limit under the new name');
+T::ok(!isset($luna['max_tokens']) && isset($luna['temperature']), 'And keeps temperature, which it accepts without reasoning');
+$sol = OpenAiCompatibleProvider::requestBody('openai', 'gpt-6.1-sol', $chatMsgs, ['temperature' => 0.3, 'max_tokens' => 700], $oaMeta);
+T::equals('low', $sol['reasoning_effort'] ?? null, 'GPT-6.1 Sol reasons at its lowest setting');
+T::ok(!isset($sol['temperature']) && !isset($sol['max_tokens']), 'GPT-6.1 Sol is not sent temperature, which it refuses while reasoning');
+T::equals(2700, $sol['max_completion_tokens'] ?? null, 'GPT-6.1 Sol gets room for its reasoning on top of the reply');
+T::equals(['type' => 'json_object'], $sol['response_format'] ?? null, 'GPT-6 is still asked for JSON');
+T::equals(null, OpenAiCompatibleProvider::gpt6Effort('grok', 'gpt-6-luna'), 'Other services with a similar model name are left alone');
+T::ok(in_array('gpt-6-luna', $oaMeta['models'], true) && in_array('gpt-6.1-sol', $oaMeta['models'], true),
+    'GPT-6 Luna and GPT-6.1 Sol are offered in the model list');
 T::equals('OpenAiCompatibleProvider', get_class(LlmProviderFactory::make('grok')),
     'Grok uses the OpenAI request format');
 T::equals('OpenAiCompatibleProvider', get_class(LlmProviderFactory::make('ollama')),
@@ -3354,7 +3448,8 @@ $rsQ = CompanyResearch::queries($agent, ['company_name' => 'Gulf Cranes', 'compa
 T::equals(4, count($rsQ), 'No more searches than the limit per company');
 T::equals(['gulfcranes.example'], $rsQ[0]['options']['include_domains'] ?? null,
     'The company\'s own website is searched first, when it is known');
-T::ok(str_contains($rsQ[1]['query'], 'trade show'), 'Then its exhibition history');
+T::ok(str_contains($rsQ[1]['query'], 'Pakistan') && str_contains($rsQ[2]['query'], 'trade show'),
+    'Then its Pakistan connection and its exhibition history (11 Nov 2026: Pakistan moved up for the pitch)');
 T::equals(1, CompanyResearch::tier('https://www.gulfcranes.example/about', 'gulfcranes.example', $agent),
     'The company\'s own site is a first-tier source');
 T::equals(2, CompanyResearch::tier('https://www.linkedin.com/company/gulf-cranes', null, $agent),
@@ -3502,7 +3597,7 @@ T::ok(str_contains($rcPrompt, 'Makes passenger lifts for high-rise buildings'),
     'The assistant is given the facts research found');
 T::ok(str_contains($rcPrompt, 'never state this as fact') && str_contains($rcPrompt, 'Looking for an agent in Pakistan'),
     'And the reasoning, marked as its own judgement rather than something to state');
-T::ok(str_contains($rcPrompt, 'Prices still come only from the approved pricing'),
+T::ok(str_contains($rcPrompt, 'Prices still come only from the price section'),
     'While prices still come only from approved pricing');
 
 db()->update('company_research', ['findings' => json_encode(['match_level' => 'direct',
@@ -4911,6 +5006,1440 @@ $wjs = (string)file_get_contents(APP_ROOT . '/public_html/widget/widget.js');
 T::ok(str_contains($wjs, "STORAGE_ARRIVAL = 'aisa_arrival'") && str_contains($wjs, 'arrival: readArrival()'),
     'The widget keeps the arrival tags and sends them when a chat starts');
 db()->exec('DELETE FROM conversations WHERE id IN (' . (int)$arr['id'] . ',' . (int)$arrBad['id'] . ',' . (int)$arrNone['id'] . ')');
+
+// =====================================================================
+// Chat fix plan (owner, 11 Nov 2026): docs/handover/2026-11-11-chat-review-and-fix-plan.md
+// =====================================================================
+T::group('Chat fix plan: the exhibition used for these tests');
+
+$fpId = db()->insert('agents', [
+    'slug' => 'acc-pharma', 'name' => 'Pharma Asia', 'status' => 'active',
+    'website_url' => 'https://pharmaasia.com.pk', 'allowed_domains' => "pharmaasia.com.pk",
+    'persona' => AgentDefaults::PERSONA, 'sales_objectives' => AgentDefaults::OBJECTIVES,
+    'sales_rules' => AgentDefaults::SALES_RULES . "\n\nRecommending a sponsorship tier\n- Silver: a specialist or first-time supplier.",
+    'llm_provider' => 'mock', 'llm_model' => 'mock-model', 'notify_email' => 'sales@example.net',
+    'readiness_min_signals' => 2, 'book_stand_url' => 'https://pharmaasia.com.pk/book-a-stand/',
+    'exhibition_sectors' => "Pharmaceutical machinery\nPackaging machinery\nPumps, valves and sensors\nAPIs\nPharmaceutical raw materials\nLaboratory equipment\nPharmaceuticals",
+]);
+Fallbacks::seed($fpId);
+$fpAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$fpId]);
+$fpStall = static function (string $name, string $type, float $rate, ?float $min, ?float $inc, int $order) use ($fpId): int {
+    return db()->insert('stall_packages', [
+        'agent_id' => $fpId, 'package_name' => $name, 'package_type' => $type, 'stall_size' => 'per sqm',
+        'currency' => 'USD', 'price' => $rate * max(1, (float)$min), 'pricing_mode' => 'per_sqm', 'price_basis' => 'per_sqm',
+        'rate_per_sqm' => $rate, 'min_sqm' => $min, 'increment_sqm' => $inc, 'region_group' => 'international',
+        'active' => 1, 'status' => 'approved', 'tax_included' => 'no', 'tax_rate_percent' => 15, 'tax_label' => 'VAT',
+        'included_items' => $type === 'shell' ? "Walls and fascia\nCarpet\nOne table and two chairs" : '',
+        'sort_order' => $order,
+    ]);
+};
+$fpShell   = $fpStall('Shell Scheme Stall', 'shell', 375, 9, 9, 1);
+$fpBare    = $fpStall('Bare Space Inside Halls', 'bare', 325, 18, 9, 2);
+$fpOutdoor = $fpStall('Outdoor Exhibit Space', 'outdoor', 150, 80, null, 3);
+foreach ([['Title Partner', 75000, "Exhibition space included: 144 sqm\nSpeaking slot at the International Pharma Convention\nLogo on all branding"],
+          ['Platinum Partner', 40000, "Exhibition space included: 72 sqm\nFour outer grill panels\n100 VIP passes"],
+          ['Gold Partner', 20000, "Exhibition space included: 36 sqm\nTwo outer grill panels\n50 VIP passes"],
+          ['Silver Partner', 10000, "Exhibition space included: 18 sqm\nOne corridor panel\n25 VIP passes"]] as $i => [$tn, $tp, $tb]) {
+    db()->insert('sponsorship_packages', [
+        'agent_id' => $fpId, 'tier_name' => $tn, 'currency' => 'USD', 'price' => $tp, 'benefits' => $tb,
+        'region_group' => 'international', 'active' => 1, 'status' => 'approved',
+        'tax_included' => 'no', 'tax_rate_percent' => 15, 'tax_label' => 'VAT', 'sort_order' => $i + 1,
+    ]);
+}
+db()->insert('knowledge_articles', [
+    'agent_id' => $fpId, 'title' => "Pakistan's pharmaceutical market: the opportunity for suppliers", 'category' => 'market',
+    'body' => 'Pakistan has more than 650 pharmaceutical manufacturers. Plants upgrading to international standards need pumps, valves, sensors and spare parts.',
+    'keywords' => 'pakistan market opportunity machinery pumps valves sensors apis laboratory', 'status' => 'approved', 'active' => 1,
+]);
+db()->insert('knowledge_articles', [
+    'agent_id' => $fpId, 'title' => 'Why exhibit at Pharma Asia', 'category' => 'benefits',
+    'body' => 'Pharma Asia gathers pharmaceutical manufacturers, buyers and distributors in one place.',
+    'keywords' => 'why exhibit benefits buyers', 'status' => 'approved', 'active' => 1,
+]);
+T::ok($fpAgent !== null, 'A Pharma-style exhibition with per-sqm stands, outdoor space from 80 sqm and four tiers');
+
+// A conversation with a company in Germany, told on the introduction card.
+$fpStart = static function () use ($fpAgent): array {
+    $st = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk',
+        'page_url' => 'https://pharmaasia.com.pk/']);
+    $c = ChatOrchestrator::applyFormCountry($fpAgent, $st['conversation'], 'DE');
+    db()->update('conversations', ['intent' => 'exhibitor',
+        'lead_state' => json_encode(['name' => 'Creasida', 'company' => 'Bartels', 'company_country' => 'Germany'])], 'id = ?', [(int)$c['id']]);
+    return [reload_conversation($c), $st['session_secret']];
+};
+
+T::group('Chat fix plan, step 1: talk like a sales person');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Which option interests you: a stand or sponsorship?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'What are the rates?');
+$p = $mock->lastSystemPrompt();
+T::ok(!str_contains($p, 'APPROVED PRICING FACTS') && !str_contains($p, 'APPROVED KNOWLEDGE'),
+    'The prompt no longer uses the heading "APPROVED PRICING FACTS" (finding 2)');
+T::ok(str_contains($p, 'PRICES YOU MAY QUOTE'), 'Prices come under a neutral heading');
+T::ok(str_contains($p, 'Never use the words "approved", "pricing facts", "stage", "system"'),
+    'The assistant is told never to say "approved", "pricing facts", "stage" or "system" (findings 2 and 10)');
+T::ok(str_contains($p, "Never mention the visitor's country when you give a price"),
+    'Nor to mention their country with a price, or suggest prices differ by country');
+T::ok(str_contains($p, 'THEY ASKED ABOUT PRICE WITHOUT SAYING WHICH OPTION'),
+    '"What are the rates?" with no option named: ask which option first (owner)');
+
+$mock->push(['reply' => 'Here are the rates.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'What are the rates for stands and sponsorship?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'They asked about stand prices') && str_contains($p, 'They asked about sponsorship prices'),
+    'Stands and sponsorship named: each stand on its own line, and the range of tiers');
+T::ok(str_contains($p, 'Quote line: Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)'),
+    'Each price comes as one ready line: name, size, price and total with VAT (finding 5)');
+T::ok(str_contains($p, 'Quote line: Outdoor Exhibit Space, 80 sqm: USD 12,000 (USD 13,800 with 15% VAT)'),
+    'Outdoor space is quoted from 80 sqm, never "1 sqm" (finding 4, owner)');
+T::ok(!str_contains($p, 'summarise briefly rather than listing every inclusion'),
+    'The old "summarise briefly" rule is gone (finding 8)');
+T::ok(str_contains($p, 'When they ask what is included, list the inclusions, one per line'),
+    'Inclusions are listed when asked');
+
+$mock->push(['reply' => 'Gold Partner is USD 20,000.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'How much is Gold?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THIS PRICE QUESTION is about: "Gold Partner"'),
+    'A price question naming one tier is about that tier only');
+
+$quoteAllowed = PricingEngine::allowedFigures(PricingEngine::stallPackages($fpId, ['international', 'both']), 'stall');
+T::equals(null, PricingEngine::findUnauthorisedPrice("- Shell Scheme Stall, 9 sqm: USD 3,375 (USD 3,881.25 with 15% VAT)", $quoteAllowed),
+    'A copied quote line passes the price guard');
+$mock->push(['reply' => 'The nearest sizes are 18 sqm and 27 sqm. Which would you prefer?', 'intent' => 'exhibitor',
+    'package_reference' => 'stall:' . $fpShell]);
+$r20 = say($fpAgent, reload_conversation($fc), $fs, 'Can I get a 20 sqm shell scheme stall? How much?');
+T::equals([], $r20['cards'] ?? [], 'A size that cannot be booked gets no price card at another size (test chat 12, 12 Nov 2026)');
+$mock->push(['reply' => "The Shell Scheme Stall includes:\n- Carpet", 'intent' => 'exhibitor', 'package_reference' => 'stall:' . $fpShell]);
+$fpInc = $fpStart();
+$rInc = say($fpAgent, $fpInc[0], $fpInc[1], "What's included in the shell scheme stall?");
+T::equals([], $rInc['cards'] ?? [], 'Asking what is included shows no price card (owner: prices only when asked)');
+$lnk = Sanitizer::toBlocks('Go ahead through the Book a stand page (https://pharmaasia.com.pk/book-a-stand/)?', ['pharmaasia.com.pk']);
+T::equals('https://pharmaasia.com.pk/book-a-stand/', (string)($lnk[0]['spans'][1]['href'] ?? ''),
+    'A link in brackets does not swallow the ")?" after it');
+T::equals(80.0, PricingEngine::referenceSize(['package_type' => 'outdoor', 'min_sqm' => 80]), 'Outdoor reference size is its minimum, 80 sqm');
+$fpOutRow = db()->one('SELECT * FROM stall_packages WHERE id = ?', [$fpOutdoor]);
+T::equals('below_minimum', PricingEngine::checkSize($fpOutRow, 50)['reason'], 'A smaller outdoor area is not priced');
+
+T::group('Chat fix plan, step 1: asking for contact details');
+
+T::ok(ChatGuide::replyAsksForContact('Could you share your email address so the team can send a proposal?'), 'An ask is recognised');
+T::ok(ChatGuide::replyAsksForContact('Please leave your phone number and a colleague will call.'), 'So is a request without a question mark');
+T::ok(!ChatGuide::replyAsksForContact('Our team will email the floor plan to every exhibitor.'), 'Mentioning email is not asking');
+T::ok(!ChatGuide::replyAsksForContact("I can share the sales team's contact details if you prefer.")
+    && !ChatGuide::replyAsksForContact("Would you like the sales team's contact details?"),
+    'Offering our own team\'s details is not asking for theirs (test chat 5, 12 Nov 2026)');
+T::ok(ChatGuide::replyAsksForContact('Please share an email address or phone number so the team can send them.'),
+    '"Please share an email address" is an ask');
+T::ok(ChatGuide::isDecline('no thanks') && ChatGuide::isDecline("I'd rather not share my email")
+    && ChatGuide::isDecline('just tell me the price'), 'A refusal is recognised');
+T::ok(!ChatGuide::isDecline('No, we have not exhibited in Pakistan before'), 'A "no" to another question is not a refusal');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Shall I have the team send a proposal? Could you share your email address?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'Tell me about the shell scheme stall');
+$cs = ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [];
+T::equals(1, (int)($cs['asked'] ?? 0), 'The ask is counted');
+$mock->push(['reply' => 'The halls are air-conditioned.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Are the halls air-conditioned?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'Do not ask for contact details in this reply.'), 'The next reply may not ask again (never two in a row)');
+foreach (['What about parking?', 'And the opening hours?', 'Is there a conference?'] as $q) {
+    $mock->push(['reply' => 'Yes.', 'intent' => 'exhibitor']);
+    say($fpAgent, reload_conversation($fc), $fs, $q);
+    T::ok(str_contains($mock->lastSystemPrompt(), 'Do not ask for contact details in this reply.'),
+        'Still not within four visitor messages: "' . $q . '"');
+}
+$mock->push(['reply' => 'Would you like a proposal? Could you share your email?', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Thanks, that helps');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'Do not ask for contact details in this reply.'),
+    'After four more messages it may ask again, once');
+$mock->push(['reply' => 'Certainly.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Do you have a floor plan?');
+$cs = ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [];
+T::ok(!empty($cs['stopped']), 'Not given twice (ignored), so the asking stops');
+$mock->push(['reply' => 'Of course.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'How do we go ahead?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'never ask again') && str_contains($p, 'https://pharmaasia.com.pk/book-a-stand/'),
+    'Then it never asks again and points to the Book a stand page');
+
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => 'Could you share your email so I can send the details?', 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'I want to know about bare space');
+$mock->push(['reply' => 'No problem.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, "No thanks, I'd rather not share my email");
+T::ok(!empty((ConversationStore::leadState(reload_conversation($fc))['contact_asks'] ?? [])['stopped']),
+    'A refusal stops the asking straight away');
+$mock->push(['reply' => 'Sure.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'Can someone call me tomorrow?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'They have asked for a call, a proposal or a person'),
+    'But if they ask for a call themselves, the assistant may take their details');
+
+T::ok(ConversationState::next(ConversationState::LEAD_CAPTURE, ['intent' => 'exhibitor', 'contact_captured' => false,
+    'suggested' => ConversationState::PRICING]) === ConversationState::PRICING,
+    'Without contact details the chat is no longer held in "capturing contact details" (finding 6)');
+
+T::group('Chat fix plan, step 2: remember the whole conversation');
+
+T::ok(ChatOrchestrator::detectCatalogueRequest('What do I get with Silver?')
+    && ChatOrchestrator::detectCatalogueRequest('Compare Gold and Platinum')
+    && ChatOrchestrator::detectCatalogueRequest('Which one do you suggest for us?'),
+    'Tier names and follow-ups are recognised (finding 7)');
+$fpOffers = PricingEngine::catalogueForPrompt($fpId);
+$q = ChatGuide::offerQuestion('Compare Gold and Platinum', $fpOffers);
+T::equals(['Platinum Partner', 'Gold Partner'], $q['items'], 'Both tiers are read from the message');
+T::equals('compare', $q['mode'], 'As a comparison');
+T::equals('recommend', ChatGuide::offerQuestion('Which one do you suggest for us?', $fpOffers)['mode'], 'A request for advice');
+T::equals('detail', ChatGuide::offerQuestion('What do I get with Silver?', $fpOffers)['mode'], 'One tier in detail');
+T::equals([], ChatGuide::offerQuestion('My job title is export manager', $fpOffers)['items'], '"Job title" is not Title Partner');
+T::equals(['Outdoor Exhibit Space'], ChatGuide::offerQuestion('Is outdoor possible?', $fpOffers)['items'], 'Outdoor space is named');
+
+// A visitor in Pakistan: no prices, but the offer stays in view for the whole chat.
+$mock->reset();
+$pkSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$pkC = ChatOrchestrator::applyFormCountry($fpAgent, $pkSt['conversation'], 'PK');
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['name' => 'Ali', 'company' => 'Karachi Pharma Machinery', 'company_country' => 'Pakistan'])], 'id = ?', [(int)$pkC['id']]);
+$mock->push(['reply' => 'We offer shell scheme, bare space, outdoor space and four sponsorship tiers.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Brief me on the participation packages and sponsorship options');
+for ($i = 0; $i < 8; $i++) {
+    $mock->push(['reply' => 'Happy to help with that.', 'intent' => 'exhibitor']);
+    say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'One more question about the venue, number ' . ($i + 1));
+}
+T::ok((int)reload_conversation($pkC)['message_count'] >= 18, 'The chat is now past the 12 recent messages');
+$mock->push(['reply' => 'Silver Partner includes 18 sqm.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'What do I get with Silver?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'WHAT IS ON OFFER') && str_contains($p, 'One corridor panel'),
+    'Fifteen messages later the tiers and their benefits are still in view');
+T::ok(str_contains($p, 'They are asking about "Silver Partner". Give what it includes in full'),
+    'And one tier asked about is given in full (step 5)');
+T::ok(!preg_match('/USD\s?\d/', $p), 'A visitor in Pakistan still gets no price');
+T::ok(str_contains($p, 'WHAT HAS HAPPENED IN THIS CHAT SO FAR') && str_contains($p, 'Karachi Pharma Machinery'),
+    'A running summary of the whole chat is in every prompt');
+T::ok(!str_contains($mock->lastUserContent(), '[Summary of the earlier part'), 'It is no longer a pretend visitor message');
+
+$mock->push(['reply' => 'Gold suits you.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Compare Gold and Platinum');
+T::ok(str_contains($mock->lastSystemPrompt(), 'only the differences between them'), 'A comparison sets out only the differences');
+$mock->push(['reply' => 'Silver would suit you.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pkC), $pkSt['session_secret'], 'Which one do you suggest for us?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'Recommend ONE option, with one reason') && str_contains($p, 'Recommending a sponsorship tier'),
+    'A request for advice gets one recommendation, using the How to sell guidance');
+
+// An international visitor who was given prices keeps them for a later follow-up.
+$mock->reset();
+[$fc, $fs] = $fpStart();
+$mock->push(['reply' => "- Gold Partner: USD 20,000 (USD 23,000 with 15% VAT)", 'intent' => 'exhibitor']);
+say($fpAgent, $fc, $fs, 'What is the price of the Gold sponsorship?');
+T::ok(!empty(ConversationStore::leadState(reload_conversation($fc))['prices_given']), 'That prices were given is remembered');
+$mock->push(['reply' => 'Silver is the smaller tier.', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($fc), $fs, 'And what do I get with Silver?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Quote line: Silver Partner: USD 10,000 (USD 11,500 with 15% VAT)'),
+    'A later follow-up still has the prices, without the word "price"');
+
+// A visitor asking about "benefits" of visiting is not shown the stand list;
+// anyone asking what packages there are is, from the first message.
+$mock->reset();
+$vSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'attendee'], 'id = ?', [(int)$vSt['conversation']['id']]);
+$mock->push(['reply' => 'Visiting is free.', 'intent' => 'attendee']);
+say($fpAgent, reload_conversation($vSt['conversation']), $vSt['session_secret'], 'What are the benefits of visiting?');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'WHAT IS ON OFFER'), 'A visitor asking about the benefits of visiting is not given the stand list');
+$nSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$mock->push(['reply' => 'We have three stand options and four tiers.', 'intent' => 'exhibitor']);
+say($fpAgent, $nSt['conversation'], $nSt['session_secret'], 'What packages do you have?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'WHAT IS ON OFFER'), 'Someone asking what packages there are is, from the first message');
+
+T::group('Chat fix plan, step 3: research first, then a pitch built on it');
+
+T::equals('pharmaceutical', CompanyResearch::industryHint($fpAgent), 'The exhibition\'s industry is read from its sector list');
+$fpRs = new MockResearchProvider();
+$fpRs->pages = [
+    ['title' => 'Bartels Mikrotechnik: micropumps', 'url' => 'https://www.bartels-mikrotechnik.de/', 'content' => 'Bartels Mikrotechnik GmbH in Dortmund, Germany makes micropumps, sensors and valves for microfluidics.'],
+    ['title' => 'Bartels at Achema', 'url' => 'https://news.example/bartels-achema', 'content' => 'Bartels Mikrotechnik exhibited at Achema.'],
+];
+ResearchProviderFactory::setTestProvider($fpRs);
+Settings::set('research.searches_per_company', '4');
+Settings::set('research.monthly_credit_limit', '900');
+Settings::set('research.first_reply_wait_seconds', '14');
+$fpAnalysis = ['official_website' => 'https://www.bartels-mikrotechnik.de', 'summary' => 'Bartels Mikrotechnik makes micropumps, sensors and valves.',
+    'facts' => [['claim' => 'Makes micropumps, sensors and valves for microfluidics', 'source' => 'S1']],
+    'products' => ['micropumps', 'sensors', 'valves'], 'match_level' => 'strong', 'prospect_type' => 'exhibitor',
+    'components' => [], 'why_exhibit' => 'Pharma plants upgrading need pumps and sensors', 'best_offer' => ['reference' => null, 'reason' => '']];
+
+$mock->reset();
+$mock->push($fpAnalysis);                                                   // the research reading
+$mock->push(['reply' => 'I see Bartels makes micropumps and sensors.', 'intent' => 'exhibitor']);   // the first reply
+$ivSt = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$iv = ChatIntro::submit($fpAgent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$ivSt['conversation']['session_id'],
+    'session_secret' => $ivSt['session_secret'], 'first_name' => 'Creasida', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit']);
+T::ok(!empty($iv['ok']), 'The introduction card is answered');
+$ivRow = db()->one('SELECT * FROM company_research WHERE conversation_id = ? ORDER BY id DESC LIMIT 1', [(int)$ivSt['conversation']['id']]);
+T::equals('done', (string)($ivRow['status'] ?? ''), 'Their company is researched BEFORE the first reply (owner\'s rule 1B)');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'WHAT RESEARCH FOUND ABOUT THEIR COMPANY') && str_contains($p, 'micropumps'),
+    'So the first reply already knows what they make');
+T::ok(str_contains($p, 'never ask them'), 'And is told never to ask what they make');
+T::ok(str_contains($p, 'THE SALES PATH') && str_contains($p, "PAKISTAN'S PHARMACEUTICAL MARKET"),
+    'The sales path, with the market note for their sector (pumps)');
+T::ok(str_contains($fpRs->queries[0]['query'], 'Germany') && str_contains($fpRs->queries[1]['query'] ?? '', 'pharmaceutical'),
+    'A short name is searched with their country and the exhibition\'s industry, to find the right Bartels');
+
+// Research still running at the first reply: the assistant does not ask what they make.
+$pendConv = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['company' => 'Slow GmbH'])], 'id = ?', [(int)$pendConv['conversation']['id']]);
+CompanyResearch::request($fpAgent, 'Slow GmbH', 'Germany', null, 'chat', (int)$pendConv['conversation']['id']);
+$mock->reset();
+$mock->push(['reply' => 'Welcome. What would you most want to achieve?', 'intent' => 'exhibitor']);
+say($fpAgent, reload_conversation($pendConv['conversation']), $pendConv['session_secret'], 'Hello');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Research on their company is still running'),
+    'Research still running: the reply asks about their aims, not what they make');
+
+// Not finished within the wait: kept, and finished afterwards without searching again.
+$fpRs->queries = [];
+$waitId = CompanyResearch::request($fpAgent, 'Slow Pumps GmbH', 'Germany', null, 'chat', null);
+$mock->reset();
+$mock->forceStatus = 'timeout';
+T::equals('paused', CompanyResearch::run((int)$waitId, microtime(true) + 9), 'Reading that runs past the wait pauses the research');
+$searchesBefore = count($fpRs->queries);
+T::equals('queued', (string)db()->value('SELECT status FROM company_research WHERE id = ?', [$waitId]), 'It goes back in the queue');
+$mock->forceStatus = null;
+$mock->push($fpAnalysis);
+T::ok(str_starts_with(CompanyResearch::run((int)$waitId), 'done'), 'And is finished by the next run');
+T::equals($searchesBefore, count($fpRs->queries), 'Without searching (or paying) again');
+T::equals('paused', CompanyResearch::run((int)CompanyResearch::request($fpAgent, 'No Time Ltd', null, null, 'chat', null), microtime(true) + 2),
+    'With no time to search at all, it simply waits in the queue');
+
+// Research that could not tell which company: said plainly, and asked once.
+$poor = CompanyResearch::promptBlock(['findings' => json_encode(['match_level' => 'poor'])]);
+T::ok(str_contains($poor, 'could not tell which company'), 'An unsure match tells the assistant it may ask, once, what they make');
+
+// One repeat research when they later give a website.
+$rrConv = db()->one('SELECT * FROM conversations WHERE id = ?', [(int)$ivSt['conversation']['id']]);
+$rrState = ConversationStore::leadState($rrConv);
+$rrState['website'] = 'https://www.bartels-other.example';
+db()->update('conversations', ['lead_state' => json_encode($rrState)], 'id = ?', [(int)$rrConv['id']]);
+CompanyResearch::considerConversation($fpAgent, (int)$rrConv['id']);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$rrConv['id']]),
+    'A new website they give is researched once more');
+CompanyResearch::considerConversation($fpAgent, (int)$rrConv['id']);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$rrConv['id']]),
+    'But only once');
+
+// The admin can see whether research ran, and why not.
+$st = CompanyResearch::statusForConversation(db()->one('SELECT * FROM conversations WHERE id = ?', [(int)$ivSt['conversation']['id']]));
+T::ok(in_array($st['state'], ['done', 'queued'], true), 'The conversation page shows the research');
+$st = CompanyResearch::statusForConversation(reload_conversation($pkC));
+T::equals('none', $st['state'], 'And when there is none, why');
+ResearchProviderFactory::setTestProvider(null);
+
+T::group('Chat fix plan, step 4: the admin list shows an ended price as Expired');
+$contentSrc = (string)file_get_contents(APP_ROOT . '/public_html/admin/_content.php');
+T::ok(str_contains($contentSrc, 'function content_status_pill') && str_contains($contentSrc, '>Expired</span>'),
+    'A live tier past its end date says "Expired", not "Live" (finding 3)');
+
+// =====================================================================
+// Guided selling, stage A (owner's plan approved 12 Nov 2026)
+// =====================================================================
+T::group('Guided selling: the qualification record');
+
+$q = Qualification::fromModel([
+    'products_made' => ['dosing pumps', 'sensors', 'null'], 'sells_abroad' => true, 'main_markets' => 'Europe, Middle East',
+    'south_asia' => 'none', 'seeking' => 'market_expansion', 'main_aim' => 'distributor_search',
+    'stand_interest' => 'SMALL', 'stand_sqm' => 18, 'contact_role' => 'Export Manager', 'budget' => 'a lot',
+]);
+T::equals(['dosing pumps', 'sensors'], $q['products_made'], 'Lists are cleaned; a placeholder such as "null" is dropped');
+T::ok(!isset($q['seeking']), 'A value outside the fixed choices is dropped');
+T::equals('small', $q['stand_interest'], 'A fixed choice is accepted whatever its capitals');
+T::ok(!isset($q['budget']), 'An unknown fact is ignored');
+$sup = Qualification::supported($q, 'We make dosing pumps. I am the export manager. We sell in Europe. About 18 sqm.', '');
+T::equals(['dosing pumps'], $sup['products_made'], 'Only what the visitor actually said is kept ("sensors" was never said)');
+T::equals(['Europe'], $sup['main_markets'], 'The same for markets');
+T::ok(isset($sup['contact_role']), 'A role they stated is kept');
+T::ok(!isset(Qualification::supported(['contact_role' => 'CEO'], 'hello there', '')['contact_role']), 'A role they never stated is not');
+T::ok(isset(Qualification::supported(['products_made' => ['micropumps']], 'hello', 'micropumps valves')['products_made']),
+    'Research may support what they make');
+T::equals(0, Qualification::completeness([]), 'An empty record is 0% complete');
+T::equals(33, Qualification::completeness(['products_made' => ['x'], 'sells_abroad' => false, 'seeking' => 'both']),
+    'Three of nine facts is 33% ("No" counts as known)');
+T::equals('Small stand, about 18 sqm', Qualification::display(['stand_interest' => 'small', 'stand_sqm' => 18], 'stand_interest'),
+    'Staff see plain words');
+
+T::group('Guided selling: the lead score');
+$scAgent = array_merge($fpAgent, ['score_weights' => null, 'target_countries' => "Germany\nFrance | 2"]);
+$full = ['products_made' => ['dosing pumps'], 'products_to_show' => ['pumps'], 'sells_abroad' => true, 'main_markets' => ['Europe'],
+    'south_asia' => 'none', 'seeking' => 'distributors', 'main_aim' => 'distributor_search', 'stand_interest' => 'small',
+    'contact_role' => 'Export Manager'];
+$sc = Qualification::score($scAgent, $full, 'Germany');
+T::equals(100.0, $sc['score'], 'A complete record, matching sector, exporter, target country, decision maker: 100');
+T::equals('hot', $sc['label'], 'That is Hot');
+T::equals(94.0, Qualification::score($scAgent, $full, 'France')['score'], 'A second-priority country counts for 60 per cent');
+T::equals(85.0, Qualification::score($scAgent, $full, 'Brazil')['score'], 'A country not on the list scores nothing for country');
+T::equals('warm', Qualification::label(85.0), '70 to 89 is Warm');
+T::equals('nurture', Qualification::label(50.0), '50 to 69 is Nurture');
+T::equals('low', Qualification::label(49.9), 'Below 50 is Low');
+T::equals(0.0, Qualification::score($scAgent, $full, 'Pakistan')['parts']['target_country'], 'Pakistan is never a target country');
+T::ok(Qualification::isDecisionMaker('Export Manager') && Qualification::isDecisionMaker('CEO')
+    && !Qualification::isDecisionMaker('Intern'), 'Decision makers are recognised by role');
+
+T::group('Guided selling: the sales path');
+T::equals(1, Qualification::step([], []), 'Nothing known: step 1, their company');
+T::equals(2, Qualification::step(['products_made' => ['pumps']], []), 'Products known: step 2, what they would show');
+T::equals(3, Qualification::step(['products_made' => ['p'], 'products_to_show' => ['p']], []), 'Then their markets');
+T::equals(4, Qualification::step(['products_made' => ['p'], 'products_to_show' => ['p'], 'sells_abroad' => true, 'south_asia' => 'none'], []), 'Then their aim');
+$to5 = ['products_made' => ['p'], 'products_to_show' => ['p'], 'sells_abroad' => true, 'south_asia' => 'none', 'seeking' => 'both'];
+T::equals(5, Qualification::step($to5, []), 'Then the opportunity');
+T::equals(6, Qualification::step($to5, Qualification::advance([], 5, false, false)), 'Once presented, the recommendation');
+T::equals(7, Qualification::step($to5, Qualification::advance(['opportunity' => true], 6, true, false)), 'Once an option is recommended, their questions');
+T::equals(8, Qualification::step([], ['next_step' => true]), 'Asking for a quotation or a call jumps to the next step');
+T::ok(Qualification::asksNextStep('Can you send me a quotation?') && !Qualification::asksNextStep('What is the venue?'),
+    'A request for the next step is recognised');
+
+// In a real chat turn.
+db()->insert('agent_sales_reps', ['agent_id' => $fpId, 'region' => 'local', 'name' => 'Farhan Mobeen',
+    'designation' => 'Senior Manager Sales', 'email' => 'farhan@example.net', 'mobile' => '+923152228225']);
+$mock->reset();
+[$gc, $gs] = $fpStart();
+$mock->push(['reply' => 'Thanks. Which products would you show?', 'intent' => 'exhibitor',
+    'qualification' => ['products_made' => ['dosing pumps', 'rockets'], 'contact_role' => 'Export Manager', 'seeking' => 'whatever']]);
+say($fpAgent, $gc, $gs, 'We make dosing pumps and I am the export manager.');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, 'THE SALES PATH') && str_contains($p, 'You are at step 1 of 8: Their company'),
+    'A possible exhibitor is put on the sales path, at the step PHP worked out');
+T::ok(str_contains($p, '"qualification"'), 'The assistant is asked to report what it learns');
+$gRow = reload_conversation($gc);
+$gState = ConversationStore::leadState($gRow);
+T::equals(['dosing pumps'], $gState['qual']['products_made'] ?? null, 'What they said is saved; what they did not say ("rockets") is not');
+T::equals(2, (int)$gRow['path_step'], 'The chat moves to step 2');
+T::equals(22, (int)$gRow['qual_pct'], 'Two of nine facts: 22% complete');
+T::ok($gRow['lead_label'] !== null && (float)$gRow['lead_score'] > 0, 'The lead is scored');
+$mock->push(['reply' => 'Understood.', 'intent' => 'exhibitor']);
+say($fpAgent, $gRow, $gs, 'Mostly the pumps.');
+T::ok(str_contains($mock->lastSystemPrompt(), 'You are at step 2 of 8') && str_contains($mock->lastSystemPrompt(), '- Products they make: dosing pumps'),
+    'The next reply knows the step and what is already known');
+$mock->push(['reply' => 'I will ask the team.', 'intent' => 'exhibitor', 'lead_fields' => ['email' => 'anna@pumps-example.de']]);
+say($fpAgent, reload_conversation($gc), $gs, 'My email is anna@pumps-example.de, please send a quotation.');
+$gLead = db()->one('SELECT * FROM leads WHERE id = ?', [(int)reload_conversation($gc)['lead_id']]);
+T::ok($gLead !== null && $gLead['lead_label'] !== null && str_contains((string)$gLead['qualification'], 'dosing pumps'),
+    'The lead carries the record, the percentage and the label');
+T::equals(8, (int)reload_conversation($gc)['path_step'], 'Asking for a quotation moves the chat to the next step');
+$brief = LeadBriefing::build($fpAgent, $gLead, 'contact', false);
+T::ok(str_contains($brief['text'], 'Lead score') && str_contains($brief['text'], 'Products they make: dosing pumps'),
+    'The notification email to the team shows the score and the record');
+
+// A visitor is not put on the path.
+$mock->reset();
+$vp = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+db()->update('conversations', ['intent' => 'attendee'], 'id = ?', [(int)$vp['conversation']['id']]);
+$mock->push(['reply' => 'Welcome.', 'intent' => 'attendee', 'qualification' => ['products_made' => ['x']]]);
+say($fpAgent, reload_conversation($vp['conversation']), $vp['session_secret'], 'I want to visit');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'THE SALES PATH'), 'A visitor is not put on the sales path');
+T::ok(reload_conversation($vp['conversation'])['path_step'] === null, 'And gets no step or score');
+
+// A company in Pakistan asking the price gets the local representative's details.
+$mock->reset();
+$pk2 = ConversationStore::start($fpAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'pharmaasia.com.pk', 'page_url' => null]);
+$pk2c = ChatOrchestrator::applyFormCountry($fpAgent, $pk2['conversation'], 'PK');
+db()->update('conversations', ['intent' => 'exhibitor', 'lead_state' => json_encode(['company' => 'Lahore Labs', 'company_country' => 'Pakistan'])], 'id = ?', [(int)$pk2c['id']]);
+$mock->push(['reply' => 'Our sales representative will give you the correct prices. The details are below.', 'intent' => 'exhibitor']);
+$pkReply = say($fpAgent, reload_conversation($pk2c), $pk2['session_secret'], 'Please send me a quotation with your stand rates');
+$pkText = json_encode($pkReply['blocks']);
+T::ok(str_contains($pkText, 'Farhan Mobeen'), 'A company in Pakistan asking for rates is given the local representative\'s details (owner, 12 Nov 2026)');
+T::ok(!preg_match('/USD\s?\d/', $pkText), 'And still no price');
+T::ok(str_contains($mock->lastSystemPrompt(), "the representative's contact details are just"),
+    'The assistant is told the details are added, and not to ask for theirs');
+
+T::group('Guided selling: website answers with links');
+
+$siteDir = sys_get_temp_dir() . '/aisa-site-' . bin2hex(random_bytes(4));
+mkdir($siteDir . '/admin', 0700, true);
+$sitePort = 8191;
+$siteBase = 'http://127.0.0.1:' . $sitePort;
+$pageHtml = static fn(string $title, string $body): string =>
+    '<!doctype html><html><head><title>' . $title . '</title><style>p{color:red}</style></head><body><nav>Menu Home About</nav>'
+    . $body . '<footer>Copyright</footer><script>var x = "secret script";</script></body></html>';
+file_put_contents($siteDir . '/sitemap.xml', '<?xml version="1.0"?><urlset>'
+    . '<url><loc>' . $siteBase . '/register-to-visit.html</loc></url><url><loc>' . $siteBase . '/exhibitor-list.html</loc></url>'
+    . '<url><loc>' . $siteBase . '/tariff.html</loc></url><url><loc>' . $siteBase . '/admin/login.html</loc></url>'
+    . '<url><loc>https://other-site.example/page.html</loc></url><url><loc>' . $siteBase . '/brochure.pdf</loc></url></urlset>');
+file_put_contents($siteDir . '/register-to-visit.html', $pageHtml('Register to visit | Pharma Asia',
+    '<h1>Visitor registration</h1><p>Fill in the visitor registration form to get your free entry badge.</p>'));
+file_put_contents($siteDir . '/exhibitor-list.html', $pageHtml('Exhibitor list',
+    '<h1>Exhibitor list</h1><p>Browse the companies exhibiting. The show was held 20-22 October 2026.</p>'));
+file_put_contents($siteDir . '/tariff.html', $pageHtml('Participation tariff',
+    '<h1>Tariff</h1><p>Shell scheme costs US$ 999 per sqm.</p><p>Stands are built in modules of 9 sqm.</p>'));
+file_put_contents($siteDir . '/admin/login.html', $pageHtml('Login', '<p>Password</p>'));
+$siteProc = proc_open([PHP_BINARY, '-S', '127.0.0.1:' . $sitePort, '-t', $siteDir], [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $sitePipes);
+for ($i = 0; $i < 40; $i++) { if (@fsockopen('127.0.0.1', $sitePort)) { break; } usleep(100000); }
+
+db()->update('agents', ['website_url' => $siteBase, 'event_starts_on' => '2027-12-07', 'register_url' => $siteBase . '/register-to-visit.html'], 'id = ?', [$fpId]);
+$siteAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$fpId]);
+$begun = SitePages::begin($siteAgent);
+T::ok($begun['ok'] && $begun['queued'] === 3, 'The sitemap is read: 3 pages queued (not the admin page, the PDF or another website)');
+$worked = SitePages::work($siteAgent, 20);
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM site_pages WHERE agent_id = ?', [$fpId]), 'The three pages are stored');
+$reg = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%register%'", [$fpId]);
+T::ok(str_contains((string)$reg['body'], 'free entry badge') && !str_contains((string)$reg['body'], 'secret script')
+    && !str_contains((string)$reg['body'], 'Menu Home'), 'A page\'s readable text is kept; scripts and menus are not');
+$tariff = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%tariff%'", [$fpId]);
+T::ok(!str_contains((string)$tariff['body'], '999') && str_contains((string)$tariff['body'], 'modules of 9 sqm'),
+    'A price written on the website is removed before the text is stored');
+$exl = db()->one("SELECT * FROM site_pages WHERE agent_id = ? AND url LIKE '%exhibitor%'", [$fpId]);
+T::ok(str_contains((string)$exl['note'], '2026'), 'A page showing other event dates than Dates & venue is marked for checking');
+
+$found = SitePages::match($fpId, 'Where do I register to visit?');
+T::equals($siteBase . '/register-to-visit.html', $found[0]['url'] ?? '', 'A question about registering finds the registration page');
+T::equals([], SitePages::match($fpId, 'Tell me about quantum physics'), 'An unrelated question finds no page');
+
+$mock->reset();
+$wv = ConversationStore::start($siteAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => '127.0.0.1', 'page_url' => null]);
+$mock->push(['reply' => 'You can register here: ' . $siteBase . '/register-to-visit.html and also ' . $siteBase . '/made-up-page.html',
+    'intent' => 'attendee']);
+$wr = say($siteAgent, $wv['conversation'], $wv['session_secret'], 'Where do I register to visit?');
+$p = $mock->lastSystemPrompt();
+T::ok(str_contains($p, "PAGES ON THE EXHIBITION'S WEBSITE") && str_contains($p, 'Address: ' . $siteBase . '/register-to-visit.html'),
+    'The assistant is given the matching page and its address');
+$stored = (string)db()->value("SELECT content FROM messages WHERE conversation_id = ? AND role = 'agent' ORDER BY id DESC LIMIT 1", [(int)$wv['conversation']['id']]);
+T::ok(str_contains($stored, '/register-to-visit.html'), 'A real page\'s link stays in the reply');
+T::ok(!str_contains($stored, 'made-up-page'), 'An address that was never found on the website is taken out');
+
+db()->update('site_pages', ['active' => 0], 'id = ?', [(int)$reg['id']]);
+T::equals([], SitePages::match($fpId, 'Where do I register to visit?'), 'A page switched off in the admin is ignored');
+
+unlink($siteDir . '/exhibitor-list.html');
+file_put_contents($siteDir . '/sitemap.xml', '<?xml version="1.0"?><urlset><url><loc>' . $siteBase . '/register-to-visit.html</loc></url>'
+    . '<url><loc>' . $siteBase . '/tariff.html</loc></url></urlset>');
+SitePages::begin($siteAgent);
+SitePages::work($siteAgent, 20);
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM site_pages WHERE agent_id = ?', [$fpId]), 'A page removed from the website is forgotten at the next reading');
+T::equals(0, (int)db()->value('SELECT active FROM site_pages WHERE id = ?', [(int)$reg['id']]), 'A page that was switched off stays off');
+Settings::set('site.read.' . $fpId, gmdate('Y-m-d H:i:s'));
+T::ok(SitePages::cron($siteAgent) === null, 'The scheduled task does nothing until a week has passed');
+Settings::set('site.read.' . $fpId, gmdate('Y-m-d H:i:s', time() - 8 * 86400));
+Settings::set('site.started.' . $fpId, gmdate('Y-m-d H:i:s', time() - 8 * 86400));
+T::ok(str_contains((string)SitePages::cron($siteAgent), 'website page'), 'After a week it reads the website again');
+
+proc_terminate($siteProc);
+array_map('unlink', glob($siteDir . '/admin/*') ?: []); @rmdir($siteDir . '/admin');
+array_map('unlink', glob($siteDir . '/*') ?: []); @rmdir($siteDir);
+db()->exec('DELETE FROM site_pages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM agent_sales_reps WHERE agent_id = ?', [$fpId]);
+
+db()->exec('DELETE FROM company_research WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM sponsorship_packages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM stall_packages WHERE agent_id = ?', [$fpId]);
+db()->exec('DELETE FROM knowledge_articles WHERE agent_id = ?', [$fpId]);
+$mock->reset();
+
+// =====================================================================
+// A price asked for one named option is always given (test chat 11, 12 Nov 2026)
+// =====================================================================
+T::group('Price asked for a named option: the price line is guaranteed');
+$pgName = (string)db()->value("SELECT package_name FROM stall_packages WHERE agent_id = ? AND active = 1 AND status = 'approved' AND region_group = 'international' ORDER BY id LIMIT 1", [(int)$agent['id']]);
+if ($pgName !== '') {
+    $mock->reset();
+    $mock->push(['reply' => "It includes carpet and lights.\nWhich products would you show?", 'intent' => 'exhibitor']);
+    [$pgConv, $pgSecret] = start_conversation($agent);
+    $pg = say($agent, $pgConv, $pgSecret, 'Our company is based in Germany. What does the ' . $pgName . ' cost?');
+    T::ok((bool)preg_match('/(?:USD|PKR|EUR)\s?\d/', blocks_text($pg)), 'The model left the price out; the reply still carries the price line');
+    T::ok(str_contains(blocks_text($pg), 'Which products would you show?'), 'The rest of the reply is kept');
+    T::ok(count($pg['cards'] ?? []) === 1, 'With its price card');
+    $mock->reset();
+    $mock->push(['reply' => "It includes carpet and lights.", 'intent' => 'exhibitor']);
+    [$pgConv2, $pgSecret2] = start_conversation($agent);
+    $pg2 = say($agent, $pgConv2, $pgSecret2, 'Our company is based in Pakistan. What does the ' . $pgName . ' cost?');
+    T::ok(!preg_match('/(?:USD|PKR|EUR)\s?\d/', blocks_text($pg2)), 'Never for a company in Pakistan');
+}
+$mock->reset();
+
+// =====================================================================
+// Quotations (guided selling plan, part 3; Stage B, 12 Nov 2026)
+// =====================================================================
+T::group('Quotation PDF: the writer');
+
+$qp = new PdfWriter();
+$qp->setTitle('Test');
+$qp->text(50, 50, 'Total: USD 7,762.50 (Müller & Söhne)', 12, true);
+$qpOut = $qp->output();
+T::ok(str_starts_with($qpOut, '%PDF-1.4') && str_ends_with(trim($qpOut), '%%EOF'), 'The writer produces a PDF file');
+preg_match('/startxref\n(\d+)/', $qpOut, $qpX);
+T::ok(substr($qpOut, (int)($qpX[1] ?? 0), 4) === 'xref', 'Its index points at the right place, so every reader can open it');
+T::ok(abs($qp->width('USD 7,762.50', 10) - 62.81) < 0.01, 'Text widths are measured, so amounts line up on the right');
+[$qpLatin, $qpLost] = PdfWriter::latin('Müller “GmbH” – 北京');
+T::ok($qpLost && str_contains($qpLatin, 'M') && !str_contains($qpLatin, '?'), 'Letters the built-in fonts cannot draw are left out, and reported');
+T::ok(PdfWriter::canPlace(APP_ROOT . '/app/assets/ecommerce-gateway-logo.png'), 'The organiser logo (a PNG with transparency) can be placed');
+T::equals(['One two', 'three'], $qp->wrap('One two three', $qp->width('One two', 10) + 1, 10), 'Long text is wrapped to the width given');
+
+T::group('Quotations: when the chat may send one');
+
+$qAgentId = (int)$agent['id'];
+$qVat = ['currency' => 'USD', 'region_group' => 'international', 'active' => 1, 'status' => 'approved', 'tax_included' => 'no',
+    'tax_rate_percent' => 15, 'tax_label' => 'VAT', 'tax_note' => 'Rates are exclusive of 15% VAT.'];
+$qStallId = db()->insert('stall_packages', $qVat + ['agent_id' => $qAgentId, 'package_name' => 'Corner Pavilion', 'package_type' => 'shell',
+    'stall_size' => 'from 9 sqm', 'size_sqm' => 9, 'price' => 3375, 'price_basis' => 'per_sqm', 'pricing_mode' => 'per_sqm',
+    'rate_per_sqm' => 375, 'min_sqm' => 9, 'increment_sqm' => 9, 'included_items' => "Walls and fascia\nCarpet\nOne table and two chairs", 'sort_order' => 90]);
+$qTierId = db()->insert('sponsorship_packages', $qVat + ['agent_id' => $qAgentId, 'tier_name' => 'Diamond Partner', 'price' => 40000,
+    'benefits' => implode("\n", array_map(static fn(int $i): string => 'Benefit number ' . $i, range(1, 16))), 'sort_order' => 90]);
+$qDraftId = db()->insert('stall_packages', ['status' => 'pending_review'] + $qVat + ['agent_id' => $qAgentId, 'package_name' => 'Garden Kiosk', 'package_type' => 'shell',
+    'stall_size' => '9 sqm', 'size_sqm' => 9, 'price' => 999, 'price_basis' => 'total', 'sort_order' => 91]);
+db()->update('agents', ['mail_from_email' => 'info@buildasia.example', 'mail_from_name' => 'Build Asia Secretariat',
+    'mail_smtp_host' => 'mail.buildasia.example', 'quote_enabled' => 0, 'quote_prefix' => 'ba27',
+    'event_starts_on' => '2027-03-02', 'event_ends_on' => '2027-03-04', 'event_venue' => 'Karachi Expo Centre'], 'id = ?', [$qAgentId]);
+$qAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$qAgentId]);
+SalesReps::save($qAgentId, 'international', ['name' => 'Rabia Basri', 'designation' => 'Project Communication Officer',
+    'email' => 'rabia@buildasia.example', 'mobile' => '+923000568730', 'wechat' => 'rabiaecg']);
+SalesReps::save($qAgentId, 'local', ['name' => 'Farhan Mobeen', 'email' => 'farhan@buildasia.example', 'mobile' => '+923001112223']);
+
+T::ok(!Quotation::available($qAgent) && str_contains((string)Quotation::whyNot($qAgent), 'switched off'), 'Quotations are off until they are switched on for the exhibition');
+db()->update('agents', ['quote_enabled' => 1], 'id = ?', [$qAgentId]);
+$qAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$qAgentId]);
+T::ok(Quotation::available($qAgent), 'Switched on, with a mail account: available');
+T::equals('BA27', Quotation::settings($qAgent)['prefix'], 'The number prefix is tidied (letters and digits, capitals)');
+T::equals('PA27', Quotation::settings(['name' => 'Pharma Asia', 'event_starts_on' => '2027-12-07'])['prefix'], 'With no prefix typed, it is made from the name and the year');
+T::ok(!in_array('Garden Kiosk', array_column(Quotation::options($qAgent), '_name'), true), 'A price still waiting for review can never be quoted');
+
+T::ok(Quotation::wants('Can you send me a quotation for that?') && Quotation::wants('please email me the prices')
+    && Quotation::wants('I need a pro forma') && Quotation::wants('Send us a proposal'), 'A request for a quotation is recognised');
+T::ok(!Quotation::wants('What does it cost?') && !Quotation::wants('I do not need a quotation yet') && !Quotation::wants('Famous quotes about trade'),
+    'A price question, or a refusal, is not');
+T::ok(Quotation::saysYes('Yes please') && Quotation::saysYes('ok, go ahead') && !Quotation::saysYes('Not yet') && !Quotation::saysYes('What is included?'),
+    'A yes to the offer is recognised');
+T::ok(Quotation::offered('Would you like a quotation by email?') && !Quotation::offered('The quotation is on its way.'), 'So is the assistant offering one');
+
+$qConvBase = ['id' => 0, 'pricing_country' => 'international', 'disclosed_company_country' => 'Germany', 'country_source' => 'visitor_disclosed'];
+$qLeadOk = ['name' => 'Anna Weber', 'company' => 'Rhein Beton GmbH', 'email' => 'anna@rhein-beton.example'];
+$qa = static fn(array $conv, array $lead, array $names, ?float $sqm, ?string $ref = null): ?string
+    => Quotation::assess($qAgent, $conv, $lead, $names, $ref, $sqm)['missing'];
+T::equals(null, $qa($qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'Everything known: ready');
+T::equals('pakistan', $qa(['pricing_country' => 'pakistan'] + $qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'A company in Pakistan: never');
+T::equals('country', $qa(['pricing_country' => 'undetermined', 'disclosed_company_country' => ''] + $qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'Country unknown: ask the country');
+T::equals('country', $qa(['country_source' => 'ip_geo'] + $qConvBase, $qLeadOk, ['Corner Pavilion'], 18.0), 'A country guessed from the IP address is not enough');
+T::equals('option', $qa($qConvBase, $qLeadOk, [], 18.0), 'No option named: ask which');
+T::equals(null, $qa($qConvBase, $qLeadOk, ['Corner Pavilion', 'Diamond Partner'], 18.0), 'Two options named: both go in one quotation (14 Nov 2026)');
+T::equals(2, count(Quotation::assess($qAgent, $qConvBase, $qLeadOk, ['Corner Pavilion', 'Diamond Partner'], null, 18.0)['records']), 'Both options are kept');
+T::equals('option', $qa($qConvBase, $qLeadOk, ['Garden Kiosk'], 9.0), 'An option that is not live: not quoted');
+T::equals('size', $qa($qConvBase, $qLeadOk, ['Corner Pavilion'], null), 'A stand with no size: ask the size');
+T::equals('size_unsellable', $qa($qConvBase, $qLeadOk, ['Corner Pavilion'], 20.0), 'A size that cannot be booked: offer the nearest sizes');
+T::equals(null, $qa($qConvBase, $qLeadOk, ['Diamond Partner'], null), 'A sponsorship tier needs no size');
+T::equals(null, $qa($qConvBase, $qLeadOk, [], 18.0, 'stall:' . $qStallId), 'The option the price card was shown for counts too');
+T::equals('name', $qa($qConvBase, ['name' => ''] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No name: ask the name');
+T::equals('company', $qa($qConvBase, ['company' => ''] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No company: ask the company');
+T::equals('email', $qa($qConvBase, ['email' => 'not-an-address'] + $qLeadOk, ['Corner Pavilion'], 18.0), 'No usable email: ask the email');
+T::ok(str_contains(Quotation::promptBlock(Quotation::assess($qAgent, $qConvBase, ['email' => ''] + $qLeadOk, ['Corner Pavilion'], null, 18.0)), 'email address the system will send it to'),
+    'The assistant is told the one thing still missing');
+T::ok(str_contains(Quotation::promptBlock(Quotation::assess($qAgent, $qConvBase, $qLeadOk, ['Corner Pavilion'], null, 18.0)), 'never say a stand is booked'),
+    'And never to say a stand is booked');
+
+T::group('Quotations: from the chat to the inbox');
+
+$qSent = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html, array $headers, array $attachments = []) use (&$qSent): array {
+    $qSent[] = compact('profile', 'to', 'subject', 'body', 'headers', 'attachments');
+    return ['ok' => true];
+};
+$mock->reset();
+$mock->push(['reply' => 'Happy to. Which email address should I send it to?', 'intent' => 'exhibitor']);
+[$qConv, $qSecret] = start_conversation($qAgent);
+$q1 = say($qAgent, $qConv, $qSecret, 'Our company Rhein Beton GmbH is based in Germany. Please send me a quotation for an 18 sqm Corner Pavilion.');
+T::equals(0, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Asked without a name or email: nothing is sent yet');
+T::ok(!str_contains(blocks_text($q1), 'Rabia Basri'), 'A plain quotation request no longer brings the sales rep\'s details: the chat is handling it');
+T::ok(!empty(ConversationStore::leadState(reload_conversation($qConv))['quote_wanted']), 'The request is remembered');
+$qPrompt = $mock->lastSystemPrompt();
+T::ok(str_contains($qPrompt, 'QUOTATION') && str_contains($qPrompt, 'Still missing'), 'The assistant was told what is still missing');
+
+$mock->push(['reply' => 'Thank you, Anna. I am sending it now.', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Anna Weber', 'company' => 'Rhein Beton GmbH', 'email' => 'anna@rhein-beton.example']]);
+$q2 = say($qAgent, reload_conversation($qConv), $qSecret, 'I am Anna Weber, anna@rhein-beton.example');
+$qRow = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+T::ok($qRow !== null && (string)$qRow['number'] === 'BA27-Q-0001', 'With the details given two messages later, the quotation is made: BA27-Q-0001');
+T::ok(str_contains(blocks_text($q2), 'Quotation BA27-Q-0001 is on its way to anna@rhein-beton.example'), 'The reply says it is on its way, with its number');
+T::ok(!preg_match('/\b(?:booked|reserved)\b/i', blocks_text($q2)), 'It never says a stand is booked or reserved');
+T::equals('USD 7,762.50', (string)$qRow['total_text'], 'The total comes from the price list: 18 sqm x USD 375, plus 15% VAT');
+T::equals('sent', (string)$qRow['status'], 'It is marked as emailed');
+T::ok(Quotation::path($qRow) !== null && str_starts_with((string)file_get_contents((string)Quotation::path($qRow)), '%PDF'), 'The PDF is stored, outside the web folder');
+T::ok(abs((strtotime((string)$qRow['valid_until']) - strtotime(substr((string)$qRow['created_at'], 0, 10))) / 86400 - 30) <= 1, 'It is valid for 30 days');
+$qMail = $qSent[0] ?? null;
+T::ok($qMail !== null && $qMail['to'] === 'anna@rhein-beton.example' && str_contains($qMail['subject'], 'BA27-Q-0001'), 'One email goes to the visitor');
+T::equals('info@buildasia.example', (string)($qMail['profile']['from_email'] ?? ''), 'From the exhibition\'s own mail account');
+T::ok(count($qMail['attachments'] ?? []) === 1 && $qMail['attachments'][0]['name'] === 'BA27-Q-0001.pdf'
+    && str_starts_with($qMail['attachments'][0]['data'], '%PDF'), 'With the PDF attached');
+T::ok(str_contains($qMail['body'], 'USD 7,762.50') && str_contains($qMail['body'], 'Rabia Basri') && !preg_match('/bank|iban|swift|account number/i', $qMail['body']),
+    'The email gives the total and the contact, and no payment details');
+T::ok(count($qSent) === 1, 'No BCC and no second copy to the visitor');
+$qNote = db()->one("SELECT * FROM email_outbox WHERE subject LIKE 'Quotation sent%' ORDER BY id DESC LIMIT 1");
+T::ok($qNote !== null && (string)$qNote['attachment_name'] === 'BA27-Q-0001.pdf' && str_contains((string)$qNote['body'], 'BA27-Q-0001'),
+    'The team\'s notification says a quotation was sent and carries the same PDF');
+T::ok(empty(ConversationStore::leadState(reload_conversation($qConv))['quote_wanted']), 'Once sent, it is not sent again by itself');
+
+$mock->push(['reply' => 'You are welcome.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConv), $qSecret, 'Thank you.');
+T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION ALREADY SENT') && str_contains($mock->lastSystemPrompt(), 'BA27-Q-0001'),
+    'Afterwards the assistant knows a quotation was sent, and that it is an offer, not a booking');
+T::equals(1, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'An ordinary message afterwards sends nothing');
+
+// The program offers a quotation itself (owner, 13 Nov 2026: "it does not offer the quotation on any stage").
+$mock->reset();
+$mock->push(['reply' => 'It includes walls, carpet and lights. Which products would you show?', 'intent' => 'exhibitor',
+    'package_reference' => 'stall:' . $qStallId,
+    'lead_fields' => ['name' => 'Jan Vos', 'company' => 'Vos Valves BV', 'email' => 'jan@vosvalves.example']]);
+[$qConvOf, $qSecretOf] = start_conversation($qAgent);
+$qOf1 = say($qAgent, $qConvOf, $qSecretOf, 'Vos Valves BV, based in the Netherlands. I am Jan Vos, jan@vosvalves.example. What does an 18 sqm Corner Pavilion cost?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION OFFER'), 'After a price question, the assistant is told to offer a quotation');
+T::ok(str_contains(blocks_text($qOf1), 'email you an official quotation'), 'If its reply does not offer one, the program adds the offer');
+T::ok((bool)preg_match('/USD\s?7,762\.50/', blocks_text($qOf1)), 'Under the price itself');
+$qBefore = (int)db()->value('SELECT COUNT(*) FROM quotations');
+$mock->push(['reply' => 'Sending it now.', 'intent' => 'exhibitor']);
+$qOf2 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'yes');
+$qOfRow = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+T::ok((int)db()->value('SELECT COUNT(*) FROM quotations') === $qBefore + 1 && (string)$qOfRow['to_email'] === 'jan@vosvalves.example'
+    && (float)$qOfRow['sqm'] === 18.0 && (int)$qOfRow['package_id'] === $qStallId, 'A plain "yes" sends the quotation for the option and size just priced');
+T::ok(str_contains(blocks_text($qOf2), 'is on its way to jan@vosvalves.example'), 'And says so');
+
+$mock->push(['reply' => 'The next step is to confirm with our team.', 'intent' => 'exhibitor']);
+$qOf3 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'How do we go ahead with the Diamond Partner?');
+T::ok(str_contains(blocks_text($qOf3), 'email you an official quotation'), '"How do we go ahead" also brings the offer');
+$mock->push(['reply' => 'Diamond Partner is our top tier.', 'intent' => 'exhibitor']);
+$qOf4 = say($qAgent, reload_conversation($qConvOf), $qSecretOf, 'What does the Diamond Partner cost?');
+T::ok(!str_contains(blocks_text($qOf4), 'email you an official quotation'), 'But at most twice in a chat');
+
+// Not offered: Pakistan, a declined request, or switched off.
+$mock->reset();
+$mock->push(['reply' => 'Our local team will share the rates.', 'intent' => 'exhibitor']);
+[$qConvOfPk, $qSecretOfPk] = start_conversation($qAgent);
+$qOfPk = say($qAgent, $qConvOfPk, $qSecretOfPk, 'Karachi Pumps, based in Pakistan. What does an 18 sqm Corner Pavilion cost?');
+T::ok(!str_contains(blocks_text($qOfPk), 'quotation') && !str_contains($mock->lastSystemPrompt(), 'QUOTATION OFFER'), 'Never offered to a company in Pakistan');
+$qOfFile = Quotation::path($qOfRow);
+if ($qOfFile !== null) { @unlink($qOfFile); }
+db()->exec('DELETE FROM quotations WHERE id = ?', [(int)$qOfRow['id']]);
+db()->exec('DELETE FROM email_outbox WHERE attachment_name = ?', [(string)$qOfRow['number'] . '.pdf']);
+db()->exec('ALTER TABLE quotations AUTO_INCREMENT = 1');
+
+// Asked for, then they would rather not give an email: dropped, never pressed.
+$mock->reset();
+$mock->push(['reply' => 'Certainly. Which email address should I send it to?', 'intent' => 'exhibitor']);
+[$qConvNo, $qSecretNo] = start_conversation($qAgent);
+say($qAgent, $qConvNo, $qSecretNo, 'Valvole Italia, based in Italy. Can you send me a quotation for an 18 sqm Corner Pavilion?');
+$mock->push(['reply' => 'That is fine. You can go ahead through the Book a stand page whenever you wish.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConvNo), $qSecretNo, "I'd rather not share my email.");
+T::ok(str_contains($mock->lastSystemPrompt(), 'do not ask again') && !str_contains($mock->lastSystemPrompt(), 'Still missing'),
+    'When they would rather not give an email, the assistant is told to accept it and not ask again');
+T::ok(empty(ConversationStore::leadState(reload_conversation($qConvNo))['quote_wanted']), 'The request is dropped');
+$mock->push(['reply' => 'Bare space is floor space only.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConvNo), $qSecretNo, 'What about bare space?');
+T::ok(!str_contains($mock->lastSystemPrompt(), 'QUOTATION'), 'And the next replies are not about the quotation any more');
+
+// Asked for, then the missing detail never comes: let go after two replies.
+$mock->reset();
+$mock->push(['reply' => 'Which size would you like?', 'intent' => 'exhibitor']);
+[$qConvW, $qSecretW] = start_conversation($qAgent);
+say($qAgent, $qConvW, $qSecretW, 'Nordic Mixers, based in Sweden. Please send a quotation for a Corner Pavilion.');
+foreach (['What are the opening hours?', 'Is there parking?', 'Who visits the show?'] as $qOther) {
+    $mock->push(['reply' => 'Here is the answer.', 'intent' => 'exhibitor']);
+    say($qAgent, reload_conversation($qConvW), $qSecretW, $qOther);
+}
+T::ok(empty(ConversationStore::leadState(reload_conversation($qConvW))['quote_wanted']) && !str_contains($mock->lastSystemPrompt(), 'Still missing'),
+    'A request whose missing detail never comes is let go after two replies, so the chat does not repeat one question');
+T::equals(1, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Neither of these chats produced a quotation');
+
+// Yes to the assistant's offer; a sponsorship tier; then the limit.
+$mock->push(['reply' => 'Diamond Partner includes sixteen benefits. Would you like a quotation by email?', 'intent' => 'sponsor']);
+say($qAgent, reload_conversation($qConv), $qSecret, 'Tell me about Diamond Partner.');
+$mock->push(['reply' => 'I am sending it now.', 'intent' => 'sponsor']);
+$q3 = say($qAgent, reload_conversation($qConv), $qSecret, 'Yes please');
+$qRow2 = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+T::ok((string)$qRow2['number'] === 'BA27-Q-0002' && (string)$qRow2['package_type'] === 'sponsorship' && $qRow2['sqm'] === null,
+    'Saying yes to the assistant\'s offer sends the tier\'s quotation, with the next number');
+T::equals('USD 46,000', (string)$qRow2['total_text'], 'The tier\'s total with VAT');
+T::equals(16, count((array)(json_decode((string)$qRow2['detail'], true)['card']['items'] ?? [])), 'The page lists every benefit of the tier, not only the first twelve');
+$mock->push(['reply' => 'Sending.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConv), $qSecret, 'Also send a quotation for 27 sqm Corner Pavilion');
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'A third quotation in the same chat is sent');
+$mock->push(['reply' => 'Our team will help you with a further quotation.', 'intent' => 'exhibitor']);
+$q5 = say($qAgent, reload_conversation($qConv), $qSecret, 'And a quotation for 36 sqm Corner Pavilion');
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'A fourth is not: at most three per conversation');
+T::ok(str_contains(blocks_text($q5), 'Rabia Basri'), 'The visitor is given the sales rep instead');
+
+// Pakistan: never.
+$mock->reset();
+$mock->push(['reply' => 'Our local team will help you with that.', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Bilal Khan', 'company' => 'Lahore Cement', 'email' => 'bilal@lahorecement.example']]);
+[$qConvPk, $qSecretPk] = start_conversation($qAgent);
+$qPk = say($qAgent, $qConvPk, $qSecretPk, 'Our company Lahore Cement is based in Pakistan. I am Bilal Khan, bilal@lahorecement.example. Send me a quotation for 18 sqm Corner Pavilion.');
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'A company in Pakistan gets no quotation, even with every detail given');
+T::ok(str_contains(blocks_text($qPk), 'Farhan Mobeen') && !preg_match('/(?:USD|PKR)\s?\d/', blocks_text($qPk)), 'They get the local rep\'s details and no price');
+
+// A size that cannot be booked.
+$mock->reset();
+$mock->push(['reply' => 'Stands come in steps of 9 sqm. Would 18 or 27 sqm suit you?', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Tom Berg', 'company' => 'Nord Stahl AS', 'email' => 'tom@nordstahl.example']]);
+[$qConvSz, $qSecretSz] = start_conversation($qAgent);
+say($qAgent, $qConvSz, $qSecretSz, 'Nord Stahl AS, based in Norway. I am Tom Berg, tom@nordstahl.example. Quotation for a 20 sqm Corner Pavilion please.');
+T::equals(3, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'A size that cannot be booked: no quotation yet');
+T::ok(str_contains($mock->lastSystemPrompt(), 'cannot be booked'), 'The assistant is told to offer the nearest sizes');
+$mock->push(['reply' => 'Sending it now.', 'intent' => 'exhibitor']);
+say($qAgent, reload_conversation($qConvSz), $qSecretSz, '18 sqm then');
+$qRowSz = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+T::ok((string)$qRowSz['to_email'] === 'tom@nordstahl.example' && (float)$qRowSz['sqm'] === 18.0, 'Once they choose a size that can be booked, it is sent');
+
+// The model writing a wrong figure changes nothing on the page.
+T::ok(!str_contains((string)$qRowSz['detail'], '9,999'), 'Nothing the assistant writes reaches the quotation');
+
+// One address, many chats: the daily limit.
+$qFloodLead = db()->one('SELECT * FROM leads WHERE id = ?', [(int)$qRowSz['lead_id']]);
+foreach (range(1, 4) as $i) {
+    Quotation::prepare($qAgent, $qFloodLead, null, Quotation::options($qAgent)[0], 9.0);
+}
+T::ok(Quotation::limitReason($qAgentId, 0, 'tom@nordstahl.example') !== null, 'Five to one email address in a day: no more from the chat');
+T::ok(Quotation::limitReason($qAgentId, 0, 'someone.else@example.com') === null, 'Another address is not affected');
+
+// The mail server is down: tried again by cron, then given up.
+$qFail = true;
+Mailer::$testTransport = static function () use (&$qFail): array { return $qFail ? ['ok' => false, 'error' => 'connection refused'] : ['ok' => true]; };
+$qLater = Quotation::issue($qAgent, ['email' => 'later@example.com'] + $qFloodLead, null, Quotation::options($qAgent)[0], 9.0, 'staff', 'owner');
+T::equals('queued', (string)$qLater['status'], 'When the mail server refuses, the quotation waits');
+db()->update('quotations', ['created_at' => gmdate('Y-m-d H:i:s', time() - 300)], 'id = ?', [(int)$qLater['id']]);
+$qFail = false;
+T::equals(1, Quotation::sendDue(), 'The next cron run sends it');
+T::equals('sent', (string)db()->value('SELECT status FROM quotations WHERE id = ?', [(int)$qLater['id']]), 'And marks it as emailed');
+
+T::group('Quotations: made by hand, and the page itself');
+
+$qStaffLead = db()->one('SELECT * FROM leads WHERE id = ?', [(int)$qRow['lead_id']]);
+$qOpt = Quotation::options($qAgent);
+$qShell = array_values(array_filter($qOpt, static fn(array $o): bool => $o['_name'] === 'Corner Pavilion'))[0];
+T::equals(null, Quotation::staffProblem($qAgent, $qStaffLead, $qShell, 27.0, 'anna@rhein-beton.example'), 'Staff can make one for an international lead');
+T::ok(str_contains((string)Quotation::staffProblem($qAgent, $qStaffLead, $qShell, 20.0, 'anna@rhein-beton.example'), 'cannot be booked'), 'Not for a size that cannot be booked');
+T::ok(str_contains((string)Quotation::staffProblem($qAgent, ['pricing_country' => 'pakistan'] + $qStaffLead, $qShell, 27.0, 'a@b.example'), 'Pakistan'), 'Not for a company in Pakistan');
+T::ok(str_contains((string)Quotation::staffProblem($qAgent, ['company_country' => 'Pakistan', 'pricing_country' => 'international'] + $qStaffLead, $qShell, 27.0, 'a@b.example'), 'Pakistan'),
+    'Even if the record\'s region says otherwise');
+T::ok(Quotation::staffProblem($qAgent, ['pricing_country' => 'undetermined', 'company_country' => '', 'country' => ''] + $qStaffLead, $qShell, 27.0, 'a@b.example') !== null,
+    'Not while the country is unknown');
+T::ok(Quotation::staffProblem($qAgent, $qStaffLead, null, null, 'a@b.example') !== null, 'Only from an option in the price list');
+BlockedCountries::save(['DE']);
+T::ok(str_contains((string)Quotation::staffProblem($qAgent, $qStaffLead, $qShell, 27.0, 'a@b.example'), 'blocked'), 'Not for a blocked country');
+BlockedCountries::save([]);
+
+$qPdf = Quotation::render($qAgent, $qRow);
+$qAllText = '';
+preg_match_all('/stream\n(.*?)\nendstream/s', $qPdf, $qStreams);
+foreach ($qStreams[1] as $qStream) {
+    $qTry = @gzuncompress($qStream);
+    if ($qTry !== false && str_contains($qTry, ' Tj')) {
+        $qAllText .= $qTry;
+    }
+}
+foreach (['QUOTATION', 'BA27-Q-0001', 'Anna Weber', 'Rhein Beton GmbH', 'Germany', 'Rabia Basri', 'Corner Pavilion', '18 sqm', 'USD 375 / sqm',
+          'USD 6,750', 'USD 1,012.50', 'USD 7,762.50', 'Walls and fascia', 'An invoice with payment details follows', 'Valid for 30 days',
+          'Ecommerce Gateway Pakistan \\(Pvt\\) Ltd', 'Karachi Expo Centre'] as $qNeedle) {
+    T::ok(str_contains($qAllText, $qNeedle), 'The page shows: ' . stripslashes($qNeedle));
+}
+T::ok(!preg_match('/bank|IBAN|SWIFT|account/i', $qAllText), 'The page has no payment details');
+T::ok(str_contains($qPdf, '/Subtype /Image') && str_contains($qPdf, '/SMask'), 'The organiser\'s logo is in the footer');
+$qPdf2 = Quotation::render($qAgent, $qRow2);
+T::ok(substr_count($qPdf2, '/Type /Page ') >= 1 && str_contains($qPdf2, '%%EOF'), 'A sponsorship quotation with a long benefit list is made too');
+
+$qBrief = LeadBriefing::build($qAgent, $qStaffLead, 'quotation', false);
+T::ok(str_starts_with($qBrief['subject'], 'Quotation sent') && str_contains($qBrief['text'], 'BA27-Q-0001'), 'The team email names the quotation');
+
+// Email with a file: the message is built correctly.
+$qCompose = new ReflectionMethod('Mailer', 'compose');
+$qCompose->setAccessible(true);
+$qMsg = $qCompose->invoke(null, 'Hello', '<p>Hello</p>', 'a@b.example', 'A', null, [], [['name' => 'BA27-Q-0001.pdf', 'type' => 'application/pdf', 'data' => '%PDF-test']]);
+T::ok(str_contains($qMsg['headers'], 'multipart/mixed') && str_contains($qMsg['body'], 'filename="BA27-Q-0001.pdf"')
+    && str_contains($qMsg['body'], base64_encode('%PDF-test')) && str_contains($qMsg['body'], 'multipart/alternative'),
+    'An email with a PDF keeps its text and HTML parts and adds the file');
+$qPlain = $qCompose->invoke(null, 'Hello', null, 'a@b.example', 'A');
+T::ok(!str_contains($qPlain['headers'], 'multipart/mixed'), 'An email without a file is built as before');
+
+// Switched off: the chat behaves as before.
+db()->update('agents', ['quote_enabled' => 0], 'id = ?', [$qAgentId]);
+$qAgentOff = db()->one('SELECT * FROM agents WHERE id = ?', [$qAgentId]);
+$qCount = (int)db()->value('SELECT COUNT(*) FROM quotations');
+$mock->reset();
+$mock->push(['reply' => 'Our team will prepare a proposal for you.', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Eva Lind', 'company' => 'Lind Bygg AB', 'email' => 'eva@lindbygg.example']]);
+[$qConvOff, $qSecretOff] = start_conversation($qAgentOff);
+$qOff1 = say($qAgentOff, $qConvOff, $qSecretOff, 'Lind Bygg AB, based in Sweden. I am Eva Lind, eva@lindbygg.example. Send me a quotation for 18 sqm Corner Pavilion.');
+T::equals($qCount, (int)db()->value('SELECT COUNT(*) FROM quotations'), 'Switched off: the chat sends no quotation');
+T::ok(!str_contains($mock->lastSystemPrompt(), "QUOTATION (this overrides"), 'And the assistant is not told the chat will send one');
+// Transcript review (14 Nov 2026): the request goes to the sales team, and the chat says only that.
+T::ok(str_contains($mock->lastSystemPrompt(), 'QUOTATION (prepared by the sales team, not by this chat)')
+    && str_contains($mock->lastSystemPrompt(), 'Never say you will send, email, arrange or prepare one'),
+    'Switched off: the assistant is told the sales team prepares it and never to promise it');
+T::ok(str_contains(blocks_text($qOff1), 'I have passed your request for a quotation to our sales team. They will email it to eva@lindbygg.example.'),
+    'The program says the request went to the team, with the address');
+$qOffConv = reload_conversation($qConvOff);
+T::ok((int)$qOffConv['handoff_triggered'] === 1 && str_contains((string)$qOffConv['handoff_reason'], 'Asked for a quotation'),
+    'The request is recorded as a hand-over to the team');
+T::ok((int)db()->value("SELECT COUNT(*) FROM email_outbox WHERE body LIKE '%Asked for a quotation%' AND body LIKE '%eva@lindbygg.example%'") >= 1,
+    'And the team is emailed about it');
+
+// The AI promising to send it itself is taken out of the reply.
+$mock->reset();
+$mock->push(['reply' => 'I can arrange the Corner Pavilion quotation. What email address should I send it to?', 'intent' => 'exhibitor']);
+[$qConvOff2, $qSecretOff2] = start_conversation($qAgentOff);
+$qOff2 = say($qAgentOff, $qConvOff2, $qSecretOff2, 'Lind Bygg AB, based in Sweden. Can I get a quotation for the Corner Pavilion?');
+T::ok(!preg_match('/I can arrange|should I send/i', blocks_text($qOff2)) && str_contains(blocks_text($qOff2), 'Our sales team prepares official quotations'),
+    'A promise the chat cannot keep is replaced by the true line: the sales team prepares it');
+$mock->push(['reply' => 'Thank you. The quotation is being emailed to you now.', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Eva Lind', 'email' => 'eva2@lindbygg.example']]);
+$qOff3 = say($qAgentOff, reload_conversation($qConvOff2), $qSecretOff2, 'eva2@lindbygg.example');
+T::ok(!str_contains(blocks_text($qOff3), 'being emailed to you now') && str_contains(blocks_text($qOff3), 'passed your request for a quotation to our sales team'),
+    'An email address given afterwards: no false "being emailed", the team line instead');
+$mock->push(['reply' => 'It is USD 6,750 plus VAT.', 'intent' => 'exhibitor', 'package_reference' => 'stall:' . $qStallId]);
+$qOfOff = say($qAgentOff, reload_conversation($qConvOff), $qSecretOff, 'What does an 18 sqm Corner Pavilion cost?');
+T::ok(!str_contains(blocks_text($qOfOff), 'official quotation'), 'Switched off: no quotation is offered either');
+
+// Several options in one quotation (transcript review, 14 Nov 2026: "give all 4 quotations").
+db()->update('agents', ['quote_enabled' => 1], 'id = ?', [$qAgentId]);
+$qAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$qAgentId]);
+$qTier2 = db()->insert('sponsorship_packages', $qVat + ['agent_id' => $qAgentId, 'tier_name' => 'Ruby Partner', 'price' => 10000,
+    'benefits' => "Logo on the partner banner\nTwo booths, 18 sqm", 'sort_order' => 89]);
+$qSent = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html, array $headers, array $attachments = []) use (&$qSent): array {
+    $qSent[] = compact('profile', 'to', 'subject', 'body', 'headers', 'attachments');
+    return ['ok' => true];
+};
+$mock->reset();
+$mock->push(['reply' => 'Of course.', 'intent' => 'sponsor',
+    'lead_fields' => ['name' => 'Wei Chen', 'company' => 'Longqiang Machinery', 'email' => 'wei@longqiang.example']]);
+[$qConvM, $qSecretM] = start_conversation($qAgent);
+$qM = say($qAgent, $qConvM, $qSecretM, 'Longqiang Machinery, based in China. I am Wei Chen, wei@longqiang.example. Please send quotations for all the sponsorship tiers.');
+$qMRow = db()->one('SELECT * FROM quotations ORDER BY id DESC LIMIT 1');
+$qMDetail = (array)json_decode((string)($qMRow['detail'] ?? ''), true);
+$qMOptions = (array)($qMDetail['options'] ?? []);
+T::ok(count($qMOptions) >= 2 && count($qMOptions) <= Quotation::MAX_OPTIONS, 'All the tiers asked for go into ONE quotation (up to four)');
+T::ok(str_contains((string)$qMRow['title'], 'Ruby Partner') && str_contains((string)$qMRow['title'], 'Diamond Partner')
+    && preg_match('/^\d options, USD 11,500 to /', (string)$qMRow['total_text']), 'Its title names them, totals lowest first');
+T::ok(str_contains(blocks_text($qM), 'is on its way to wei@longqiang.example'), 'The program confirms it, once it is made');
+$qMMail = array_values(array_filter($qSent, static fn(array $m): bool => $m['to'] === 'wei@longqiang.example'))[0] ?? [];
+T::ok(str_contains((string)($qMMail['body'] ?? ''), '- Ruby Partner: USD 11,500') && str_contains((string)($qMMail['body'] ?? ''), '- Diamond Partner: USD 46,000'),
+    'The email lists each option with its own total');
+$qMPdf = (string)file_get_contents((string)Quotation::path($qMRow));
+T::ok(str_starts_with($qMPdf, '%PDF') && substr_count($qMPdf, '/Type /Page ') + substr_count($qMPdf, '/Type/Page ') >= 1, 'The PDF is made');
+T::ok(str_contains(Quotation::promptBlock(['missing' => 'option', 'record' => null, 'records' => [], 'sqm' => null, 'note' => null], ['Ruby Partner', 'Diamond Partner']),
+    '"Ruby Partner", "Diamond Partner"'), 'Asked which option, the assistant is given the exact names');
+db()->exec('DELETE FROM sponsorship_packages WHERE id = ?', [$qTier2]);
+
+// The honesty filter
+T::equals('Thanks, Kaleem.', Quotation::stripClaims('Thanks, Kaleem. The quotation is being emailed to you now.', true), 'A claim that it is being sent is taken out');
+T::equals('', Quotation::stripClaims('I can arrange the Platinum Partner quotation. What email address should I send it to?', false),
+    'A promise the chat cannot keep is taken out');
+T::equals('I can arrange the Platinum Partner quotation. What email address should I send it to?',
+    Quotation::stripClaims('I can arrange the Platinum Partner quotation. What email address should I send it to?', true),
+    'When the chat really sends quotations, asking for the address is fine');
+T::equals("Here are the tiers:\n- Silver: USD 10,000\n- Gold: USD 20,000\n\nWhich one interests you?",
+    Quotation::stripClaims("Here are the tiers:\n- Silver: USD 10,000\n- Gold: USD 20,000\n\nWhich one interests you?", false), 'Lists and line breaks are left as they were');
+
+// Tidy up, so later groups see the agent as before.
+Mailer::$testTransport = null;
+foreach (db()->all('SELECT * FROM quotations') as $qTidy) {
+    $qFile = Quotation::path($qTidy);
+    if ($qFile !== null) { @unlink($qFile); }
+}
+db()->exec('DELETE FROM quotations');
+db()->exec('DELETE FROM stall_packages WHERE id IN (?, ?)', [$qStallId, $qDraftId]);
+db()->exec('DELETE FROM sponsorship_packages WHERE id = ?', [$qTierId]);
+db()->update('agents', ['mail_from_email' => $agent['mail_from_email'] ?? null, 'mail_from_name' => $agent['mail_from_name'] ?? null,
+    'mail_smtp_host' => $agent['mail_smtp_host'] ?? null, 'quote_enabled' => 0, 'quote_prefix' => null,
+    'event_starts_on' => $agent['event_starts_on'] ?? null, 'event_ends_on' => $agent['event_ends_on'] ?? null,
+    'event_venue' => $agent['event_venue'] ?? null], 'id = ?', [$qAgentId]);
+db()->exec('DELETE FROM agent_sales_reps WHERE agent_id = ?', [$qAgentId]);
+$mock->reset();
+
+// =====================================================================
+// The optional company website on the chat card (owner, 12 Nov 2026)
+// =====================================================================
+T::group('Chat card: optional company website');
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Anna.', 'intent' => 'exhibitor']);
+$cwSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$cw = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$cwSt['conversation']['session_id'],
+    'session_secret' => $cwSt['session_secret'], 'first_name' => 'Anna', 'company' => 'Bartels', 'country' => 'DE', 'interest' => 'exhibit',
+    'website' => 'https://www.Bartels-Mikrotechnik.de/en/products']);
+T::ok(!empty($cw['ok']), 'A card with a website is accepted');
+$cwState = ConversationStore::leadState(reload_conversation($cwSt['conversation']));
+T::equals('bartels-mikrotechnik.de', (string)($cwState['website'] ?? ''), 'The website is kept as a plain address, for the research');
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Ben.', 'intent' => 'exhibitor']);
+$cwSt2 = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$cw2 = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$cwSt2['conversation']['session_id'],
+    'session_secret' => $cwSt2['session_secret'], 'first_name' => 'Ben', 'company' => 'Rhein Beton', 'country' => 'DE', 'interest' => 'exhibit',
+    'website' => 'we have no site']);
+T::ok(!empty($cw2['ok']), 'The website is optional: words that are not an address do not stop the card');
+T::ok(empty(ConversationStore::leadState(reload_conversation($cwSt2['conversation']))['website']), 'And are not kept as a website');
+$mock->reset();
+
+// A website given now is not answered with an earlier research on the same name.
+T::group('Research: the same name with a different website is a different company');
+$rwA = CompanyResearch::request($agent, 'Bartels', 'Germany', null, 'chat');
+$rwB = CompanyResearch::request($agent, 'Bartels', 'Germany', null, 'chat');
+T::equals($rwA, $rwB, 'The same name with no website reuses the earlier research');
+$rwC = CompanyResearch::request($agent, 'Bartels', 'Germany', 'https://www.bartels-mikrotechnik.de/', 'chat');
+T::ok($rwC !== null && $rwC !== $rwA, 'The same name with a website gets its own research');
+$rwD = CompanyResearch::request($agent, 'Bartels', 'Germany', 'bartels-mikrotechnik.de', 'chat');
+T::equals($rwC, $rwD, 'The same name and the same website reuses that one');
+db()->exec('DELETE FROM company_research WHERE id IN (?, ?)', [(int)$rwA, (int)$rwC]);
+
+// =====================================================================
+// Languages (owner, 13 Nov 2026)
+// =====================================================================
+T::group('Languages: the chat card, the words the program listens for, the price guard');
+
+T::equals(16, count(Lang::LANGUAGES), 'Sixteen languages: English and fifteen more');
+T::ok(isset(Lang::LANGUAGES['id'], Lang::LANGUAGES['ms']), 'Including Bahasa Indonesia and Bahasa Melayu');
+T::ok(ChatOrchestrator::detectPricingRequest('Berapa harga stan 18 meter persegi?', ConversationState::NEW_CONVERSATION)
+    && Quotation::wants('Boleh hantar sebut harga?') && Quotation::wants('Mohon kirim penawaran harga') && Quotation::saysYes('Ya, silakan'),
+    'A price question, a quotation request and a yes, in Indonesian and Malay');
+T::equals(18.0, PricingEngine::requestedSize('stan 18 meter persegi'), 'A size in Indonesian and Malay');
+T::ok(Lang::has('Apakah Anda ingin saya mengirimkan penawaran resmi?', 'quote'), 'An Indonesian offer worded "penawaran resmi" is recognised, so it is not offered twice');
+T::ok(PricingEngine::findUnauthorisedPrice('Harga Rp 100.000.000', ['USD 6,750']) !== null
+    && PricingEngine::findUnauthorisedPrice('RM 30,000', ['USD 6,750']) !== null, 'Prices in rupiah or ringgit are refused');
+T::ok(isset(Lang::LANGUAGES['it'], Lang::LANGUAGES['ja'], Lang::LANGUAGES['fa'], Lang::LANGUAGES['th']), 'Including Italian, Japanese, Persian and Thai');
+T::ok(isset(Lang::LANGUAGES['zh'], Lang::LANGUAGES['ur']) && Lang::LANGUAGES['ur'][0] === 'Urdu (Roman)', 'Chinese and Roman Urdu are among them');
+T::equals(null, Lang::valid('xx'), 'An unknown language is refused');
+T::equals('en', Lang::of([]), 'English when nothing was chosen');
+T::equals('报价单 PA27-Q-0001 正在发送至 a@b.example，有效期至 1 Dec 2026。',
+    Lang::t('zh', 'quote_sent', ['number' => 'PA27-Q-0001', 'email' => 'a@b.example', 'date' => '1 Dec 2026']), 'Program-written lines come in the chosen language');
+T::ok(str_contains(Lang::promptBlock('ur'), 'Roman Urdu') && str_contains(Lang::promptBlock('ur'), 'Never use Urdu script'), 'Roman Urdu is written in Latin letters');
+T::ok(str_contains(Lang::promptBlock('zh'), 'untranslated'), 'Prices, option names and addresses stay as given');
+
+foreach (['展位多少钱？', 'Stall ki qeemat kya hai?', 'كم سعر الجناح؟', 'Stand fiyatı ne kadar?', 'Сколько стоит стенд?',
+          '¿Cuánto cuesta un stand?', 'Quel est le prix d\'un stand ?', 'Was kostet ein Stand?', '부스 가격이 얼마예요?'] as $lq) {
+    T::ok(ChatOrchestrator::detectPricingRequest($lq, ConversationState::NEW_CONVERSATION), 'A price question is recognised: ' . $lq);
+}
+foreach (['Quanto costa uno stand?', 'ブースの料金はいくらですか？', 'قیمت غرفه چقدر است؟', 'ราคาบูธเท่าไหร่'] as $lq) {
+    T::ok(ChatOrchestrator::detectPricingRequest($lq, ConversationState::NEW_CONVERSATION), 'A price question is recognised: ' . $lq);
+}
+T::ok(Quotation::wants('Mi mandi un preventivo') && Quotation::wants('見積書を送ってください') && Quotation::wants('لطفا پیش‌فاکتور بفرستید')
+    && Quotation::wants('ขอใบเสนอราคา'), 'A quotation request in Italian, Japanese, Persian and Thai');
+T::equals(null, PersonRequest::detect('لطفا پیش‌فاکتور بفرستید'), 'A Persian pro forma request is not read as an invoice question');
+T::ok(Lang::has('Posso inviarle una quotazione ufficiale?', 'quote'), 'An Italian offer worded "quotazione" is recognised, so it is not offered twice');
+T::ok(Quotation::saysYes('はい') && Quotation::saysYes('بله') && Quotation::saysYes('ใช่') && Quotation::saysYes('Certo'), 'A yes in the four new languages');
+T::equals(18.0, PricingEngine::requestedSize('۱۸ متر مربع'), 'A size written with Persian digits');
+T::equals(null, PricingEngine::findUnauthorisedPrice('قیمت غرفه ۶٬۷۵۰ دلار است', ['USD 6,750']), 'An approved price in Persian digits passes');
+T::ok(PricingEngine::findUnauthorisedPrice('قیمت غرفه ۵٬۰۰۰ دلار است', ['USD 6,750']) !== null, 'An invented price in Persian digits is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('価格は5,000ドルです', ['USD 6,750']) !== null && PricingEngine::findUnauthorisedPrice('ราคา 200,000 บาท', ['USD 6,750']) !== null,
+    'And in Japanese, and in Thai baht');
+T::ok(!ChatOrchestrator::detectPricingRequest('我们生产泵和传感器。', ConversationState::NEW_CONVERSATION), 'An ordinary Chinese sentence is not a price question');
+T::ok(Quotation::wants('请把报价单发给我') && Quotation::wants('Bize fiyat teklifi gönderin') && Quotation::wants('Envíeme una cotización')
+    && Quotation::wants('Quotation bhej dein please'), 'A quotation request is recognised in other languages');
+T::ok(Quotation::saysYes('好的') && Quotation::saysYes('Haan ji') && Quotation::saysYes('نعم') && Quotation::saysYes('Evet')
+    && Quotation::saysYes('Да') && Quotation::saysYes('Sí, por favor') && Quotation::saysYes('Oui') && Quotation::saysYes('Ja, gerne') && Quotation::saysYes('네'),
+    'A short "yes" is recognised in every language');
+T::ok(!Quotation::saysYes('Simple question about the venue') && !Quotation::saysYes('Japan is our main market'), 'Words that only start like "si" or "ja" are not a yes');
+T::equals('Asked for a person', PersonRequest::detect('我想找人工客服'), 'Asking for a person, in Chinese');
+T::equals('Asked for a person', PersonRequest::detect('Kisi insaan se baat karein'), 'In Roman Urdu');
+T::equals('Asked for a person', PersonRequest::detect('Связаться с человеком'), 'In Russian (the window\'s own button)');
+T::equals(null, PersonRequest::detect('Я экспорт-менеджер компании'), 'But "I am the export manager" is not a request for a person');
+T::equals('A contract, payment or discount question', PersonRequest::detect('Können Sie uns einen Rabatt geben?'), 'A discount, in German');
+T::ok(Qualification::asksNextStep('下一步怎么做？') && Qualification::asksNextStep('Aage kaise barhein?'), '"What is the next step?" in Chinese and Roman Urdu');
+T::ok(ChatGuide::isDecline('不用了') && ChatGuide::isDecline('Nahi, shukriya') && ChatGuide::isDecline('Nein danke'), 'A short "no" in other languages');
+T::equals(18.0, PricingEngine::requestedSize('我想要18平方米的标准展位'), 'A size in Chinese');
+T::equals(18.0, PricingEngine::requestedSize('18 metrekare stand'), 'In Turkish');
+T::equals(27.0, PricingEngine::requestedSize('Стенд 27 кв. м'), 'In Russian');
+T::equals(36.0, PricingEngine::requestedSize('Un stand de 36 mètres carrés'), 'In French');
+
+// The price guard: a price written any way must be one of the approved prices.
+$lgOk = ['USD 6,750', 'USD 7,762.50'];
+T::equals(null, PricingEngine::findUnauthorisedPrice('展位价格为6,750美元，含税7,762.50美元。', $lgOk), 'An approved price in Chinese passes');
+T::equals(null, PricingEngine::findUnauthorisedPrice('El precio es 6.750 dólares (7.762,50 USD con IVA).', $lgOk), 'And in the Spanish way of writing numbers');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Стоимость 6 750 долларов.', $lgOk), 'And the Russian way');
+T::ok(PricingEngine::findUnauthorisedPrice('展位价格为5,000美元。', $lgOk) !== null, 'An invented price in Chinese is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('It costs 6000 dollars.', $lgOk) !== null, 'And "6000 dollars" in English, which was not caught before');
+T::ok(PricingEngine::findUnauthorisedPrice('Le stand coûte 500 euros.', $lgOk) !== null, 'Another currency, written as a word, is caught');
+T::ok(PricingEngine::findUnauthorisedPrice('展位价格为40000元。', $lgOk) !== null, 'Yuan after a number is caught');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Retail medicine sales reached 1.049 trillion rupees.', $lgOk), 'Market facts in rupees are not blocked');
+T::equals(null, PricingEngine::findUnauthorisedPrice('Visitors: 35,000. Exhibitors: 800.', $lgOk), 'Numbers that are not money pass');
+
+// The chat card and the chat itself.
+$mock->reset();
+$mock->push(['reply' => '您好，欢迎！', 'intent' => 'exhibitor']);
+$lgSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$lgIntro = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgSt['conversation']['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'first_name' => 'Wei', 'company' => 'Shanghai Pumps', 'country' => 'CN', 'interest' => 'exhibit', 'language' => 'zh']);
+T::ok(!empty($lgIntro['ok']), 'The card is accepted with a language');
+$lgConv = reload_conversation($lgSt['conversation']);
+T::equals('zh', ConversationStore::leadState($lgConv)['language'] ?? null, 'The chosen language is kept');
+T::ok(str_contains($mock->lastSystemPrompt(), 'The visitor chose Chinese'), 'The assistant is told to reply in Chinese');
+T::ok(str_contains((string)db()->value("SELECT content FROM messages WHERE conversation_id = ? AND role = 'visitor' ORDER BY id LIMIT 1", [(int)$lgConv['id']]), '我叫Wei'),
+    'What the card said is recorded in Chinese too');
+$mock->push(['reply' => 'Theek hai.', 'intent' => 'exhibitor']);
+ChatOrchestrator::handle($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgConv['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'message' => 'Shukriya', 'origin' => 'www.buildasia.net', 'language' => 'ur']);
+T::equals('ur', ConversationStore::leadState(reload_conversation($lgConv))['language'] ?? null, 'Changing the language later is kept from that message on');
+T::ok(str_contains($mock->lastSystemPrompt(), 'Roman Urdu'), 'And the assistant follows it');
+$mock->push(['reply' => 'Hello.', 'intent' => 'exhibitor']);
+ChatOrchestrator::handle($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$lgConv['session_id'],
+    'session_secret' => $lgSt['session_secret'], 'message' => 'Hi', 'origin' => 'www.buildasia.net', 'language' => 'klingon']);
+T::equals('ur', ConversationStore::leadState(reload_conversation($lgConv))['language'] ?? null, 'An unknown language changes nothing');
+T::ok(Lang::has('您希望我通过电子邮件发送这项方案的正式报价吗？', 'quote'), 'An offer the AI writes in Chinese is recognised, so the program does not add a second one');
+SalesReps::save((int)$agent['id'], 'local', ['name' => 'Farhan Mobeen', 'mobile' => '+923001112223', 'email' => 'farhan@buildasia.example']);
+$lgRep = SalesReps::textFor((int)$agent['id'], 'pakistan', 'web', 'ur');
+T::ok(str_contains($lgRep, 'seedha') && str_contains($lgRep, 'Farhan Mobeen') && str_contains($lgRep, '+923001112223'), 'The sales rep\'s details come in the chosen language, with the details unchanged');
+db()->exec('DELETE FROM agent_sales_reps WHERE agent_id = ?', [(int)$agent['id']]);
+$mock->reset();
+
+// =====================================================================
+// Personal chat links (owner, 13 Nov 2026)
+// =====================================================================
+T::group('Personal chat links: made, signed, opened as the person');
+
+$plId = (int)$agent['id'];
+db()->update('agents', ['event_starts_on' => date('Y-m-d', time() + 30 * 86400), 'event_ends_on' => date('Y-m-d', time() + 32 * 86400),
+    'chat_link_prospect' => 1, 'chat_link_quote' => 1, 'chat_link_whatsapp' => 1], 'id = ?', [$plId]);
+$plAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$plId]);
+T::ok(PersonalLink::ready() && PersonalLink::enabled($plAgent, 'quote'), 'All three kinds are on after the upgrade');
+
+$plLeadId = db()->insert('leads', ['agent_id' => $plId, 'reference' => 'L-PL-1', 'name' => 'Anna Weber', 'company' => 'Rhein Beton GmbH',
+    'email' => 'anna@rhein-beton.example', 'company_country' => 'Germany', 'pricing_country' => 'international', 'status' => 'new']);
+$plOld = ConversationStore::start($plAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+db()->update('conversations', ['lead_id' => $plLeadId, 'summary' => 'They asked about an 18 sqm shell scheme stall.',
+    'lead_state' => json_encode(['language' => 'de', 'offer_focus' => ['Shell Scheme 18 sqm'], 'quotes_sent' => ['BA27-Q-0042']])],
+    'id = ?', [(int)$plOld['conversation']['id']]);
+$plQuoteId = db()->insert('quotations', ['agent_id' => $plId, 'lead_id' => $plLeadId, 'seq' => 42, 'number' => 'BA27-Q-0042',
+    'to_name' => 'Anna Weber', 'to_company' => 'Rhein Beton GmbH', 'to_country' => 'Germany', 'to_email' => 'anna@rhein-beton.example',
+    'package_type' => 'stall', 'package_id' => 1, 'title' => 'Shell Scheme', 'total_text' => 'USD 7,762.50', 'status' => 'sent']);
+
+$plUrl = PersonalLink::url($plAgent, 'quote', $plQuoteId);
+T::ok($plUrl !== null && str_starts_with($plUrl, 'https://www.buildasia.net/?aisa_p='), 'The link opens the exhibition\'s website');
+T::ok(str_contains($plUrl, 'utm_source=email') && str_contains($plUrl, 'utm_medium=personal-link') && str_contains($plUrl, 'utm_campaign=quotation'),
+    'It is tagged, so the conversation page shows where they came from');
+T::ok(!str_contains($plUrl, 'anna') && !str_contains($plUrl, 'Weber'), 'It carries no name or address');
+parse_str((string)parse_url($plUrl, PHP_URL_QUERY), $plQ);
+$plToken = (string)$plQ['aisa_p'];
+$plRead = PersonalLink::read($plToken);
+T::ok($plRead !== null && $plRead['kind'] === 'quote' && $plRead['id'] === $plQuoteId, 'The link is read back');
+T::ok(abs($plRead['expires'] - strtotime(date('Y-m-d', time() + 32 * 86400) . ' 23:59:59 Asia/Karachi')) < 2, 'It works until the end of the exhibition\'s last day');
+T::equals(null, PersonalLink::read($plToken, $plRead['expires'] + 1), 'After that it no longer works');
+[$plPay, $plSig] = explode('.', $plToken);
+$plForged = rtrim(strtr(base64_encode(json_encode(['k' => 'quote', 'i' => $plQuoteId + 1, 'a' => $plId, 'e' => $plRead['expires']])), '+/', '-_'), '=') . '.' . $plSig;
+T::equals(null, PersonalLink::read($plForged), 'A link changed to point at someone else does not work');
+T::equals(null, PersonalLink::read('nonsense'), 'Nor does a made-up one');
+
+db()->update('agents', ['event_ends_on' => date('Y-m-d', time() - 86400)], 'id = ?', [$plId]);
+T::equals(null, PersonalLink::url(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), 'quote', $plQuoteId), 'Once the exhibition is over, no new links are made');
+db()->update('agents', ['event_ends_on' => date('Y-m-d', time() + 32 * 86400), 'chat_link_quote' => 0], 'id = ?', [$plId]);
+T::equals(null, PersonalLink::url(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), 'quote', $plQuoteId), 'Switched off: no link');
+T::equals(null, PersonalLink::open(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]),
+    ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'], $plToken),
+    'And a link already sent opens the normal chat');
+db()->update('agents', ['chat_link_quote' => 1], 'id = ?', [$plId]);
+
+// Opening it.
+$plNew = ConversationStore::start($plAgent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$plOpen = PersonalLink::open($plAgent, $plNew['conversation'], $plToken);
+T::ok($plOpen !== null && str_contains($plOpen['text'], 'Anna') && str_contains($plOpen['text'], 'BA27-Q-0042'), 'They are welcomed by name, with their quotation');
+T::equals('de', $plOpen['language'] ?? null, 'In the language they chose before (German here)');
+$plConv = reload_conversation($plNew['conversation']);
+$plState = ConversationStore::leadState($plConv);
+T::equals($plLeadId, (int)$plConv['lead_id'], 'The conversation is recorded on their lead');
+T::ok(!empty($plState['intro_done']) && ($plState['company'] ?? '') === 'Rhein Beton GmbH' && ($plState['email'] ?? '') === 'anna@rhein-beton.example',
+    'The first card is skipped: what we know is already there');
+T::ok(($plState['offer_focus'] ?? []) === ['Shell Scheme 18 sqm'] && str_contains((string)$plConv['summary'], '18 sqm'), 'And so is what they discussed last time');
+T::ok((string)$plConv['pricing_country'] === 'international' && (string)$plConv['country_source'] === 'visitor_disclosed', 'Their country is known, so prices can be shown');
+T::equals('exhibitor', (string)$plConv['intent'], 'They are treated as a possible exhibitor');
+T::equals(2, (int)db()->value('SELECT COUNT(*) FROM messages WHERE conversation_id = ?', [(int)$plConv['id']]), 'A note for the team and the welcome are recorded');
+T::ok((int)db()->value("SELECT COUNT(*) FROM audit_log WHERE event = 'personal_link_opened' AND entity_id = ?", [(int)$plConv['id']]) === 1, 'And the opening is in the activity log');
+T::equals(null, PersonalLink::open(db()->one("SELECT * FROM agents WHERE id <> ? AND status <> 'deleted' LIMIT 1", [$plId]) ?? ['id' => 0],
+    $plNew['conversation'], $plToken), 'A link from one exhibition does not work on another');
+
+// A prospect email and a WhatsApp registration.
+$plCo = CompanyStore::findOrCreate($plId, ['name' => 'Nord Stahl AS', 'website' => 'nordstahl.example', 'country' => 'Norway'], 'manual')['company'];
+$plOut = db()->insert('outreach_emails', ['agent_id' => $plId, 'campaign_id' => 1, 'target_id' => 1, 'company_id' => (int)$plCo['id'],
+    'to_email' => 'tom@nordstahl.example', 'to_name' => 'Tom Berg', 'subject' => 'S', 'body' => 'B', 'status' => 'sent', 'dedupe_key' => 'pl-test-1']);
+parse_str((string)parse_url((string)PersonalLink::url($plAgent, 'prospect', $plOut), PHP_URL_QUERY), $plQ2);
+$plC2 = ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null]);
+$plOpen2 = PersonalLink::open($plAgent, $plC2['conversation'], (string)$plQ2['aisa_p']);
+T::ok($plOpen2 !== null && str_contains($plOpen2['text'], 'Tom') && str_contains($plOpen2['text'], (string)$plAgent['name']), 'A prospect is welcomed by name, about our email');
+$plC2r = reload_conversation($plC2['conversation']);
+$plLead2 = db()->one('SELECT * FROM leads WHERE id = ?', [(int)$plC2r['lead_id']]);
+T::ok($plLead2 !== null && (string)$plLead2['email'] === 'tom@nordstahl.example' && (string)$plLead2['company'] === 'Nord Stahl AS',
+    'A lead is made for the prospect who came to talk');
+T::equals('Norway', (string)$plC2r['disclosed_company_country'], 'Their company\'s country comes from the company record');
+
+$plRegId = db()->insert('registrations', ['agent_id' => $plId, 'source_id' => 1, 'name' => 'Sana Iqbal', 'company_name' => 'City Hospital Pharmacy',
+    'email' => 'sana@cityhospital.example', 'phone_e164' => '+923001234500', 'country' => 'Pakistan', 'consent_whatsapp' => 'yes', 'whatsapp_state' => 'sent']);
+parse_str((string)parse_url((string)PersonalLink::url($plAgent, 'whatsapp', $plRegId), PHP_URL_QUERY), $plQ3);
+T::equals('whatsapp', $plQ3['utm_source'] ?? null, 'A WhatsApp link is tagged as WhatsApp');
+$plC3 = ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null]);
+$plOpen3 = PersonalLink::open($plAgent, $plC3['conversation'], (string)$plQ3['aisa_p']);
+T::ok($plOpen3 !== null && str_contains($plOpen3['text'], 'Sana'), 'A registered visitor is welcomed by name');
+$plC3r = reload_conversation($plC3['conversation']);
+T::equals('pakistan', (string)$plC3r['pricing_country'], 'A company in Pakistan stays local: still no prices');
+T::equals((int)$plC3r['lead_id'], (int)db()->value('SELECT lead_id FROM registrations WHERE id = ?', [$plRegId]), 'The registration is linked to the new lead');
+
+// Do not contact, and blocked countries.
+Suppression::add($plId, 'email', 'tom@nordstahl.example', 'Asked not to be contacted', 'manual', 'tester');
+T::equals(null, PersonalLink::open($plAgent, ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'],
+    (string)$plQ2['aisa_p']), 'Someone on the do-not-contact list gets the normal chat');
+BlockedCountries::save(['DE']);
+T::equals(null, PersonalLink::open($plAgent, ConversationStore::start($plAgent, ['visitor_id' => null, 'origin' => 'x', 'page_url' => null])['conversation'],
+    $plToken), 'So does someone from a blocked country');
+BlockedCountries::save([]);
+
+// In the quotation email.
+db()->update('agents', ['mail_from_email' => 'info@buildasia.example', 'mail_smtp_host' => 'mail.buildasia.example'], 'id = ?', [$plId]);
+$plAgent = db()->one('SELECT * FROM agents WHERE id = ?', [$plId]);
+@mkdir(STORAGE_PATH . '/quotations/' . $plId, 0750, true);
+file_put_contents(STORAGE_PATH . '/quotations/' . $plId . '/BA27-Q-0042.pdf', '%PDF-test');
+db()->update('quotations', ['file_path' => 'quotations/' . $plId . '/BA27-Q-0042.pdf', 'status' => 'queued', 'detail' => json_encode(['event' => ['Build Asia'], 'valid' => '1 Jan 2027'])],
+    'id = ?', [$plQuoteId]);
+$plMail = [];
+Mailer::$testTransport = static function (array $profile, string $to, string $subject, string $body, ?string $html = null, array $headers = [], array $att = []) use (&$plMail): array {
+    $plMail[] = compact('body', 'html');
+    return ['ok' => true];
+};
+Quotation::send($plAgent, db()->one('SELECT * FROM quotations WHERE id = ?', [$plQuoteId]));
+T::ok(str_contains($plMail[0]['body'] ?? '', "Let's discuss more — click here: https://www.buildasia.net/?aisa_p="), 'The quotation email carries the personal link');
+T::ok(str_contains($plMail[0]['html'] ?? '', '>Let\'s discuss more — click here</a>'), 'As a link in the formatted email');
+db()->update('agents', ['chat_link_quote' => 0], 'id = ?', [$plId]);
+$plMail = [];
+db()->update('quotations', ['status' => 'queued', 'attempts' => 0], 'id = ?', [$plQuoteId]);
+Quotation::send(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), db()->one('SELECT * FROM quotations WHERE id = ?', [$plQuoteId]));
+T::ok(!str_contains($plMail[0]['body'] ?? '', 'aisa_p'), 'Switched off, the email goes without it');
+Mailer::$testTransport = null;
+
+// In a WhatsApp opening message to a registered visitor.
+MessagingProviderFactory::setTestProvider($waMock);
+$waMock->reset();
+$plWaAgent = array_merge(db()->one('SELECT * FROM agents WHERE id = ?', [$plId]), ['whatsapp_enabled' => 1, 'whatsapp_number' => '+923008618299', 'whatsapp_approve_first' => 0, 'whatsapp_daily_cap' => 100,
+    'whatsapp_send_from' => '00:00:00', 'whatsapp_send_to' => '23:59:59']);
+db()->update('registrations', ['whatsapp_state' => 'queued'], 'id = ?', [$plRegId]);
+WhatsAppOutbox::queue($plWaAgent, ['phone_e164' => '+923001234500', 'body' => 'Thank you for registering, Sana.',
+    'kind' => 'opening', 'registration_id' => $plRegId, 'dedupe_key' => 'test:pl:open:1']);
+$plWaRun = WhatsAppEngine::sendDue($plWaAgent, 25);
+T::ok(str_starts_with($waMock->lastBody(), 'Thank you for registering, Sana.') && str_contains($waMock->lastBody(), "Let's discuss more here: https://www.buildasia.net/?aisa_p="),
+    'A WhatsApp opening message carries the link', 'run: ' . json_encode($plWaRun) . ' body: ' . $waMock->lastBody());
+
+// Tidy up.
+foreach (['quotations' => $plQuoteId, 'registrations' => $plRegId, 'outreach_emails' => $plOut, 'leads' => $plLeadId] as $plT => $plRow) {
+    db()->exec('DELETE FROM ' . $plT . ' WHERE id = ?', [$plRow]);
+}
+db()->exec("DELETE FROM whatsapp_outbox WHERE dedupe_key = 'test:pl:open:1'");
+MessagingProviderFactory::setTestProvider(null);
+db()->exec('DELETE FROM suppression_list WHERE agent_id = ?', [$plId]);
+@unlink(STORAGE_PATH . '/quotations/' . $plId . '/BA27-Q-0042.pdf');
+db()->update('agents', ['chat_link_quote' => 1, 'mail_from_email' => $agent['mail_from_email'] ?? null, 'mail_smtp_host' => $agent['mail_smtp_host'] ?? null,
+    'event_starts_on' => $agent['event_starts_on'] ?? null, 'event_ends_on' => $agent['event_ends_on'] ?? null], 'id = ?', [$plId]);
+$mock->reset();
+
+// =====================================================================
+// Blocked countries (owner, 12 Nov 2026)
+// =====================================================================
+T::group('Blocked countries: one list, closed in every part');
+
+$bcAgentId = (int)$agent['id'];
+T::equals([], BlockedCountries::codes(), 'Nothing is blocked to begin with');
+T::ok(!BlockedCountries::blocks('Fiji'), 'So no country is refused');
+
+$bcChange = BlockedCountries::save(['fj', 'XX', 'AE', 'FJ']);
+T::equals(['AE', 'FJ'], BlockedCountries::codes(), 'The list keeps real countries only, once each');
+T::equals(2, count($bcChange['added']), 'And reports what was added');
+T::ok(BlockedCountries::blocks('Fiji') && BlockedCountries::blocks('fj') && BlockedCountries::blocks('United Arab Emirates'),
+    'A blocked country is recognised by name or by code');
+T::ok(!BlockedCountries::blocks('Germany') && !BlockedCountries::blocks('') && !BlockedCountries::blocks(null),
+    'Other countries, and no country at all, are not blocked');
+BlockedCountries::forget();
+T::equals(['AE', 'FJ'], BlockedCountries::codes(), 'The list is kept in the settings');
+
+// The chat's first card
+$bcOptions = array_column(ChatIntro::countryOptions(), 0);
+T::ok(!in_array('FJ', $bcOptions, true) && !in_array('AE', $bcOptions, true), 'A blocked country is not offered on the chat card');
+T::ok(in_array('DE', $bcOptions, true) && $bcOptions[0] === 'PK', 'The other countries still are, Pakistan first');
+$bcSt = ConversationStore::start($agent, ['visitor_id' => 'v' . bin2hex(random_bytes(10)), 'origin' => 'www.buildasia.net', 'page_url' => null]);
+$bcIntro = ChatIntro::submit($agent, ['request_id' => 'r' . bin2hex(random_bytes(10)), 'session_id' => (string)$bcSt['conversation']['session_id'],
+    'session_secret' => $bcSt['session_secret'], 'first_name' => 'Tom', 'company' => 'Island Cement', 'country' => 'FJ', 'interest' => 'exhibit']);
+T::ok(empty($bcIntro['ok']), 'A card sent with a blocked country anyway is refused');
+
+// The chat itself
+$mock->reset();
+[$bcConv, $bcSecret] = start_conversation($agent);
+$bc1 = say($agent, $bcConv, $bcSecret, 'Our company is based in Fiji. What are your stand rates?');
+T::equals('blocked_country', (string)($bc1['fallback'] ?? ''), 'A visitor whose company is in a blocked country gets the standard reply');
+T::ok(str_contains(blocks_text($bc1), 'not able to assist'), 'It says politely that we cannot assist');
+T::ok(($bc1['cards'] ?? []) === [] && !preg_match('/(?:USD|PKR|\$)\s?\d/', blocks_text($bc1)), 'No price and no price card');
+$bcRow = reload_conversation($bcConv);
+T::ok(empty($bcRow['lead_id']), 'No lead is created');
+T::equals(0, (int)db()->value('SELECT COUNT(*) FROM company_research WHERE conversation_id = ?', [(int)$bcConv['id']]), 'Their company is not researched');
+T::ok(BlockedCountries::blocksConversation($bcRow), 'The conversation is marked as from a blocked country');
+$bcMail = (int)db()->value('SELECT COUNT(*) FROM email_outbox');
+$bc2 = say($agent, $bcRow, $bcSecret, 'Please send me a proposal, my email is tom@islandcement.example');
+T::equals('blocked_country', (string)($bc2['fallback'] ?? ''), 'Every later message gets the same reply');
+T::ok(empty(reload_conversation($bcConv)['lead_id']) && (int)db()->value('SELECT COUNT(*) FROM email_outbox') === $bcMail,
+    'Even with an email address: still no lead and nothing sent to the team');
+
+// A personal location does not override the company's country
+$mock->reset();
+$mock->push(['reply' => 'Welcome. What does your company make?', 'intent' => 'exhibitor']);
+[$bcConv2, $bcSecret2] = start_conversation($agent);
+$bc3 = say($agent, $bcConv2, $bcSecret2, 'Our company is based in Germany. We make cement mixers.');
+T::ok(($bc3['fallback'] ?? '') !== 'blocked_country', 'A company in an open country is answered as usual');
+
+// Do not contact: WhatsApp, registrations, companies
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+923001234567', null, null, 'Fiji') !== null,
+    'A registration from a blocked country may not be messaged');
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+971501234567', null, null) !== null,
+    'Nor may a number with a blocked country\'s dialling code');
+T::ok(WhatsAppEngine::blockedReason($bcAgentId, '+923001234567', null, null, 'Germany') === null,
+    'Other countries are not affected');
+T::equals('suppressed', RegistrationIntake::decideState($bcAgentId, false, '+923001234567', 'yes', null, null, 'Fiji'),
+    'A new registration from a blocked country is never queued for WhatsApp');
+T::equals('eligible', RegistrationIntake::decideState($bcAgentId, false, '+923001234567', 'yes', null, null, 'Germany'),
+    'One from an open country is');
+
+$bcCo = CompanyStore::findOrCreate($bcAgentId, ['name' => 'Suva Building Supplies', 'website' => 'suva-building.example', 'country' => 'Fiji'], 'manual')['company'];
+T::ok(!CompanyStore::isContactable($bcAgentId, $bcCo), 'A company in a blocked country may not be contacted');
+T::ok(str_contains((string)WhatsAppEngine::blockedReason($bcAgentId, null, 'sales@suva-building.example', (int)$bcCo['id']), 'blocked country'),
+    'So an email to it is stopped at sending, with the reason');
+$bcCo2 = CompanyStore::findOrCreate($bcAgentId, ['name' => 'Rhein Beton GmbH', 'website' => 'rhein-beton.example', 'country' => 'Germany'], 'manual')['company'];
+T::ok(CompanyStore::isContactable($bcAgentId, $bcCo2), 'A company in an open country may');
+
+// Lifting the block
+$bcChange = BlockedCountries::save([]);
+T::equals(2, count($bcChange['removed']), 'Unticking everything opens every country again');
+T::ok(!BlockedCountries::blocks('Fiji') && CompanyStore::isContactable($bcAgentId, $bcCo), 'At once, everywhere');
+T::ok(in_array('FJ', array_column(ChatIntro::countryOptions(), 0), true), 'And the country is back on the chat card');
+db()->exec('DELETE FROM companies WHERE id IN (?, ?)', [(int)$bcCo['id'], (int)$bcCo2['id']]);
+$mock->reset();
+
+// =====================================================================
+// Concerns and opt-out (improvement plan, 13 Nov 2026)
+// =====================================================================
+T::group('Concerns: read, answered with care, remembered, and an opt-out respected');
+
+$cnCases = [
+    'This is too expensive for us' => 'price',
+    'Honestly that is more than we expected' => 'price',
+    'Bohat mehnga hai yaar' => 'price',
+    'I need to discuss this with my director first' => 'approval',
+    'My manager asked me to collect the prices for him' => 'approval',
+    'Can you send me the brochure?' => 'send_details',
+    'Please email me more details' => 'send_details',
+    'We already exhibit at other shows in Dubai' => 'other_shows',
+    'Not this year, maybe next edition' => 'not_ready',
+    'Can you guarantee we will get buyers?' => 'guarantee',
+    'What ROI can we expect?' => 'guarantee',
+    'What is the quality of the visitors? Are they serious buyers?' => 'audience',
+    'Please do not contact me again' => 'opt_out',
+    'Unsubscribe me' => 'opt_out',
+    'Remove my email from your list' => 'opt_out',
+    'Mujhe contact mat karna' => 'opt_out',
+];
+foreach ($cnCases as $cnText => $cnType) {
+    T::equals($cnType, Concerns::detect($cnText), 'Read: "' . $cnText . '"');
+}
+foreach (['What are the dates?', 'Please send me a quotation for 18 sqm', 'Not now, thanks', 'How much is a 9 sqm stall?',
+          'We make pumps', 'Can you contact me tomorrow at 10?', 'Is the visitor registration free?'] as $cnText) {
+    T::equals(null, Concerns::detect($cnText), 'Not a concern: "' . $cnText . '"');
+}
+T::equals('approval', Concerns::fromModel('approval'), 'The concern the assistant heard is kept when it is one of the list');
+T::equals(null, Concerns::fromModel('give a discount'), 'Anything else is dropped');
+$cnState = Concerns::remember(Concerns::remember(Concerns::remember([], 'price'), 'approval'), 'price');
+T::equals(['price', 'approval'], $cnState['concerns'], 'Concerns are remembered once each, in order');
+T::equals(['Finds it expensive', 'Needs approval from management'], Concerns::labels($cnState['concerns']), 'In the team\'s words');
+
+$cnBlock = Concerns::promptBlock('price', [], [['title' => 'Who visits', 'body' => '35,000 trade visitors in 2026.']]);
+T::ok(str_contains($cnBlock, 'Do not offer or hint at a discount') && str_contains($cnBlock, 'total budget'),
+    'A price concern: no discount, one question about budget or exposure');
+T::ok(str_contains($cnBlock, '35,000 trade visitors'), 'With the approved facts about who visits');
+T::ok(str_contains(Concerns::promptBlock('guarantee', []), 'no exhibition can guarantee'), 'A guarantee is answered honestly');
+T::ok(str_contains(Concerns::promptBlock(null, ['price']), 'Raised earlier in this chat: finds it expensive'), 'An earlier concern stays in view');
+
+// In the chat
+$mock->reset();
+$mock->push(['reply' => 'Welcome, Lena. What would you like to show?', 'intent' => 'exhibitor']);
+[$cnConv, $cnSecret] = start_conversation($agent);
+say($agent, $cnConv, $cnSecret, 'Hi, I am Lena from Kessler Pumpen, Germany. We would like to exhibit.');
+$mock->push(['reply' => 'I understand the investment has to make sense. Is it the total budget or the space?', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Hmm, that is too expensive for us.');
+$cnPrompt = $mock->lastSystemPrompt();
+T::ok(str_contains($cnPrompt, 'THIS MESSAGE: they find it expensive'), 'The chat is told how to answer a price concern');
+T::ok(str_contains($cnPrompt, 'Never promise or imply guaranteed buyers'), 'And never to promise results');
+$cnState = ConversationStore::leadState(reload_conversation($cnConv));
+T::equals(['price'], $cnState['concerns'] ?? null, 'The concern is kept with the conversation');
+
+$mock->push(['reply' => 'Of course. I can help you prepare a summary for him.', 'intent' => 'exhibitor', 'concern' => 'approval']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Ich muss das mit meinem Chef besprechen.');
+T::equals(['price', 'approval'], ConversationStore::leadState(reload_conversation($cnConv))['concerns'] ?? null,
+    'A concern the assistant heard in another language is kept too');
+
+// "Please don't contact me again"
+$mock->push(['reply' => 'Thanks. Could I have your email so the team can send it?', 'intent' => 'exhibitor',
+    'lead_fields' => ['name' => 'Lena', 'email' => 'lena@kessler-pumpen.example']]);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Sure, lena@kessler-pumpen.example');
+$cnLeadId = (int)reload_conversation($cnConv)['lead_id'];
+T::ok($cnLeadId > 0, 'A lead with an email address');
+$mock->push(['reply' => 'Understood. The team will not follow up with you.', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'Actually, please do not contact me again.');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THIS MESSAGE: they asked not to be contacted'), 'The chat is told to accept it and ask nothing');
+$cnState = ConversationStore::leadState(reload_conversation($cnConv));
+T::ok(!empty($cnState['no_contact']) && !empty($cnState['contact_asks']['stopped']), 'The conversation is marked: no contact, no more asking');
+T::ok(Suppression::blocksEmail((int)$agent['id'], 'lena@kessler-pumpen.example'), 'Their email address is on the Do-not-contact list');
+$mock->push(['reply' => 'The exhibition is on 7 to 9 December 2027.', 'intent' => 'exhibitor']);
+say($agent, reload_conversation($cnConv), $cnSecret, 'When is the exhibition?');
+T::ok(str_contains($mock->lastSystemPrompt(), 'THEY ASKED NOT TO BE CONTACTED'), 'Every later reply is told not to sell or ask');
+$cnBrief = LeadBriefing::build($agent, db()->one('SELECT * FROM leads WHERE id = ?', [$cnLeadId]), 'new_lead', false);
+T::ok(str_contains($cnBrief['text'], 'They asked in the chat NOT to be contacted'), 'The team is told first thing in the briefing');
+T::ok(str_contains($cnBrief['text'], 'Concerns raised') && str_contains($cnBrief['text'], 'Finds it expensive; Needs approval from management; Asked not to be contacted'),
+    'With the concerns raised');
+
+// Heard only by the assistant: no list, but the asking stops and the team checks
+$mock->reset();
+$mock->push(['reply' => 'Welcome.', 'intent' => 'exhibitor']);
+[$cnConv2, $cnSecret2] = start_conversation($agent);
+say($agent, $cnConv2, $cnSecret2, 'Hello, we may exhibit.');
+$mock->push(['reply' => 'Verstanden.', 'intent' => 'exhibitor', 'concern' => 'opt_out']);
+say($agent, reload_conversation($cnConv2), $cnSecret2, 'Bitte kontaktieren Sie mich nicht mehr.');
+$cnState2 = ConversationStore::leadState(reload_conversation($cnConv2));
+T::ok(!empty($cnState2['no_contact_maybe']) && empty($cnState2['no_contact']) && !empty($cnState2['contact_asks']['stopped']),
+    'An opt-out heard only by the assistant stops the asking and is flagged for the team to check');
+
+// Someone collecting options for their manager
+$cnPath = Qualification::promptBlock(['products_made' => ['pumps'], 'contact_role' => 'Purchase assistant'], 7, true, true);
+T::ok(str_contains($cnPath, 'Treat them as just as important'), 'Someone preparing options for a manager is helped, not passed over');
+T::ok(!str_contains(Qualification::promptBlock(['products_made' => ['pumps'], 'contact_role' => 'Managing Director'], 7, true, true), 'Treat them as just as important'),
+    'Not said about a director');
+T::ok(str_contains(Qualification::promptBlock(['products_made' => ['pumps']], 7, true, true), 'decide themselves or prepare the options'),
+    'When the role is unknown, it may be asked once, naturally');
+
+db()->exec('DELETE FROM suppression_list WHERE agent_id = ?', [(int)$agent['id']]);
+$mock->reset();
+
+// =====================================================================
+// Transcript review (14 Nov 2026): complete answers, the right advice
+// =====================================================================
+T::group('Transcript review: all tiers at once, stand and sponsorship, machinery');
+
+T::ok(ChatGuide::asksForAll('give the price and quotation of all options') && ChatGuide::asksForAll('give all 4 quotations')
+    && ChatGuide::asksForAll('所有赞助级别的价格') && ChatGuide::asksForAll('sab options ki price'), '"All" is understood, in other languages too');
+T::ok(!ChatGuide::asksForAll('What is the best option for us?') && !ChatGuide::asksForAll('How much is a 9 sqm stall?'), 'And not read into other questions');
+$trOffers = [['name' => 'Shell Scheme Stall', 'kind' => 'Participation option'], ['name' => 'Silver Partner', 'kind' => 'Sponsorship tier'],
+    ['name' => 'Gold Partner', 'kind' => 'Sponsorship tier']];
+T::equals(['Silver Partner', 'Gold Partner'], ChatGuide::allOfKind($trOffers, ['sponsorship']), 'All the tiers, by their exact names');
+T::equals(['sponsorship'], ChatGuide::kindsOf($trOffers, ['Gold Partner']), 'The kind of an option in view');
+
+$trMethod = new ReflectionMethod(PromptBuilder::class, 'priceScope');
+$trMethod->setAccessible(true);
+$trTiers = (string)$trMethod->invoke(null, ['pricing_requested' => true, 'offer_question' => ['items' => [], 'categories' => ['sponsorship'], 'mode' => 'list', 'all' => false]]);
+T::ok(str_contains($trTiers, "give every tier's Quote line") && !str_contains($trTiers, 'range'), 'Sponsorship prices: every tier in one reply, not a range');
+$trAll = (string)$trMethod->invoke(null, ['pricing_requested' => true, 'offer_question' => ['items' => [], 'categories' => [], 'mode' => null, 'all' => true]]);
+T::ok(str_contains($trAll, 'every stand option') && str_contains($trAll, 'every sponsorship tier'), '"All options": stands and tiers together');
+
+$trOffer = new ReflectionMethod(PromptBuilder::class, 'offerTurn');
+$trOffer->setAccessible(true);
+$trText = (string)$trOffer->invoke(null, ['catalogue' => [['name' => 'x']], 'offer_question' => null, 'known_products' => ['Stainless steel reactor tanks']]);
+T::ok(str_contains($trText, 'exact name') && str_contains($trText, 'only when its Includes above say so'), 'Exact names; a tier includes space only when its list says so');
+T::ok(str_contains($trText, 'the largest unit') && str_contains($trText, 'floor load'), 'For large machinery: the size of the largest unit first');
+T::ok(!str_contains((string)$trOffer->invoke(null, ['catalogue' => [['name' => 'x']], 'offer_question' => null, 'known_products' => ['Herbal supplements']]), 'the largest unit'),
+    'Not for small products');
+T::ok(str_contains($trText, 'stand booking page is for stands'), 'The link must fit: the stand page is for stands');
+T::equals(null, Concerns::detect('We are not ready to book yet. We are only comparing the options.'), '"Not ready to book yet" is still deciding, not a "no"');
 
 db()->exec('DELETE FROM admin_user_access');
 db()->exec('DELETE FROM admin_users WHERE username LIKE \'acc-%\'');

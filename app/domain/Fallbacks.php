@@ -23,6 +23,7 @@ final class Fallbacks
         'pakistan_pricing'    => 'Pakistan pricing enquiry',
         'undetermined_pricing' => 'Country not established',
         'conversation_limit'  => 'Conversation length reached',
+        'blocked_country'     => 'Blocked country: the only reply such a visitor gets',
         'off_topic'           => 'Outside what the agent can answer',
         'knowledge_gap'       => 'Information not held',
         'whatsapp_handover'   => 'WhatsApp: a person is taking over',
@@ -77,6 +78,9 @@ final class Fallbacks
 
         'undetermined_pricing' =>
             "So that I share the right pricing, could you tell me which country your company is based in?",
+
+        'blocked_country' =>
+            "Thank you for your message. We are sorry, but we are not able to assist with participation from your country.",
 
         'conversation_limit' =>
             "We've covered a lot here. So the team can pick this up properly, leave your name and email or phone number and someone will be in touch.",

@@ -112,7 +112,7 @@ final class ConversationState
         if (preg_match('/\b\d{1,3}\s?(?:sqm|sq\.?\s?m|square\s?met(?:re|er)s?|m2|x\s?\d{1,3})\b/i', $message)) {
             $signals['specified_size_or_tier'] = true;
         }
-        if (self::mentions($text, ['platinum', 'gold', 'silver', 'bronze', 'diamond', 'title sponsor', 'shell scheme', 'bare space', 'raw space'])) {
+        if (self::mentions($text, ['platinum', 'gold', 'silver', 'bronze', 'diamond', 'title sponsor', 'shell scheme', 'bare space', 'raw space', 'outdoor space', 'outdoor exhibit'])) {
             $signals['specified_size_or_tier'] = true;
         }
 
@@ -256,9 +256,12 @@ final class ConversationState
                 self::PRICING
             ),
 
+            // Without contact details the conversation may still go back to
+            // the options or to their questions: it is not held in "get
+            // contact" until an email is given (fix plan step 1, 11 Nov 2026).
             self::LEAD_CAPTURE => (bool)($ctx['contact_captured'] ?? false)
                 ? self::suggestedOr($suggested, [self::OBJECTION_HANDLING, self::HANDOFF, self::COMPLETED], self::LEAD_CAPTURE)
-                : self::LEAD_CAPTURE,
+                : self::suggestedOr($suggested, [self::PRICING, self::OBJECTION_HANDLING], self::LEAD_CAPTURE),
 
             self::OBJECTION_HANDLING => self::suggestedOr(
                 $suggested,

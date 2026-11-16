@@ -324,9 +324,18 @@ final class PricingEngine
      */
     public static function requestedSize(string $message): ?float
     {
+        $message = Lang::digits($message);
         // Explicit area: "27 sqm", "27 m2", "27 square meters"
         if (preg_match('/\b(\d{1,4}(?:\.\d{1,2})?)\s*(?:sqm|sq\.?\s?m|m2|m²|square\s?met(?:re|er)s?)\b/i', $message, $m)) {
             $v = (float)$m[1];
+            return $v > 0 ? $v : null;
+        }
+        // The same in the chat's other languages: 18平方米, 18 متر مربع, 18 metrekare, 18 кв. м, 18 metros cuadrados,
+        // 18 mètres carrés, 18 Quadratmeter, 18 제곱미터 (13 Nov 2026).
+        if (preg_match('/(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:平方米|平米|平方|㎡|متر\s*مربع|مترا\s*مربعا|م2|metrekare|кв\.?\s*м\w*|квадратн\w*\s+метр\w*|'
+            . 'metros?\s+cuadrados?|m[eè]tres?\s+carr[ée]s?|quadratmeter|qm|제곱미터|murabba\s+met(?:er|re)|'
+            . 'metri\s+quadr(?:ati|i)|mq|平方メートル|ตารางเมตร|ตร\.\s?ม\.?|meter\s+persegi)/iu', $message, $m)) {
+            $v = (float)str_replace(',', '.', $m[1]);
             return $v > 0 ? $v : null;
         }
         // Dimensions: "6m x 6m", "3 x 6", "6 by 9"
@@ -391,6 +400,31 @@ final class PricingEngine
         return ['ok' => true, 'sqm' => $sqm, 'reason' => null, 'message' => null];
     }
 
+    /** The visitor-facing name of each kind of stand. */
+    public static function kindLabel(string $packageType): string
+    {
+        return match ($packageType) {
+            'shell'   => 'Shell scheme',
+            'outdoor' => 'Outdoor space',
+            default   => 'Bare space',
+        };
+    }
+
+    /**
+     * The size a rate-based record is shown at when the visitor has not
+     * given one: its minimum. Outdoor space may be published with a rate and
+     * no minimum; it is then shown per single square metre, which is the
+     * published rate itself and not an invented size.
+     */
+    public static function referenceSize(array $record): float
+    {
+        $min = (float)($record['min_sqm'] ?? 0);
+        if ($min > 0) {
+            return $min;
+        }
+        return (string)($record['package_type'] ?? '') === 'outdoor' ? 1.0 : 0.0;
+    }
+
     private static function sqmText(float $sqm): string
     {
         $whole = (fmod($sqm, 1.0) === 0.0);
@@ -407,7 +441,7 @@ final class PricingEngine
             return (float)$record['price'];
         }
         $rate = (float)($record['rate_per_sqm'] ?? 0);
-        $size = $sqm ?? (float)($record['min_sqm'] ?? 0);
+        $size = $sqm ?? self::referenceSize($record);
         if ($rate <= 0 || $size <= 0) {
             return (float)$record['price'];
         }
@@ -458,13 +492,13 @@ final class PricingEngine
     {
         $currency = strtoupper((string)$record['currency']);
         $perSqm   = (string)($record['pricing_mode'] ?? 'fixed') === 'per_sqm';
-        $size     = $perSqm ? ($sqm ?? (float)($record['min_sqm'] ?? 0)) : null;
+        $size     = $perSqm ? ($sqm ?? self::referenceSize($record)) : null;
         $base     = self::basePrice($record, $size);
         $tax      = self::taxBreakdown($record, $base);
 
         if ($type === self::TYPE_STALL) {
             $title  = (string)$record['package_name'];
-            $scheme = ((string)$record['package_type']) === 'shell' ? 'Shell scheme' : 'Bare space';
+            $scheme = self::kindLabel((string)$record['package_type']);
             $items  = self::lines((string)($record['included_items'] ?? ''));
             $meta   = [$scheme];
 
@@ -582,7 +616,7 @@ final class PricingEngine
                         $sizeNote = $check['message'];
                     }
                 }
-                $useSize ??= (float)($r['min_sqm'] ?? 0);
+                $useSize ??= self::referenceSize($r);
             }
 
             $card = self::toCard($r, $type, $useSize);
@@ -597,14 +631,19 @@ final class PricingEngine
                 'name'      => $card['title'],
                 'details'   => implode(', ', $card['meta']),
                 'price'     => implode(' | ', $priceText),
+                // The whole price on one line, ready to copy (fix plan step 1).
+                'line'      => ChatGuide::quoteLine($card),
                 'includes'  => $card['items'],
                 'tax'       => $card['tax_note'],
                 'quantity'  => $type === self::TYPE_SPONSORSHIP ? ($r['quantity_available'] ?? null) : null,
             ];
 
             if ($perSqm) {
-                $fact['sold_as'] = 'Charged per square metre. Minimum '
-                    . self::sqmText((float)($r['min_sqm'] ?? 0))
+                $minimum = (float)($r['min_sqm'] ?? 0);
+                $fact['sold_as'] = 'Charged per square metre. '
+                    . ($minimum > 0 || (string)($r['package_type'] ?? '') !== 'outdoor'
+                        ? 'Minimum ' . self::sqmText($minimum)
+                        : 'No minimum size is published')
                     . ($r['increment_sqm'] ? ', in units of ' . self::sqmText((float)$r['increment_sqm']) : '')
                     . '. The figures above are for ' . self::sqmText((float)$card['sqm']) . '.';
             }
@@ -615,6 +654,79 @@ final class PricingEngine
             $facts[] = $fact;
         }
         return $facts;
+    }
+
+    /**
+     * What is on offer, described without any price (approved 11 November 2026).
+     *
+     * A visitor who asks to be briefed on the packages or the sponsorship
+     * options has not asked a price, so no price facts are prepared for that
+     * turn; before this, the assistant then had nothing to describe. This gives
+     * it the names, sizes, inclusions and tier benefits of every live record.
+     * It is the same for every visitor, whatever their country: a visitor in
+     * Pakistan is told what is offered and is passed to the local sales
+     * representative when price comes up.
+     *
+     * Nothing here may carry a figure of money: anything that looks like one
+     * is dropped, and the reply guard still discards any price in the answer.
+     *
+     * @return array<int, array{kind:string,name:string,details:string,includes:array,sold_as:string}>
+     */
+    public static function catalogueForPrompt(int $agentId): array
+    {
+        $money = '/(?:\b[A-Z]{3}\b\s?\d|[$€£¥₨]|\b(?:Rs|PKR|USD|EUR|GBP|AED)\b)/u';
+        $out   = [];
+        $seen  = [];
+
+        foreach ([
+            [self::TYPE_STALL, 'stall_packages', 'Participation option'],
+            [self::TYPE_SPONSORSHIP, 'sponsorship_packages', 'Sponsorship tier'],
+        ] as [$type, $table, $kind]) {
+            $rows = db()->all(
+                "SELECT * FROM {$table}
+                 WHERE agent_id = ? AND active = 1 AND status IN ('approved','pending_review')
+                 ORDER BY sort_order ASC, id ASC LIMIT 60",
+                [$agentId]
+            );
+            foreach (self::servable($rows, $type) as $r) {
+                $card = self::toCard($r, $type, null);
+                $name = trim((string)$card['title']);
+                $key  = $type . '|' . mb_strtolower($name);
+                if ($name === '' || isset($seen[$key])) {
+                    continue;   // the same package priced for another region
+                }
+                $seen[$key] = true;
+
+                $clean = static fn(array $list): array => array_values(array_filter(
+                    array_map(static fn($v) => trim((string)$v), $list),
+                    static fn(string $v): bool => $v !== '' && !preg_match($money, $v)
+                ));
+
+                $soldAs = '';
+                if ($type === self::TYPE_STALL && (string)($r['pricing_mode'] ?? 'fixed') === 'per_sqm') {
+                    $minimum = (float)($r['min_sqm'] ?? 0);
+                    $soldAs  = 'Charged per square metre. '
+                        . ($minimum > 0 ? 'Minimum ' . self::sqmText($minimum) : 'No minimum size is published')
+                        . (!empty($r['increment_sqm']) ? ', in units of ' . self::sqmText((float)$r['increment_sqm']) : '')
+                        . '.';
+                }
+
+                $meta = $clean($card['meta'] ?? []);
+                if ($soldAs !== '' && (float)($r['min_sqm'] ?? 0) <= 0) {
+                    // No minimum: the card's "1 sqm" is only a pricing reference, not a size on offer.
+                    $meta = array_values(array_filter($meta, static fn(string $v): bool => !preg_match('/^[\d.]+\s*sqm$/i', $v)));
+                }
+
+                $out[] = [
+                    'kind'     => $kind,
+                    'name'     => $name,
+                    'details'  => implode(', ', $meta),
+                    'includes' => $clean($card['items'] ?? []),
+                    'sold_as'  => $soldAs,
+                ];
+            }
+        }
+        return $out;
     }
 
     /** Every figure a reply is permitted to contain, given these facts. */
@@ -639,42 +751,97 @@ final class PricingEngine
      */
     public static function findUnauthorisedPrice(string $reply, array $allowedPriceStrings): ?string
     {
+        // Persian, Arabic, Thai and full-width digits are read as ordinary digits (13 Nov 2026).
+        $reply = Lang::digits($reply);
         // Any three-letter currency code the agent may not quote.
         foreach (self::FORBIDDEN_CURRENCIES as $ccy) {
             if (preg_match('/(?:^|[^A-Z])' . $ccy . '(?:[^A-Z]|$)/', strtoupper($reply))) {
                 return $ccy;
             }
         }
-        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ'] as $symbol) {
+        foreach (['€', '£', '₨', '₹', '﷼', 'د.إ', '¥', '￥', '₩', '₽', '₺', '฿'] as $symbol) {
             if (str_contains($reply, $symbol)) {
                 return $symbol;
             }
         }
+        // Other currencies, written as words in the chat's languages (13 Nov 2026).
+        // Rupees are left out: the Pakistan market article quotes medicine sales in rupees,
+        // and companies in Pakistan are never given a price anyway.
+        if (preg_match('/(?<![\p{L}])(?:euros?|liras?|yuan|renminbi|dirhams?|riyals?|rials?|dinars?|'
+            . 'pounds?\s+sterling|рубл\w*|евро|лир\w*|юан\w*|дирхам\w*|يورو|درهم|دراهم|ريال|جنيه|'
+            . '人民币|欧元|英镑|迪拉姆|里亚尔|유로|تومان|ریال|یورو|บาท|ユーロ|ยูโร|euro|rupiah|ringgit)(?![\p{L}])/iu', $reply, $cm)
+            || preg_match('/\d\s*(?<!美)(?:元|円|엔|원)(?!\p{L})/u', $reply, $cm)
+            || preg_match('/(?<![\p{L}])(?:Rp|RM)\.?\s?\d/u', $reply, $cm)) {
+            return trim($cm[0]);
+        }
 
-        // Any monetary amount must match one of the approved price strings.
-        $allowedNumbers = [];
+        $allowed = [];
         foreach ($allowedPriceStrings as $p) {
-            $digits = preg_replace('/[^0-9]/', '', $p) ?? '';
-            if ($digits !== '') {
-                $allowedNumbers[$digits] = true;
+            if (preg_match('/\d[\d.,]*/', (string)$p, $pm)) {
+                $allowed[] = self::amountOf($pm[0]);
             }
         }
 
-        if (preg_match_all('/(?:USD|\$)\s*([0-9][0-9,\.]*[0-9])/i', $reply, $m)) {
-            foreach ($m[1] as $found) {
-                $digits = preg_replace('/[^0-9]/', '', $found) ?? '';
-                // Trailing ".00" is equivalent to the whole-number form.
-                $trimmed = rtrim($digits, '0');
-                if (!isset($allowedNumbers[$digits])
-                    && !isset($allowedNumbers[rtrim($digits, '0')])
-                    && !isset($allowedNumbers[$digits . '00'])
-                    && $trimmed !== '') {
-                    return 'USD ' . $found;
+        // Any amount written with dollars, in any of the chat's languages,
+        // before or after the figure, must be one of the approved amounts:
+        // "USD 6,750", "$6,750", "6,750 dollars", "6.750 dólares", "6 750 долларов", "6,750美元".
+        $num   = '(\d{1,3}(?:[ \x{00A0}\x{202F}\x{2009}.,\']\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)';
+        $marks = 'USD|US\$|\$|美元|美金|دولار|دولارات|دلار|dollars?|dólares|dolares|dólar|dolar|dolları|доллар\w*|долл\.?|dollari|달러|米ドル|ドル|ดอลลาร์';
+        $found = [];
+        if (preg_match_all('/(?:' . $marks . ')\s*' . $num . '/iu', $reply, $m1)) {
+            $found = array_merge($found, $m1[1]);
+        }
+        if (preg_match_all('/' . $num . '\s*(?:' . $marks . ')/iu', $reply, $m2)) {
+            $found = array_merge($found, $m2[1]);
+        }
+        foreach ($found as $amount) {
+            $value = self::amountOf($amount);
+            if ($value <= 0) {
+                continue;
+            }
+            $ok = false;
+            foreach ($allowed as $a) {
+                if (abs($a - $value) < 0.005) {
+                    $ok = true;
+                    break;
                 }
+            }
+            if (!$ok) {
+                return 'USD ' . trim($amount);
             }
         }
 
         return null;
+    }
+
+    /**
+     * The value of an amount written in any common style: 7,762.50 (English),
+     * 7.762,50 (German, Spanish), 7 762,50 (French, Russian), 7'762.50.
+     */
+    public static function amountOf(string $text): float
+    {
+        $t = preg_replace('/[\s\x{00A0}\x{202F}\x{2009}\']/u', '', trim($text)) ?? '';
+        if ($t === '') {
+            return 0.0;
+        }
+        $lastDot = strrpos($t, '.');
+        $lastComma = strrpos($t, ',');
+        if ($lastDot !== false && $lastComma !== false) {
+            $dec = $lastDot > $lastComma ? '.' : ',';
+        } elseif ($lastDot !== false || $lastComma !== false) {
+            $sep = $lastDot !== false ? '.' : ',';
+            $after = strlen($t) - (int)strrpos($t, $sep) - 1;
+            // One separator followed by one or two digits is a decimal point; otherwise thousands.
+            $dec = (substr_count($t, $sep) === 1 && $after >= 1 && $after <= 2) ? $sep : null;
+        } else {
+            $dec = null;
+        }
+        if ($dec === null) {
+            return (float)preg_replace('/[^0-9]/', '', $t);
+        }
+        $whole = substr($t, 0, (int)strrpos($t, $dec));
+        $frac  = substr($t, (int)strrpos($t, $dec) + 1);
+        return (float)(preg_replace('/[^0-9]/', '', $whole) . '.' . preg_replace('/[^0-9]/', '', $frac));
     }
 
     /** Split a newline/semicolon separated field into clean lines. */

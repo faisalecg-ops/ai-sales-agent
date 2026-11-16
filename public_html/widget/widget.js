@@ -17,7 +17,7 @@
 
   // Bumped whenever this file changes, so the diagnostic page can report
   // which copy is actually live and rule out a stale cached version.
-  var WIDGET_VERSION = '1.1.0';
+  var WIDGET_VERSION = '1.2.0';
 
   if (window.__aisaWidgetLoaded) { return; }
   window.__aisaWidgetLoaded = true;
@@ -92,6 +92,357 @@
     try { window.sessionStorage.setItem(key, value); } catch (e) { /* private mode */ }
   }
 
+  // ---------------------------------------------------------------------
+  // Languages (owner, 13 Nov 2026)
+  //
+  // The visitor chooses a language on the first card; English by default.
+  // Everything the window itself says is shown in that language, and the
+  // choice goes to the server with every message so the assistant replies in
+  // it. Urdu is Roman Urdu (Urdu in Latin letters), as the owner asked.
+  // ---------------------------------------------------------------------
+  var STORAGE_LANG = 'aisa_lang';
+  var LANGS = [
+    ['en', 'English'], ['zh', '中文 (Chinese)'], ['ur', 'Urdu (Roman)'], ['ar', 'العربية (Arabic)'],
+    ['tr', 'Türkçe (Turkish)'], ['ru', 'Русский (Russian)'], ['es', 'Español (Spanish)'], ['fr', 'Français (French)'],
+    ['de', 'Deutsch (German)'], ['ko', '한국어 (Korean)'], ['it', 'Italiano (Italian)'], ['ja', '日本語 (Japanese)'],
+    ['fa', 'فارسی (Persian)'], ['th', 'ไทย (Thai)'], ['id', 'Bahasa Indonesia'], ['ms', 'Bahasa Melayu']
+  ];
+  var RTL = { ar: true, fa: true };
+  var TEXT = {
+    en: {
+      lead: "So we can help you properly, tell us a little about yourself.", language: "Language",
+      first: "First name", company: "Company", website: "Company website (optional)", country: "Country your company is based in",
+      choose: "Choose a country", interest: "I am interested in", exhibit: "Exhibiting", visit: "Visiting", cont: "Continue",
+      skip: "Skip — just ask a question", wait: "One moment",
+      e_name: "Please tell us your first name.", e_interest: "Please choose exhibiting or visiting.",
+      e_company: "To help with exhibiting, we need your company name.",
+      e_country: "To help with exhibiting, choose the country your company is based in.",
+      e_timeout: "This chat timed out. Reload the page to start again.",
+      e_generic: "That did not go through. Check your connection and try again.",
+      said_name: "My name is {name}.", said_from_country: "I am from {org}, based in {country}.", said_from: "I am from {org}.",
+      said_country: "I am based in {country}.", said_exhibit: "I am interested in exhibiting.", said_visit: "I am interested in visiting.",
+      placeholder: "Type your message", send: "Send", person: "Talk to a person", still: "Still working on your answer…",
+      busy: "Sorry — we are very busy right now. ", retry: "Try again", retrying: "Trying again…",
+      many: "Many people are asking right now — your answer is on its way…",
+      n_fast: "You are sending messages faster than we can process. Wait a moment and try again.",
+      n_long: "That message is too long. Shorten it and send again.", n_fail: "That did not send. Try again in a moment.",
+      n_conn: "That did not send. Check your connection and try again.",
+      f_name: "Your name", f_company: "Company", f_email: "Email address", f_phone: "Phone number", f_note: "Anything we should know",
+      f_send: "Send my details", f_sending: "Sending", f_need: "Enter an email address or a phone number so the team can reach you.",
+      f_thanks: "Thank you. A member of the team will be in touch.", not_you: "Not you? Start a new chat"
+    },
+    zh: {
+      lead: "为了更好地为您服务，请简单介绍一下您自己。", language: "语言",
+      first: "名字", company: "公司", website: "公司网站（选填）", country: "公司所在国家",
+      choose: "选择国家", interest: "我感兴趣的是", exhibit: "参展", visit: "参观", cont: "继续",
+      skip: "跳过 — 直接提问", wait: "请稍候",
+      e_name: "请填写您的名字。", e_interest: "请选择参展或参观。", e_company: "如需参展咨询，请填写公司名称。",
+      e_country: "如需参展咨询，请选择公司所在国家。", e_timeout: "会话已超时，请刷新页面重新开始。", e_generic: "提交失败，请检查网络后重试。",
+      said_name: "我叫{name}。", said_from_country: "我来自{org}，公司位于{country}。", said_from: "我来自{org}。",
+      said_country: "我在{country}。", said_exhibit: "我有意参展。", said_visit: "我有意参观。",
+      placeholder: "请输入您的消息", send: "发送", person: "联系人工客服", still: "正在为您准备回答…",
+      busy: "抱歉，目前咨询较多。", retry: "重试", retrying: "正在重试…", many: "目前咨询人数较多，回答马上就到…",
+      n_fast: "您发送消息过快，请稍等片刻再试。", n_long: "消息过长，请缩短后重新发送。", n_fail: "发送失败，请稍后再试。",
+      n_conn: "发送失败，请检查网络后重试。",
+      f_name: "您的姓名", f_company: "公司", f_email: "电子邮箱", f_phone: "电话号码", f_note: "其他需要说明的事项",
+      f_send: "提交我的信息", f_sending: "正在提交", f_need: "请填写电子邮箱或电话号码，以便团队与您联系。",
+      f_thanks: "谢谢！我们的团队会尽快与您联系。", not_you: "不是您本人？开始新的对话"
+    },
+    ur: {
+      lead: "Behtar madad ke liye apne baare mein thora sa bata dein.", language: "Zabaan",
+      first: "Pehla naam", company: "Company", website: "Company ki website (zaroori nahi)", country: "Aap ki company kis mulk mein hai",
+      choose: "Mulk chunein", interest: "Mujhe dilchaspi hai", exhibit: "Exhibit karne mein", visit: "Visit karne mein", cont: "Aage barhein",
+      skip: "Chhorein — seedha sawal poochein", wait: "Ek lamha",
+      e_name: "Baraye meharbani apna pehla naam likhein.", e_interest: "Exhibit ya visit mein se ek chunein.",
+      e_company: "Exhibit ke liye company ka naam zaroori hai.", e_country: "Exhibit ke liye company ka mulk chunein.",
+      e_timeout: "Chat ka waqt khatam ho gaya. Page dobara load karein.", e_generic: "Yeh nahi gaya. Internet check kar ke dobara koshish karein.",
+      said_name: "Mera naam {name} hai.", said_from_country: "Main {org} se hoon, hamari company {country} mein hai.", said_from: "Main {org} se hoon.",
+      said_country: "Main {country} mein hoon.", said_exhibit: "Mujhe exhibit karne mein dilchaspi hai.", said_visit: "Mujhe visit karne mein dilchaspi hai.",
+      placeholder: "Apna message likhein", send: "Bhejein", person: "Kisi insaan se baat karein", still: "Aap ka jawab tayyar ho raha hai…",
+      busy: "Maazrat — is waqt bohat log pooch rahe hain. ", retry: "Dobara koshish", retrying: "Dobara koshish ho rahi hai…",
+      many: "Is waqt bohat log pooch rahe hain — jawab aa raha hai…",
+      n_fast: "Aap bohat tezi se message bhej rahe hain. Thora ruk kar dobara koshish karein.",
+      n_long: "Message bohat lamba hai. Chhota kar ke dobara bhejein.", n_fail: "Message nahi gaya. Thori dair baad koshish karein.",
+      n_conn: "Message nahi gaya. Internet check kar ke dobara koshish karein.",
+      f_name: "Aap ka naam", f_company: "Company", f_email: "Email address", f_phone: "Phone number", f_note: "Koi aur baat jo hamein maloom honi chahiye",
+      f_send: "Meri details bhejein", f_sending: "Bheja ja raha hai", f_need: "Email ya phone number likhein taake team aap se raabta kar sake.",
+      f_thanks: "Shukriya. Hamari team jald aap se raabta karegi.", not_you: "Aap nahin? Nayi chat shuru karein"
+    },
+    ar: {
+      lead: "حتى نساعدك بشكل أفضل، أخبرنا قليلاً عن نفسك.", language: "اللغة",
+      first: "الاسم الأول", company: "الشركة", website: "موقع الشركة (اختياري)", country: "البلد الذي يقع فيه مقر شركتك",
+      choose: "اختر البلد", interest: "أنا مهتم بـ", exhibit: "المشاركة كعارض", visit: "الزيارة", cont: "متابعة",
+      skip: "تخطَّ — اطرح سؤالك مباشرة", wait: "لحظة من فضلك",
+      e_name: "يرجى كتابة اسمك الأول.", e_interest: "يرجى اختيار المشاركة كعارض أو الزيارة.",
+      e_company: "للمساعدة في المشاركة كعارض، نحتاج إلى اسم شركتك.", e_country: "للمساعدة في المشاركة كعارض، اختر البلد الذي يقع فيه مقر شركتك.",
+      e_timeout: "انتهت مهلة المحادثة. أعد تحميل الصفحة للبدء من جديد.", e_generic: "لم يتم الإرسال. تحقق من الاتصال وحاول مرة أخرى.",
+      said_name: "اسمي {name}.", said_from_country: "أنا من {org}، ومقرها في {country}.", said_from: "أنا من {org}.",
+      said_country: "أنا في {country}.", said_exhibit: "أنا مهتم بالمشاركة كعارض.", said_visit: "أنا مهتم بالزيارة.",
+      placeholder: "اكتب رسالتك", send: "إرسال", person: "التحدث مع شخص", still: "ما زلنا نعدّ إجابتك…",
+      busy: "عذراً — هناك ضغط كبير حالياً. ", retry: "حاول مرة أخرى", retrying: "جارٍ المحاولة مرة أخرى…",
+      many: "هناك الكثير من الأسئلة الآن — إجابتك في الطريق…",
+      n_fast: "أنت ترسل الرسائل بسرعة كبيرة. انتظر لحظة ثم حاول مرة أخرى.", n_long: "الرسالة طويلة جداً. اختصرها وأرسلها مرة أخرى.",
+      n_fail: "لم يتم الإرسال. حاول بعد لحظات.", n_conn: "لم يتم الإرسال. تحقق من الاتصال وحاول مرة أخرى.",
+      f_name: "اسمك", f_company: "الشركة", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف", f_note: "أي شيء يجب أن نعرفه",
+      f_send: "أرسل بياناتي", f_sending: "جارٍ الإرسال", f_need: "أدخل بريداً إلكترونياً أو رقم هاتف حتى يتمكن الفريق من التواصل معك.",
+      f_thanks: "شكراً لك. سيتواصل معك أحد أعضاء الفريق.", not_you: "لست أنت؟ ابدأ محادثة جديدة"
+    },
+    tr: {
+      lead: "Size daha iyi yardımcı olabilmemiz için kendinizden biraz bahsedin.", language: "Dil",
+      first: "Adınız", company: "Firma", website: "Firma web sitesi (isteğe bağlı)", country: "Firmanızın bulunduğu ülke",
+      choose: "Ülke seçin", interest: "İlgilendiğim konu", exhibit: "Katılımcı olmak", visit: "Ziyaret etmek", cont: "Devam",
+      skip: "Atla — doğrudan soru sor", wait: "Bir saniye",
+      e_name: "Lütfen adınızı yazın.", e_interest: "Lütfen katılımcı olmayı veya ziyareti seçin.",
+      e_company: "Katılım konusunda yardımcı olabilmemiz için firma adınız gerekli.", e_country: "Katılım konusunda yardımcı olabilmemiz için firmanızın ülkesini seçin.",
+      e_timeout: "Sohbetin süresi doldu. Yeniden başlamak için sayfayı yenileyin.", e_generic: "Gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+      said_name: "Adım {name}.", said_from_country: "{org} firmasındanım, merkezimiz {country}.", said_from: "{org} firmasındanım.",
+      said_country: "{country} merkezliyim.", said_exhibit: "Katılımcı olarak katılmakla ilgileniyorum.", said_visit: "Ziyaret etmekle ilgileniyorum.",
+      placeholder: "Mesajınızı yazın", send: "Gönder", person: "Bir kişiyle görüşün", still: "Yanıtınız hazırlanıyor…",
+      busy: "Üzgünüz — şu anda yoğunluk var. ", retry: "Tekrar dene", retrying: "Tekrar deneniyor…", many: "Şu anda çok soru var — yanıtınız yolda…",
+      n_fast: "Mesajları çok hızlı gönderiyorsunuz. Biraz bekleyip tekrar deneyin.", n_long: "Mesaj çok uzun. Kısaltıp tekrar gönderin.",
+      n_fail: "Gönderilemedi. Biraz sonra tekrar deneyin.", n_conn: "Gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+      f_name: "Adınız", f_company: "Firma", f_email: "E-posta adresi", f_phone: "Telefon numarası", f_note: "Bilmemiz gereken başka bir şey",
+      f_send: "Bilgilerimi gönder", f_sending: "Gönderiliyor", f_need: "Ekibin size ulaşabilmesi için bir e-posta adresi veya telefon numarası girin.",
+      f_thanks: "Teşekkürler. Ekibimizden biri sizinle iletişime geçecek.", not_you: "Siz değil misiniz? Yeni sohbet başlatın"
+    },
+    ru: {
+      lead: "Чтобы мы могли вам помочь, расскажите немного о себе.", language: "Язык",
+      first: "Имя", company: "Компания", website: "Сайт компании (необязательно)", country: "Страна, где находится ваша компания",
+      choose: "Выберите страну", interest: "Меня интересует", exhibit: "Участие в выставке", visit: "Посещение", cont: "Продолжить",
+      skip: "Пропустить — задать вопрос", wait: "Минутку",
+      e_name: "Пожалуйста, укажите ваше имя.", e_interest: "Выберите участие или посещение.",
+      e_company: "Для участия нам нужно название вашей компании.", e_country: "Для участия выберите страну, где находится ваша компания.",
+      e_timeout: "Время сеанса истекло. Обновите страницу, чтобы начать заново.", e_generic: "Не удалось отправить. Проверьте подключение и попробуйте снова.",
+      said_name: "Меня зовут {name}.", said_from_country: "Я из компании {org}, она находится в стране {country}.", said_from: "Я из компании {org}.",
+      said_country: "Я нахожусь в стране {country}.", said_exhibit: "Меня интересует участие в качестве экспонента.", said_visit: "Меня интересует посещение выставки.",
+      placeholder: "Введите сообщение", send: "Отправить", person: "Связаться с человеком", still: "Готовим ваш ответ…",
+      busy: "Извините — сейчас очень много обращений. ", retry: "Повторить", retrying: "Повторяем…", many: "Сейчас много вопросов — ответ уже готовится…",
+      n_fast: "Вы отправляете сообщения слишком быстро. Подождите немного и попробуйте снова.", n_long: "Сообщение слишком длинное. Сократите его и отправьте снова.",
+      n_fail: "Не удалось отправить. Попробуйте чуть позже.", n_conn: "Не удалось отправить. Проверьте подключение и попробуйте снова.",
+      f_name: "Ваше имя", f_company: "Компания", f_email: "Эл. почта", f_phone: "Номер телефона", f_note: "Что нам ещё стоит знать",
+      f_send: "Отправить мои данные", f_sending: "Отправка", f_need: "Укажите эл. почту или телефон, чтобы команда могла с вами связаться.",
+      f_thanks: "Спасибо. Наш сотрудник свяжется с вами.", not_you: "Это не вы? Начните новый чат"
+    },
+    es: {
+      lead: "Para ayudarle mejor, cuéntenos un poco sobre usted.", language: "Idioma",
+      first: "Nombre", company: "Empresa", website: "Sitio web de la empresa (opcional)", country: "País donde está su empresa",
+      choose: "Elija un país", interest: "Me interesa", exhibit: "Exponer", visit: "Visitar", cont: "Continuar",
+      skip: "Omitir — hacer una pregunta", wait: "Un momento",
+      e_name: "Indique su nombre, por favor.", e_interest: "Elija exponer o visitar.",
+      e_company: "Para ayudarle a exponer necesitamos el nombre de su empresa.", e_country: "Para ayudarle a exponer, elija el país de su empresa.",
+      e_timeout: "El chat ha caducado. Recargue la página para empezar de nuevo.", e_generic: "No se pudo enviar. Revise su conexión e inténtelo de nuevo.",
+      said_name: "Me llamo {name}.", said_from_country: "Soy de {org}, con sede en {country}.", said_from: "Soy de {org}.",
+      said_country: "Estoy en {country}.", said_exhibit: "Me interesa exponer.", said_visit: "Me interesa visitar.",
+      placeholder: "Escriba su mensaje", send: "Enviar", person: "Hablar con una persona", still: "Seguimos preparando su respuesta…",
+      busy: "Lo sentimos — ahora mismo hay mucha demanda. ", retry: "Reintentar", retrying: "Reintentando…", many: "Hay muchas consultas ahora — su respuesta está en camino…",
+      n_fast: "Está enviando mensajes demasiado rápido. Espere un momento e inténtelo de nuevo.", n_long: "El mensaje es demasiado largo. Acórtelo y envíelo de nuevo.",
+      n_fail: "No se pudo enviar. Inténtelo en un momento.", n_conn: "No se pudo enviar. Revise su conexión e inténtelo de nuevo.",
+      f_name: "Su nombre", f_company: "Empresa", f_email: "Correo electrónico", f_phone: "Teléfono", f_note: "Algo más que debamos saber",
+      f_send: "Enviar mis datos", f_sending: "Enviando", f_need: "Indique un correo o un teléfono para que el equipo pueda contactarle.",
+      f_thanks: "Gracias. Un miembro del equipo se pondrá en contacto.", not_you: "¿No es usted? Empiece un chat nuevo"
+    },
+    fr: {
+      lead: "Pour bien vous aider, présentez-vous en quelques mots.", language: "Langue",
+      first: "Prénom", company: "Entreprise", website: "Site web de l'entreprise (facultatif)", country: "Pays où se trouve votre entreprise",
+      choose: "Choisissez un pays", interest: "Je suis intéressé par", exhibit: "Exposer", visit: "Visiter", cont: "Continuer",
+      skip: "Passer — poser une question", wait: "Un instant",
+      e_name: "Veuillez indiquer votre prénom.", e_interest: "Choisissez exposer ou visiter.",
+      e_company: "Pour vous aider à exposer, il nous faut le nom de votre entreprise.", e_country: "Pour vous aider à exposer, choisissez le pays de votre entreprise.",
+      e_timeout: "La conversation a expiré. Rechargez la page pour recommencer.", e_generic: "L'envoi a échoué. Vérifiez votre connexion et réessayez.",
+      said_name: "Je m'appelle {name}.", said_from_country: "Je travaille chez {org}, basée en {country}.", said_from: "Je travaille chez {org}.",
+      said_country: "Je suis basé en {country}.", said_exhibit: "Je souhaite exposer.", said_visit: "Je souhaite visiter.",
+      placeholder: "Écrivez votre message", send: "Envoyer", person: "Parler à une personne", still: "Nous préparons votre réponse…",
+      busy: "Désolé — nous sommes très sollicités en ce moment. ", retry: "Réessayer", retrying: "Nouvelle tentative…", many: "Beaucoup de questions en ce moment — votre réponse arrive…",
+      n_fast: "Vous envoyez des messages trop vite. Patientez un instant puis réessayez.", n_long: "Le message est trop long. Raccourcissez-le et renvoyez-le.",
+      n_fail: "L'envoi a échoué. Réessayez dans un instant.", n_conn: "L'envoi a échoué. Vérifiez votre connexion et réessayez.",
+      f_name: "Votre nom", f_company: "Entreprise", f_email: "Adresse e-mail", f_phone: "Téléphone", f_note: "Autre chose à nous dire",
+      f_send: "Envoyer mes coordonnées", f_sending: "Envoi", f_need: "Indiquez un e-mail ou un téléphone pour que l'équipe puisse vous joindre.",
+      f_thanks: "Merci. Un membre de l'équipe vous contactera.", not_you: "Ce n'est pas vous ? Nouvelle conversation"
+    },
+    de: {
+      lead: "Damit wir Ihnen gut helfen können, erzählen Sie uns kurz etwas über sich.", language: "Sprache",
+      first: "Vorname", company: "Firma", website: "Firmenwebsite (optional)", country: "Land, in dem Ihre Firma sitzt",
+      choose: "Land wählen", interest: "Ich interessiere mich für", exhibit: "Ausstellen", visit: "Besuchen", cont: "Weiter",
+      skip: "Überspringen — direkt fragen", wait: "Einen Moment",
+      e_name: "Bitte geben Sie Ihren Vornamen an.", e_interest: "Bitte wählen Sie Ausstellen oder Besuchen.",
+      e_company: "Für eine Ausstellerberatung brauchen wir Ihren Firmennamen.", e_country: "Für eine Ausstellerberatung wählen Sie bitte das Land Ihrer Firma.",
+      e_timeout: "Der Chat ist abgelaufen. Laden Sie die Seite neu, um neu zu beginnen.", e_generic: "Das hat nicht geklappt. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      said_name: "Mein Name ist {name}.", said_from_country: "Ich bin von {org} mit Sitz in {country}.", said_from: "Ich bin von {org}.",
+      said_country: "Ich bin in {country}.", said_exhibit: "Ich interessiere mich für eine Teilnahme als Aussteller.", said_visit: "Ich interessiere mich für einen Besuch.",
+      placeholder: "Ihre Nachricht", send: "Senden", person: "Mit einem Menschen sprechen", still: "Ihre Antwort wird vorbereitet…",
+      busy: "Entschuldigung — gerade ist sehr viel los. ", retry: "Erneut versuchen", retrying: "Neuer Versuch…", many: "Gerade fragen viele — Ihre Antwort ist unterwegs…",
+      n_fast: "Sie senden Nachrichten zu schnell. Warten Sie kurz und versuchen Sie es erneut.", n_long: "Die Nachricht ist zu lang. Kürzen Sie sie und senden Sie sie erneut.",
+      n_fail: "Senden fehlgeschlagen. Versuchen Sie es gleich noch einmal.", n_conn: "Senden fehlgeschlagen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      f_name: "Ihr Name", f_company: "Firma", f_email: "E-Mail-Adresse", f_phone: "Telefonnummer", f_note: "Was wir noch wissen sollten",
+      f_send: "Meine Angaben senden", f_sending: "Wird gesendet", f_need: "Geben Sie eine E-Mail-Adresse oder Telefonnummer an, damit das Team Sie erreichen kann.",
+      f_thanks: "Danke. Jemand aus dem Team meldet sich bei Ihnen.", not_you: "Nicht Sie? Neuen Chat beginnen"
+    },
+    ko: {
+      lead: "더 잘 도와드릴 수 있도록 간단히 소개해 주세요.", language: "언어",
+      first: "이름", company: "회사", website: "회사 웹사이트 (선택)", country: "회사 소재 국가",
+      choose: "국가 선택", interest: "관심 분야", exhibit: "전시 참가", visit: "방문", cont: "계속",
+      skip: "건너뛰기 — 바로 질문하기", wait: "잠시만요",
+      e_name: "이름을 입력해 주세요.", e_interest: "전시 참가 또는 방문을 선택해 주세요.",
+      e_company: "전시 참가 상담을 위해 회사명이 필요합니다.", e_country: "전시 참가 상담을 위해 회사 소재 국가를 선택해 주세요.",
+      e_timeout: "채팅 시간이 만료되었습니다. 페이지를 새로 고쳐 다시 시작하세요.", e_generic: "전송되지 않았습니다. 연결을 확인하고 다시 시도하세요.",
+      said_name: "제 이름은 {name}입니다.", said_from_country: "저는 {country}에 있는 {org} 소속입니다.", said_from: "저는 {org} 소속입니다.",
+      said_country: "저는 {country}에 있습니다.", said_exhibit: "전시 참가에 관심이 있습니다.", said_visit: "방문에 관심이 있습니다.",
+      placeholder: "메시지를 입력하세요", send: "보내기", person: "상담원과 대화", still: "답변을 준비하고 있습니다…",
+      busy: "죄송합니다 — 지금 문의가 많습니다. ", retry: "다시 시도", retrying: "다시 시도하는 중…", many: "지금 문의가 많습니다 — 곧 답변드리겠습니다…",
+      n_fast: "메시지를 너무 빨리 보내고 있습니다. 잠시 후 다시 시도하세요.", n_long: "메시지가 너무 깁니다. 줄여서 다시 보내 주세요.",
+      n_fail: "전송되지 않았습니다. 잠시 후 다시 시도하세요.", n_conn: "전송되지 않았습니다. 연결을 확인하고 다시 시도하세요.",
+      f_name: "성함", f_company: "회사", f_email: "이메일 주소", f_phone: "전화번호", f_note: "알려 주실 내용",
+      f_send: "내 정보 보내기", f_sending: "보내는 중", f_need: "팀이 연락드릴 수 있도록 이메일 또는 전화번호를 입력해 주세요.",
+      f_thanks: "감사합니다. 담당자가 곧 연락드리겠습니다.", not_you: "본인이 아니신가요? 새 채팅 시작"
+    },
+    it: {
+      lead: "Per aiutarla al meglio, ci dica qualcosa di lei.", language: "Lingua",
+      first: "Nome", company: "Azienda", website: "Sito web dell'azienda (facoltativo)", country: "Paese in cui ha sede la sua azienda",
+      choose: "Scelga un paese", interest: "Sono interessato a", exhibit: "Esporre", visit: "Visitare", cont: "Continua",
+      skip: "Salta — fai una domanda", wait: "Un momento",
+      e_name: "Indichi il suo nome, per favore.", e_interest: "Scelga esporre o visitare.",
+      e_company: "Per aiutarla a esporre ci serve il nome della sua azienda.", e_country: "Per aiutarla a esporre, scelga il paese della sua azienda.",
+      e_timeout: "La chat è scaduta. Ricarichi la pagina per ricominciare.", e_generic: "Invio non riuscito. Controlli la connessione e riprovi.",
+      said_name: "Mi chiamo {name}.", said_from_country: "Lavoro per {org}, con sede in {country}.", said_from: "Lavoro per {org}.",
+      said_country: "Mi trovo in {country}.", said_exhibit: "Sono interessato a esporre.", said_visit: "Sono interessato a visitare.",
+      placeholder: "Scriva il suo messaggio", send: "Invia", person: "Parlare con una persona", still: "Stiamo preparando la risposta…",
+      busy: "Ci scusi — in questo momento siamo molto impegnati. ", retry: "Riprova", retrying: "Nuovo tentativo…",
+      many: "Molte richieste in questo momento — la risposta è in arrivo…",
+      n_fast: "Sta inviando messaggi troppo velocemente. Attenda un momento e riprovi.", n_long: "Il messaggio è troppo lungo. Lo accorci e lo invii di nuovo.",
+      n_fail: "Invio non riuscito. Riprovi tra un momento.", n_conn: "Invio non riuscito. Controlli la connessione e riprovi.",
+      f_name: "Il suo nome", f_company: "Azienda", f_email: "Indirizzo e-mail", f_phone: "Numero di telefono", f_note: "Altro che dovremmo sapere",
+      f_send: "Invia i miei dati", f_sending: "Invio in corso", f_need: "Inserisca un'e-mail o un numero di telefono perché il team possa contattarla.",
+      f_thanks: "Grazie. Un membro del team la contatterà.", not_you: "Non è lei? Inizi una nuova chat"
+    },
+    ja: {
+      lead: "より適切にご案内するため、簡単にご紹介ください。", language: "言語",
+      first: "お名前（名）", company: "会社名", website: "会社のウェブサイト（任意）", country: "会社の所在国",
+      choose: "国を選択", interest: "ご関心", exhibit: "出展", visit: "来場", cont: "次へ",
+      skip: "スキップして質問する", wait: "少々お待ちください",
+      e_name: "お名前をご入力ください。", e_interest: "出展か来場をお選びください。",
+      e_company: "出展のご案内には会社名が必要です。", e_country: "出展のご案内のため、会社の所在国をお選びください。",
+      e_timeout: "チャットの有効期限が切れました。ページを再読み込みしてください。", e_generic: "送信できませんでした。接続をご確認のうえ、もう一度お試しください。",
+      said_name: "{name}と申します。", said_from_country: "{country}の{org}の者です。", said_from: "{org}の者です。",
+      said_country: "{country}におります。", said_exhibit: "出展に関心があります。", said_visit: "来場に関心があります。",
+      placeholder: "メッセージを入力", send: "送信", person: "担当者と話す", still: "回答を準備しています…",
+      busy: "申し訳ございません。ただいま大変混み合っております。", retry: "再試行", retrying: "再試行しています…",
+      many: "ただいまお問い合わせが多くなっております。まもなく回答いたします…",
+      n_fast: "送信が早すぎます。少し待ってからもう一度お試しください。", n_long: "メッセージが長すぎます。短くしてもう一度送信してください。",
+      n_fail: "送信できませんでした。しばらくしてからお試しください。", n_conn: "送信できませんでした。接続をご確認のうえ、もう一度お試しください。",
+      f_name: "お名前", f_company: "会社名", f_email: "メールアドレス", f_phone: "電話番号", f_note: "その他お伝えいただきたいこと",
+      f_send: "情報を送信", f_sending: "送信中", f_need: "担当者からご連絡できるよう、メールアドレスまたは電話番号をご入力ください。",
+      f_thanks: "ありがとうございます。担当者よりご連絡いたします。", not_you: "ご本人ではありませんか？新しいチャットを始める"
+    },
+    fa: {
+      lead: "برای اینکه بهتر کمکتان کنیم، کمی درباره خودتان بگویید.", language: "زبان",
+      first: "نام", company: "شرکت", website: "وب‌سایت شرکت (اختیاری)", country: "کشور محل شرکت شما",
+      choose: "انتخاب کشور", interest: "علاقه‌مندم به", exhibit: "شرکت به‌عنوان غرفه‌دار", visit: "بازدید", cont: "ادامه",
+      skip: "رد شدن — مستقیم بپرسید", wait: "لحظه‌ای صبر کنید",
+      e_name: "لطفاً نام خود را بنویسید.", e_interest: "لطفاً غرفه‌داری یا بازدید را انتخاب کنید.",
+      e_company: "برای راهنمایی درباره غرفه، نام شرکت لازم است.", e_country: "برای راهنمایی درباره غرفه، کشور محل شرکت را انتخاب کنید.",
+      e_timeout: "زمان گفتگو به پایان رسید. برای شروع دوباره صفحه را بارگذاری کنید.", e_generic: "ارسال نشد. اتصال را بررسی کنید و دوباره تلاش کنید.",
+      said_name: "نام من {name} است.", said_from_country: "از شرکت {org} هستم که در {country} مستقر است.", said_from: "از شرکت {org} هستم.",
+      said_country: "من در {country} هستم.", said_exhibit: "به شرکت در نمایشگاه به‌عنوان غرفه‌دار علاقه دارم.", said_visit: "به بازدید از نمایشگاه علاقه دارم.",
+      placeholder: "پیام خود را بنویسید", send: "ارسال", person: "صحبت با یک نفر", still: "در حال آماده کردن پاسخ…",
+      busy: "پوزش می‌خواهیم — در حال حاضر درخواست‌ها زیاد است. ", retry: "تلاش دوباره", retrying: "در حال تلاش دوباره…",
+      many: "در حال حاضر سؤال‌ها زیاد است — پاسخ شما در راه است…",
+      n_fast: "پیام‌ها را خیلی سریع می‌فرستید. کمی صبر کنید و دوباره تلاش کنید.", n_long: "پیام خیلی طولانی است. کوتاه‌ترش کنید و دوباره بفرستید.",
+      n_fail: "ارسال نشد. کمی بعد دوباره تلاش کنید.", n_conn: "ارسال نشد. اتصال را بررسی کنید و دوباره تلاش کنید.",
+      f_name: "نام شما", f_company: "شرکت", f_email: "ایمیل", f_phone: "شماره تلفن", f_note: "نکته دیگری که باید بدانیم",
+      f_send: "ارسال اطلاعات من", f_sending: "در حال ارسال", f_need: "یک ایمیل یا شماره تلفن وارد کنید تا تیم بتواند با شما تماس بگیرد.",
+      f_thanks: "سپاسگزاریم. یکی از اعضای تیم با شما تماس خواهد گرفت.", not_you: "شما نیستید؟ گفتگوی جدید را شروع کنید"
+    },
+    th: {
+      lead: "เพื่อให้เราช่วยคุณได้ดีขึ้น กรุณาแนะนำตัวสั้นๆ", language: "ภาษา",
+      first: "ชื่อ", company: "บริษัท", website: "เว็บไซต์บริษัท (ไม่บังคับ)", country: "ประเทศที่ตั้งของบริษัท",
+      choose: "เลือกประเทศ", interest: "ฉันสนใจ", exhibit: "ออกบูธ", visit: "เข้าชมงาน", cont: "ต่อไป",
+      skip: "ข้าม — ถามคำถามเลย", wait: "รอสักครู่",
+      e_name: "กรุณากรอกชื่อของคุณ", e_interest: "กรุณาเลือกออกบูธหรือเข้าชมงาน",
+      e_company: "สำหรับการออกบูธ เราต้องการชื่อบริษัทของคุณ", e_country: "สำหรับการออกบูธ กรุณาเลือกประเทศที่ตั้งของบริษัท",
+      e_timeout: "แชทหมดเวลาแล้ว กรุณาโหลดหน้าใหม่เพื่อเริ่มอีกครั้ง", e_generic: "ส่งไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      said_name: "ฉันชื่อ {name}", said_from_country: "ฉันมาจาก {org} ซึ่งตั้งอยู่ที่ {country}", said_from: "ฉันมาจาก {org}",
+      said_country: "ฉันอยู่ที่ {country}", said_exhibit: "ฉันสนใจเข้าร่วมออกบูธ", said_visit: "ฉันสนใจเข้าชมงาน",
+      placeholder: "พิมพ์ข้อความของคุณ", send: "ส่ง", person: "คุยกับเจ้าหน้าที่", still: "กำลังเตรียมคำตอบให้คุณ…",
+      busy: "ขออภัย — ขณะนี้มีผู้ติดต่อจำนวนมาก ", retry: "ลองอีกครั้ง", retrying: "กำลังลองอีกครั้ง…",
+      many: "ขณะนี้มีคำถามจำนวนมาก — คำตอบกำลังมา…",
+      n_fast: "คุณส่งข้อความเร็วเกินไป กรุณารอสักครู่แล้วลองอีกครั้ง", n_long: "ข้อความยาวเกินไป กรุณาย่อแล้วส่งใหม่",
+      n_fail: "ส่งไม่สำเร็จ กรุณาลองใหม่ในอีกสักครู่", n_conn: "ส่งไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      f_name: "ชื่อของคุณ", f_company: "บริษัท", f_email: "อีเมล", f_phone: "หมายเลขโทรศัพท์", f_note: "ข้อมูลอื่นที่เราควรทราบ",
+      f_send: "ส่งข้อมูลของฉัน", f_sending: "กำลังส่ง", f_need: "กรุณากรอกอีเมลหรือหมายเลขโทรศัพท์เพื่อให้ทีมงานติดต่อกลับ",
+      f_thanks: "ขอบคุณ ทีมงานจะติดต่อกลับโดยเร็ว", not_you: "ไม่ใช่คุณใช่ไหม? เริ่มแชทใหม่"
+    },
+    id: {
+      lead: "Agar kami dapat membantu dengan baik, ceritakan sedikit tentang Anda.", language: "Bahasa",
+      first: "Nama depan", company: "Perusahaan", website: "Situs web perusahaan (opsional)", country: "Negara lokasi perusahaan Anda",
+      choose: "Pilih negara", interest: "Saya tertarik untuk", exhibit: "Menjadi peserta pameran", visit: "Berkunjung", cont: "Lanjut",
+      skip: "Lewati — langsung bertanya", wait: "Mohon tunggu",
+      e_name: "Silakan isi nama depan Anda.", e_interest: "Silakan pilih menjadi peserta pameran atau berkunjung.",
+      e_company: "Untuk membantu soal pameran, kami perlu nama perusahaan Anda.", e_country: "Untuk membantu soal pameran, pilih negara lokasi perusahaan Anda.",
+      e_timeout: "Sesi chat telah berakhir. Muat ulang halaman untuk memulai lagi.", e_generic: "Gagal terkirim. Periksa koneksi Anda lalu coba lagi.",
+      said_name: "Nama saya {name}.", said_from_country: "Saya dari {org}, berlokasi di {country}.", said_from: "Saya dari {org}.",
+      said_country: "Saya berada di {country}.", said_exhibit: "Saya tertarik untuk menjadi peserta pameran.", said_visit: "Saya tertarik untuk berkunjung.",
+      placeholder: "Ketik pesan Anda", send: "Kirim", person: "Bicara dengan staf", still: "Jawaban Anda sedang disiapkan…",
+      busy: "Maaf — saat ini sedang sangat sibuk. ", retry: "Coba lagi", retrying: "Mencoba lagi…",
+      many: "Banyak pertanyaan saat ini — jawaban Anda segera datang…",
+      n_fast: "Anda mengirim pesan terlalu cepat. Tunggu sebentar lalu coba lagi.", n_long: "Pesan terlalu panjang. Persingkat lalu kirim lagi.",
+      n_fail: "Gagal terkirim. Coba lagi sebentar lagi.", n_conn: "Gagal terkirim. Periksa koneksi Anda lalu coba lagi.",
+      f_name: "Nama Anda", f_company: "Perusahaan", f_email: "Alamat email", f_phone: "Nomor telepon", f_note: "Hal lain yang perlu kami ketahui",
+      f_send: "Kirim data saya", f_sending: "Mengirim", f_need: "Isi alamat email atau nomor telepon agar tim kami dapat menghubungi Anda.",
+      f_thanks: "Terima kasih. Tim kami akan segera menghubungi Anda.", not_you: "Bukan Anda? Mulai chat baru"
+    },
+    ms: {
+      lead: "Supaya kami dapat membantu dengan baik, ceritakan sedikit tentang diri anda.", language: "Bahasa",
+      first: "Nama pertama", company: "Syarikat", website: "Laman web syarikat (pilihan)", country: "Negara syarikat anda berpangkalan",
+      choose: "Pilih negara", interest: "Saya berminat untuk", exhibit: "Menjadi pempamer", visit: "Melawat", cont: "Teruskan",
+      skip: "Langkau — terus bertanya", wait: "Sebentar",
+      e_name: "Sila isi nama pertama anda.", e_interest: "Sila pilih menjadi pempamer atau melawat.",
+      e_company: "Untuk membantu tentang pameran, kami perlukan nama syarikat anda.", e_country: "Untuk membantu tentang pameran, pilih negara syarikat anda berpangkalan.",
+      e_timeout: "Sesi chat telah tamat. Muat semula halaman untuk bermula semula.", e_generic: "Tidak berjaya dihantar. Semak sambungan anda dan cuba lagi.",
+      said_name: "Nama saya {name}.", said_from_country: "Saya dari {org}, yang berpangkalan di {country}.", said_from: "Saya dari {org}.",
+      said_country: "Saya berada di {country}.", said_exhibit: "Saya berminat untuk menyertai pameran sebagai pempamer.", said_visit: "Saya berminat untuk melawat.",
+      placeholder: "Taip mesej anda", send: "Hantar", person: "Bercakap dengan seseorang", still: "Jawapan anda sedang disediakan…",
+      busy: "Maaf — kami sangat sibuk sekarang. ", retry: "Cuba lagi", retrying: "Mencuba lagi…",
+      many: "Banyak pertanyaan sekarang — jawapan anda sedang dalam perjalanan…",
+      n_fast: "Anda menghantar mesej terlalu cepat. Tunggu sebentar dan cuba lagi.", n_long: "Mesej terlalu panjang. Pendekkan dan hantar semula.",
+      n_fail: "Tidak berjaya dihantar. Cuba lagi sebentar nanti.", n_conn: "Tidak berjaya dihantar. Semak sambungan anda dan cuba lagi.",
+      f_name: "Nama anda", f_company: "Syarikat", f_email: "Alamat e-mel", f_phone: "Nombor telefon", f_note: "Perkara lain yang perlu kami tahu",
+      f_send: "Hantar butiran saya", f_sending: "Menghantar", f_need: "Isi alamat e-mel atau nombor telefon supaya pasukan kami boleh menghubungi anda.",
+      f_thanks: "Terima kasih. Pasukan kami akan menghubungi anda.", not_you: "Bukan anda? Mulakan chat baharu"
+    }
+  };
+  var LANG = 'en';
+
+  function t(key, vars) {
+    var table = TEXT[LANG] || TEXT.en;
+    var s = Object.prototype.hasOwnProperty.call(table, key) ? table[key] : (TEXT.en[key] || key);
+    if (vars) {
+      Object.keys(vars).forEach(function (k) { s = s.split('{' + k + '}').join(String(vars[k])); });
+    }
+    return s;
+  }
+
+  // Elements whose words follow the chosen language: [node, key, attribute].
+  var BOUND = [];
+  function bind(node, key, attr) {
+    BOUND.push([node, key, attr || null]);
+    if (attr) { node.setAttribute(attr, t(key)); } else { node.textContent = t(key); }
+    return node;
+  }
+  function applyLang() {
+    BOUND = BOUND.filter(function (b) { return b[0] && (b[0].isConnected !== false || b[0].nodeType === 3); });
+    BOUND.forEach(function (b) {
+      if (b[2]) { b[0].setAttribute(b[2], t(b[1])); } else { b[0].textContent = t(b[1]); }
+    });
+    if (typeof panel !== 'undefined' && panel) { panel.setAttribute('dir', RTL[LANG] ? 'rtl' : 'ltr'); }
+  }
+  function setLang(code) {
+    if (!TEXT[code]) { return; }
+    LANG = code;
+    storageSet(STORAGE_LANG, code);
+    applyLang();
+  }
+  LANG = TEXT[storageGet(STORAGE_LANG)] ? storageGet(STORAGE_LANG) : 'en';
+
   /**
    * The visitor identifier is generated here and kept in the host page's own
    * localStorage — first-party, so third-party cookie restrictions do not
@@ -159,6 +510,37 @@
   }
 
   rememberArrival();
+
+  // ---------------------------------------------------------------------
+  // Personal chat link (owner, 13 Nov 2026)
+  //
+  // "Let's discuss more — click here" in an email or WhatsApp message opens
+  // the website with ?aisa_p=<signed token>. The token is taken out of the
+  // address bar at once (so it is not shared by copying the address), kept
+  // for this tab, and sent when the chat starts; the chat then opens by
+  // itself and welcomes the person by name.
+  // ---------------------------------------------------------------------
+  var STORAGE_PERSONAL = 'aisa_personal_' + AGENT;
+  var PERSONAL = null;
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      var tok = q.get('aisa_p');
+      if (tok && /^[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+$/.test(tok) && tok.length < 400) {
+        PERSONAL = tok;
+        sessionSet(STORAGE_PERSONAL, tok);
+        q.delete('aisa_p');
+        var rest = q.toString();
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(window.history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+        }
+      }
+    } catch (e) { /* old browser: the link simply opens the normal chat */ }
+  })();
+  // Opened by the link just now: the chat opens by itself. A later page in
+  // the same tab keeps the person, but waits for them to open the chat.
+  var PERSONAL_FRESH = !!PERSONAL;
+  if (!PERSONAL) { PERSONAL = sessionGet(STORAGE_PERSONAL) || null; }
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -370,6 +752,7 @@
     '.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}',
 
     // ---- Introduction card (first name, company, country, exhibit or visit) ----
+    '.intro[hidden]{display:none}',
     '.intro{margin:4px 0 6px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}',
     '.intro-lead{margin:0;font-size:13.5px;color:var(--ink-soft)}',
     '.field select{font-family:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);',
@@ -449,6 +832,7 @@
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'false');
   panel.setAttribute('aria-label', 'Chat with our sales assistant');
+  panel.setAttribute('dir', RTL[LANG] ? 'rtl' : 'ltr');
   root.appendChild(panel);
 
   // Header
@@ -500,7 +884,7 @@
   var input = document.createElement('textarea');
   input.className = 'input';
   input.rows = 1;
-  input.placeholder = 'Type your message';
+  bind(input, 'placeholder', 'placeholder');
   input.setAttribute('aria-label', 'Your message');
 
   var hp = document.createElement('input');
@@ -513,7 +897,7 @@
 
   var sendBtn = el('button', 'send');
   sendBtn.type = 'button';
-  sendBtn.title = 'Send';
+  bind(sendBtn, 'send', 'title');
   sendBtn.setAttribute('aria-label', 'Send message');
   sendBtn.appendChild(svg(ICON.send));
 
@@ -524,7 +908,7 @@
   var humanBtn = el('button', 'human');
   humanBtn.type = 'button';
   humanBtn.appendChild(svg(ICON.person));
-  humanBtn.appendChild(el('span', null, 'Talk to a person'));
+  humanBtn.appendChild(bind(el('span', null), 'person'));
   var counter = el('span', 'counter', '');
   footRow.appendChild(humanBtn);
   footRow.appendChild(counter);
@@ -612,6 +996,7 @@
   function addMessage(from, blocks, cards) {
     var wrap = el('div', 'msg from-' + from);
     var bubble = el('div', 'bubble');
+    bubble.setAttribute('dir', 'auto');
     renderBlocks(blocks, bubble);
     wrap.appendChild(bubble);
 
@@ -626,7 +1011,7 @@
   }
 
   function addVisitorText(text) {
-    addMessage('visitor', [{ type: 'p', spans: [{ t: 'text', v: text }] }], null);
+    return addMessage('visitor', [{ type: 'p', spans: [{ t: 'text', v: text }] }], null);
   }
 
   /**
@@ -691,7 +1076,9 @@
   var slowTimer = null;
   // The dots, and — if the answer takes a while because the AI is busy — a
   // short line underneath so the visitor knows nothing has gone wrong.
-  function showTyping(note) {
+  // quiet: only the dots, with no "still working" line however long it takes
+  // (the owner's rule while an exhibitor's company is being researched).
+  function showTyping(note, quiet) {
     hideTyping();
     typingNode = el('div', 'msg from-agent');
     var t = el('div', 'typing');
@@ -706,9 +1093,10 @@
     typingNode.appendChild(line);
     log.appendChild(typingNode);
     scrollDown();
+    if (quiet) { return; }
     slowTimer = window.setTimeout(function () {
       if (line.parentNode && line.hidden) {
-        line.textContent = 'Still working on your answer\u2026';
+        line.textContent = t('still');
         line.hidden = false;
         scrollDown();
       }
@@ -725,14 +1113,14 @@
   function showRetry(text) {
     var note = el('div', 'notice');
     note.appendChild(svg(ICON.alert));
-    note.appendChild(el('span', null, 'Sorry \u2014 we are very busy right now. '));
-    var b = el('button', 'retry-btn', 'Try again');
+    note.appendChild(el('span', null, t('busy')));
+    var b = el('button', 'retry-btn', t('retry'));
     b.type = 'button';
     b.addEventListener('click', function () {
       if (W.busy) { return; }
       if (note.parentNode) { note.parentNode.removeChild(note); }
       setBusy(true);
-      showTyping('Trying again\u2026');
+      showTyping(t('retrying'));
       sendTurn(text, 1);
     });
     note.appendChild(b);
@@ -787,10 +1175,10 @@
 
     var fields = {};
     [
-      ['name', 'Your name', 'text', 'name'],
-      ['company', 'Company', 'text', 'organization'],
-      ['email', 'Email address', 'email', 'email'],
-      ['phone', 'Phone number', 'tel', 'tel']
+      ['name', t('f_name'), 'text', 'name'],
+      ['company', t('f_company'), 'text', 'organization'],
+      ['email', t('f_email'), 'email', 'email'],
+      ['phone', t('f_phone'), 'tel', 'tel']
     ].forEach(function (f) {
       var wrap = el('div', 'field');
       var id = 'aisa-' + f[0];
@@ -807,7 +1195,7 @@
     });
 
     var noteWrap = el('div', 'field');
-    var noteLabel = el('label', null, 'Anything we should know');
+    var noteLabel = el('label', null, t('f_note'));
     noteLabel.setAttribute('for', 'aisa-note');
     var note = document.createElement('textarea');
     note.id = 'aisa-note';
@@ -826,20 +1214,20 @@
     error.hidden = true;
     formNode.appendChild(error);
 
-    var submit = el('button', 'submit', 'Send my details');
+    var submit = el('button', 'submit', t('f_send'));
     submit.type = 'button';
     formNode.appendChild(submit);
 
     submit.addEventListener('click', function () {
       error.hidden = true;
       if (!fields.email.value.trim() && !fields.phone.value.trim()) {
-        error.textContent = 'Enter an email address or a phone number so the team can reach you.';
+        error.textContent = t('f_need');
         error.hidden = false;
         fields.email.focus();
         return;
       }
       submit.disabled = true;
-      submit.textContent = 'Sending';
+      submit.textContent = t('f_sending');
 
       post('contact.php', {
         request_id: 'r' + randomId(23),
@@ -856,18 +1244,18 @@
         if (res && res.ok) {
           if (formNode && formNode.parentNode) { formNode.parentNode.removeChild(formNode); }
           formNode = null;
-          addMessage('agent', [{ type: 'p', spans: [{ t: 'text', v: res.message || 'Thank you. A member of the team will be in touch.' }] }], null);
+          addMessage('agent', [{ type: 'p', spans: [{ t: 'text', v: res.message || t('f_thanks') }] }], null);
         } else {
           error.textContent = (res && res.message) || 'That did not send. Check your details and try again.';
           error.hidden = false;
           submit.disabled = false;
-          submit.textContent = 'Send my details';
+          submit.textContent = t('f_send');
         }
       }).catch(function () {
-        error.textContent = 'That did not send. Check your connection and try again.';
+        error.textContent = t('n_conn');
         error.hidden = false;
         submit.disabled = false;
-        submit.textContent = 'Send my details';
+        submit.textContent = t('f_send');
       });
     });
 
@@ -892,12 +1280,32 @@
     quick.hidden = true;
 
     introNode = el('div', 'form intro');
-    introNode.appendChild(el('p', 'intro-lead', 'So we can help you properly, tell us a little about yourself.'));
+
+    // The language comes first: everything below, and the assistant's
+    // replies, follow it (owner, 13 Nov 2026).
+    var lWrap = el('div', 'field');
+    var lLab = bind(el('label', null), 'language');
+    lLab.setAttribute('for', 'aisa-intro-language');
+    var langSel = document.createElement('select');
+    langSel.id = 'aisa-intro-language';
+    LANGS.forEach(function (l) {
+      var o = document.createElement('option');
+      o.value = l[0];
+      o.textContent = l[1];
+      if (l[0] === LANG) { o.selected = true; }
+      langSel.appendChild(o);
+    });
+    langSel.addEventListener('change', function () { setLang(langSel.value); });
+    lWrap.appendChild(lLab);
+    lWrap.appendChild(langSel);
+    introNode.appendChild(lWrap);
+
+    introNode.appendChild(bind(el('p', 'intro-lead'), 'lead'));
 
     function textField(key, label, auto) {
       var wrap = el('div', 'field');
       var id = 'aisa-intro-' + key;
-      var lab = el('label', null, label);
+      var lab = bind(el('label', null), label);
       lab.setAttribute('for', id);
       var inp = document.createElement('input');
       inp.type = 'text';
@@ -910,17 +1318,21 @@
       return inp;
     }
 
-    var firstName = textField('first_name', 'First name', 'given-name');
-    var company = textField('company', 'Company', 'organization');
+    var firstName = textField('first_name', 'first', 'given-name');
+    var company = textField('company', 'company', 'organization');
+    // Optional (owner, 12 Nov 2026): tells two companies of the same name apart.
+    var website = textField('website', 'website', 'url');
+    website.setAttribute('inputmode', 'url');
+    website.placeholder = 'www.yourcompany.com';
 
     var cWrap = el('div', 'field');
-    var cLab = el('label', null, 'Country your company is based in');
+    var cLab = bind(el('label', null), 'country');
     cLab.setAttribute('for', 'aisa-intro-country');
     var country = document.createElement('select');
     country.id = 'aisa-intro-country';
     var none = document.createElement('option');
     none.value = '';
-    none.textContent = 'Choose a country';
+    bind(none, 'choose');
     country.appendChild(none);
     (countries || []).forEach(function (c) {
       if (!c || c.length < 2) { return; }
@@ -936,18 +1348,18 @@
     var choice = document.createElement('fieldset');
     choice.className = 'choice';
     var legend = document.createElement('legend');
-    legend.textContent = 'I am interested in';
+    bind(legend, 'interest');
     choice.appendChild(legend);
     var row = el('div', 'choice-row');
     var radios = {};
-    [['exhibit', 'Exhibiting'], ['visit', 'Visiting']].forEach(function (opt) {
+    [['exhibit', 'exhibit'], ['visit', 'visit']].forEach(function (opt) {
       var lab = document.createElement('label');
       var r = document.createElement('input');
       r.type = 'radio';
       r.name = 'aisa-intro-interest';
       r.value = opt[0];
       lab.appendChild(r);
-      lab.appendChild(document.createTextNode(opt[1]));
+      lab.appendChild(bind(document.createElement('span'), opt[1]));
       row.appendChild(lab);
       radios[opt[0]] = r;
     });
@@ -966,11 +1378,11 @@
     error.setAttribute('role', 'alert');
     introNode.appendChild(error);
 
-    var submit = el('button', 'submit', 'Continue');
+    var submit = bind(el('button', 'submit'), 'cont');
     submit.type = 'button';
     introNode.appendChild(submit);
 
-    var skip = el('button', 'skip', 'Skip — just ask a question');
+    var skip = bind(el('button', 'skip'), 'skip');
     skip.type = 'button';
     introNode.appendChild(skip);
 
@@ -999,25 +1411,37 @@
       var org = company.value.trim();
       var code = country.value;
 
-      if (!name) { fail('Please tell us your first name.', firstName); return; }
-      if (!interest) { fail('Please choose exhibiting or visiting.', radios.exhibit); return; }
+      if (!name) { fail(t('e_name'), firstName); return; }
+      if (!interest) { fail(t('e_interest'), radios.exhibit); return; }
       if (interest === 'exhibit' && !org) {
-        fail('To help with exhibiting, we need your company name.', company); return;
+        fail(t('e_company'), company); return;
       }
       if (interest === 'exhibit' && !code) {
-        fail('To help with exhibiting, choose the country your company is based in.', country); return;
+        fail(t('e_country'), country); return;
       }
 
       submit.disabled = true;
-      submit.textContent = 'One moment';
+      submit.textContent = t('wait');
 
       // What the visitor said, shown as their own message — the same words
       // the conversation record keeps.
       var countryName = code ? country.options[country.selectedIndex].textContent : '';
-      var said = 'My name is ' + name + '.';
-      if (org) { said += ' I am from ' + org + (countryName ? ', based in ' + countryName : '') + '.'; }
-      else if (countryName) { said += ' I am based in ' + countryName + '.'; }
-      said += interest === 'exhibit' ? ' I am interested in exhibiting.' : ' I am interested in visiting.';
+      var said = t('said_name', { name: name });
+      if (org) { said += ' ' + (countryName ? t('said_from_country', { org: org, country: countryName }) : t('said_from', { org: org })); }
+      else if (countryName) { said += ' ' + t('said_country', { country: countryName }); }
+      said += ' ' + t(interest === 'exhibit' ? 'said_exhibit' : 'said_visit');
+
+      // The card steps aside and their words appear with the typing dots,
+      // while their company is looked up — nothing else is said.
+      var card = introNode;
+      if (card) { card.hidden = true; }
+      var saidNode = addVisitorText(said);
+      showTyping(null, true);
+      function restoreCard() {
+        hideTyping();
+        if (saidNode && saidNode.parentNode) { saidNode.parentNode.removeChild(saidNode); }
+        if (card) { card.hidden = false; }
+      }
 
       post('intro.php', {
         request_id: 'r' + randomId(23),
@@ -1026,32 +1450,36 @@
         visitor_id: visitorId(),
         first_name: name,
         company: org,
+        website: website.value.trim(),
         country: code,
         interest: interest,
+        language: LANG,
         company_website_hp: ihp.value
       }).then(function (res) {
         if (res && res.ok) {
+          hideTyping();
           closeCard();
-          addVisitorText(said);
           addMessage('agent', res.blocks || [], res.cards || null);
           if (res.contact_form) { showContactForm(null); }
           else { input.focus(); }
           return;
         }
+        restoreCard();
         submit.disabled = false;
-        submit.textContent = 'Continue';
+        submit.textContent = t('cont');
         if (res && res.error === 'session_expired') {
-          fail('This chat timed out. Reload the page to start again.');
+          fail(t('e_timeout'));
         } else if (res && res.error === 'already_done') {
           closeCard();
           input.focus();
         } else {
-          fail((res && res.message) || 'That did not go through. Check the details and try again.');
+          fail((res && res.message) || t('e_generic'));
         }
       }).catch(function () {
+        restoreCard();
         submit.disabled = false;
-        submit.textContent = 'Continue';
-        fail('That did not go through. Check your connection and try again.');
+        submit.textContent = t('cont');
+        fail(t('e_generic'));
       });
     });
 
@@ -1092,10 +1520,13 @@
     W.started = true;
     headStatus.textContent = 'Connecting';
 
+    var personal = PERSONAL;
+    PERSONAL = null;                       // used once; "Not you?" starts a plain chat
     return post('session.php', {
       visitor_id: visitorId(),
       page_url: location.href.slice(0, 500),
-      arrival: readArrival()
+      arrival: readArrival(),
+      personal: personal
     }).then(function (res) {
       if (!res || !res.ok) {
         headStatus.textContent = 'Unavailable';
@@ -1130,7 +1561,22 @@
       }
 
       W.quickReplies = res.quick_replies || [];
-      if (res.unavailable || res.contact_form) {
+      if (res.personal) {
+        // Their language from an earlier chat, unless they chose one on this device.
+        if (res.language && TEXT[res.language] && !storageGet(STORAGE_LANG)) { setLang(res.language); }
+        var notYou = bind(el('button', 'skip not-you'), 'not_you');
+        notYou.type = 'button';
+        notYou.addEventListener('click', function () {
+          sessionSet(STORAGE_PERSONAL, '');
+          if (notYou.parentNode) { notYou.parentNode.removeChild(notYou); }
+          while (log.firstChild) { log.removeChild(log.firstChild); }
+          W.started = false;
+          W.session = null;
+          startSession();
+        });
+        log.appendChild(notYou);
+        input.focus();
+      } else if (res.unavailable || res.contact_form) {
         showContactForm(null);
       } else if (res.intro_form) {
         showIntroCard(res.countries);
@@ -1182,12 +1628,13 @@
       visitor_id: visitorId(),
       message: text,
       retry: attempt > 0,
+      language: LANG,
       company_website_hp: hp.value
     }).then(function (res) {
       if (res && res.ok && res.fallback === 'llm_busy') {
         if (attempt < MAX_BUSY_RETRIES) {
           var wait = Math.max(5, Math.min(60, parseInt(res.retry_after, 10) || 12));
-          showTyping('Many people are asking right now \u2014 your answer is on its way\u2026');
+          showTyping(t('many'));
           window.setTimeout(function () { sendTurn(text, attempt + 1); }, wait * 1000);
           return;
         }
@@ -1203,14 +1650,14 @@
       if (!res || !res.ok) {
         var code = res && res.error;
         if (code === 'rate_limited') {
-          showNotice('You are sending messages faster than we can process. Wait a moment and try again.');
+          showNotice(t('n_fast'));
         } else if (code === 'message_too_long') {
-          showNotice('That message is too long. Shorten it and send again.');
+          showNotice(t('n_long'));
         } else if (code === 'session_expired') {
           showNotice('This chat timed out. Reload the page to start again.');
           setBusy(true);
         } else {
-          showNotice('That did not send. Try again in a moment.');
+          showNotice(t('n_fail'));
         }
         return;
       }
@@ -1224,7 +1671,7 @@
     }).catch(function () {
       hideTyping();
       setBusy(false);
-      showNotice('That did not send. Check your connection and try again.');
+      showNotice(t('n_conn'));
     });
   }
 
@@ -1285,7 +1732,7 @@
 
   humanBtn.addEventListener('click', function () {
     if (W.busy) { return; }
-    send('I would like to speak to someone from your team.');
+    send(LANG === 'en' ? 'I would like to speak to someone from your team.' : t('person'));
   });
 
   input.addEventListener('input', function () { autoGrow(); updateCounter(); });
@@ -1300,8 +1747,8 @@
     if (ev.key === 'Escape' && W.open) { closePanel(); }
   });
 
-  if (AUTO_OPEN) {
-    window.setTimeout(openPanel, 1200);
+  if (AUTO_OPEN || PERSONAL_FRESH) {
+    window.setTimeout(openPanel, PERSONAL_FRESH ? 600 : 1200);
   }
 
   // Public hook, so a site can open the widget from its own button.

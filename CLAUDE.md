@@ -24,7 +24,7 @@ Read this before any task on this project.
   switcher. Read `docs/sales-agent-status-2026-10-10.md`. The contract for
   /social is the "Done — what /social can rely on" section at the end of
   `docs/handover/2026-10-10-shared-login-and-event-access.md`. Sales agent
-  tests now: `php tests/acceptance.php` (1,207) and `php tests/access-http.php`
+  tests now: `php tests/acceptance.php` (1,319) and `php tests/access-http.php`
   (82, end-to-end staff isolation). New admin pages must use
   `admin_require_access('view'|'manage')` or `admin_require_role('admin')`.
   **Approved sales agent change (12 Oct 2026) — built, owner to install:**
@@ -130,10 +130,112 @@ Read this before any task on this project.
   (repository faisalecg-ops/pharmaasia) is LIVE at https://pharmaasia.com.pk since
   7 Nov 2026, with Pharma Asia Pulse (this blog script) at /pulse; the review copy
   pharmaasia.ecgateway.net is only a backup now.
+- **Chat fix plan (owner approved 11 Nov 2026), built 11 Nov 2026 on branch `pharma-asia-2027`, owner to
+  install** `salesagent-update-2026-11-chat-fixes.zip` (no database step) + `tools/pharmaasia-2027/pharmaasia-chat-fixes-2026-11.sql`:
+  wording rules and one-line prices (`ChatGuide`), contact asked once then a gap of 5, offer kept in view and a
+  whole-chat summary every turn, research before the first exhibitor reply (`research.first_reply_wait_seconds`,
+  paused runs keep their pages), the four-step case, research card on the conversation page, "Expired" badge.
+  Read `docs/upgrade-2026-11-chat-fixes.md` and the "Done" section of `docs/handover/2026-11-11-chat-review-and-fix-plan.md`.
+  Acceptance tests 1,319. The 15 real-model test chats: `tools/chat-tests/run.php` (test copy only) — 31/31 pass
+  with GPT-6 Luna + Tavily on 12 Nov 2026; research wait default 14 s (research ~9 s while waiting).
+- **Guided selling plan (owner approved 12 Nov 2026):** Claude doc "AI Sales Agent — Guided selling,
+  quotations and email replies: plan" (https://claude.ai/artifact/TVpaToSMHxL91yjL3SDpVC). Three stages.
+  **Stage A BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-a.zip` (36 files; it
+  contains the chat fixes too and replaces that zip), Database upgrade steps `2026_11_qualification` and
+  `2026_11_site_pages`. Read `docs/upgrade-2026-11-guided-selling-a.md`. Code: `Qualification` (nine facts, score,
+  Hot/Warm/Nurture/Low, the eight-step path; weights and target countries per exhibition), `SitePages` (weekly
+  sitemap reading into `site_pages`, answers with links, only known links, never prices from the website),
+  admin `website.php`. Pakistan price or quotation ask: no price, the local rep's details are added.
+  The chat card has an optional **Company website** box (`lead_state.website`, used by research to tell
+  same-name companies apart). Acceptance tests 1,417. Real-AI test chats 1 to 18 run on 12 Nov 2026 (GPT-6 Luna + Tavily); transcript
+  `docs/reference/chat-tests-2026-11-12-guided-selling.txt`.
+  **Blocked countries (owner, 12 Nov 2026, in the same package):** one list for all exhibitions, Set-up →
+  Blocked countries (`BlockedCountries`, setting `blocked_countries`, ISO codes). Not on the chat card; a chat
+  from a blocked country gets only the standard reply `blocked_country` (no AI, research, price, lead or email
+  to the team); no WhatsApp, no prospect research or email (`CompanyStore::isContactable`,
+  `WhatsAppEngine::blockedReason`). By what the person said or the record's country, never by IP (owner's
+  choice). The Pharma Asia website has its own list (Admin → Forms → Blocked countries, `form_blocked_countries`).
+  Any new way of contacting people must pass `WhatsAppEngine::blockedReason`; any new chat entry point must
+  check `BlockedCountries::blocksConversation`.
+  **Stage B BUILT 12 Nov 2026, owner to install** `salesagent-update-2026-11-guided-selling-b.zip` (43 files; it
+  contains the chat fixes and Stage A too and replaces every earlier November zip), Database upgrade steps
+  `2026_11_qualification`, `2026_11_site_pages`, `2026_11_quotations`. Read `docs/upgrade-2026-11-guided-selling-b.md`.
+  Code: `Quotation` (assess → prepare → dispatch; `staffProblem` for the lead page; settings per exhibition
+  `agents.quote_*`, off by default), `app/lib/PdfWriter.php` (pure PHP, Helvetica, PNG/JPEG; no CJK), table
+  `quotations`, PDFs in `storage/quotations/<agent id>/`, logos in `storage/uploads/quotation-logos/`, organiser
+  logo `app/assets/ecommerce-gateway-logo.png`, `Mailer` attachments (`email_outbox.attachment_path`), admin
+  `quotation.php` (opens a PDF), lead page Quotations card. Rules: international only and country from the
+  visitor's own words (never IP), never Pakistan, approved live prices only, 3 per conversation, 5 per address
+  per day, no payment details, no BCC (team notification `quotation` carries the PDF), the reply line
+  "Quotation N is on its way to …" is written by PHP. Acceptance tests 1,534. Real-AI chats 1 to 24 run 12 Nov (`docs/reference/chat-tests-2026-11-12-quotations.txt`).
+  A request is dropped when the visitor declines to give details, and let go after two replies without the missing detail.
+  **13 Nov 2026 (owner: "it does not offer the quotation on any stage"):** the program now offers it after a price
+  card or "how do we go ahead" (prompt section QUOTATION OFFER, plus a PHP line when the reply lacks one), at most
+  twice per chat; `lead_state.quote_last_ref` lets a plain "yes" quote the option just priced. Tests 1,534.
+  Note: five prospecting tests fail only in the first ~20 minutes after Karachi midnight (they move records back
+  20 minutes); the live daily limits are correct.
+  The quotation email's Message-ID is kept in `quotations.message_id` for Stage C.
+  **Languages and personal chat links (owner, 13 Nov 2026), BUILT, owner to install**
+  `salesagent-update-2026-11-final.zip` with one guide `docs/install-2026-11-final.md` (contains every November change;
+  the owner has installed none of the November zips; replaces all of them), extra
+  Database upgrade step `2026_11_personal_links`. Read `docs/upgrade-2026-11-languages-and-chat-links.md`.
+  `Lang` (16 languages: en, zh, ur = Roman Urdu, ar, tr, ru, es, fr, de, ko; it, ja, fa, th in `TEXT_MORE`/`WORDS_MORE`;
+  id, ms in `TEXT_IDMS`/`WORDS_IDMS`; fa and ar right to left; `Lang::digits` reads Persian/Arabic/Thai digits; `lead_state.language`, sent by the
+  widget with every message; prompt section LANGUAGE; program-written lines translated; price/quote/yes/next/
+  person/money/decline/size words recognised in all ten). Widget 1.2.0: Language select on the card, all labels
+  translated, Arabic RTL. Quotation PDFs and emails stay English (owner). Price guard now checks amounts with
+  dollar words in every language and European number styles, and refuses other currencies as words (not rupees:
+  the Market article quotes rupees). `PersonalLink`: signed token `?aisa_p=` (Crypto::sign), kinds prospect
+  (outreach_emails.id) / quote (quotations.id) / whatsapp (registrations.id, opening and follow-up only), on/off
+  per exhibition `agents.chat_link_*` (default on), valid until the end of `event_ends_on` (90 days without one),
+  opened by `api/session.php` (`personal`): no card, welcome by name, lead linked, earlier chat's summary and
+  offer kept; do-not-contact and blocked countries get the normal chat; utm_medium=personal-link (/social only
+  counts utm_medium social/exhibitor-share/share, so it is unaffected). Tests 1,636 (then 1,682 with the concerns).
+  **Conversation quality (owner, 13 Nov 2026: "improve according to"
+  `docs/SALES_CONVERSATION_QUALITY_AND_PROMPT_IMPROVEMENT_PLAN.md` on main), BUILT, in the same final zip, no database step.**
+  Read `docs/upgrade-2026-11-conversation-quality.md` (what already existed, what was added, what was not). `Concerns`
+  (price, approval, send_details, other_shows, not_ready, guarantee, audience, opt_out; PHP reads English/Roman Urdu,
+  the AI reports `concern` in any language; `lead_state.concerns`; prompt section WHEN THEY RAISE A CONCERN with approved
+  audience facts); a PHP-read opt-out puts the lead's email/phone on the Do-not-contact list (`Suppression`, source
+  opt_out) and sets `lead_state.no_contact`; heard only by the AI → `no_contact_maybe` (asking stops, team checks).
+  Rule 11 (no guaranteed results). Tests 1,682. Real-AI chats 34–41 written, not run (the test keys were rotated).
+  **Transcript review (owner, 14 Nov 2026: apply `docs/PHARMA_ASIA_CHAT_TRANSCRIPT_REVIEW_AND_RECOMMENDATIONS.md`
+  on main), BUILT, same final zip, no database step.** Read `docs/upgrade-2026-11-transcript-review.md`. Only PHP says
+  something was sent/passed on (`Quotation::stripClaims`, system rule 12); quotations off/limit/failure → team route
+  (handoff reason "Asked for a quotation…", briefing row "Why they need you", Lang `quote_team`/`quote_team_ask`/
+  `quote_failed`); one quotation holds up to 4 options (`detail.options`, `lead_state.quote_names`, `MAX_OPTIONS`);
+  sponsorship prices = every tier at once; "all" (`ChatGuide::asksForAll`); exact names; stand vs sponsorship;
+  machinery → largest unit first; stand page only for stands. Tests 1,710. Real-AI chats 42–48 written, not run.
+  **Stage C (not built):** email replies in the same thread; reply mailbox set per exhibition in the admin;
+  prospect-campaign replies left out for now. It waits for the owner to try Stage B.
 - **Event Blog 1.4.1 (10 Nov 2026):** changing the Blog address also rewrites links
   saved with the old address (`Settings::moveLinks()`: menus, slide buttons, article
   texts, JSON-escaped too). Found on Pharma Asia Pulse after the move: the starter
   pack had saved its menus as full review-copy addresses. 340 blog tests pass.
+- **Pharma Asia after the 24th edition (owner approved 10 Nov 2026; plan: Claude doc
+  "Pharma Asia 2026 Post-Event Update Plan"):** built on branch `pharma-asia-2027`, owner to
+  install. Read `docs/upgrade-2026-11-pharma-asia.md`. Approved sales agent changes: outdoor
+  exhibit space as a third kind of stand (step `2026_11_outdoor_package`), and OpenAI GPT-6
+  models with their request settings (owner: GPT-6 Luna for the website chat, GPT-6.1 Sol for
+  prospect emails). Pharma Asia's 2027 content and the Pulse update are SQL files built by
+  `tools/pharmaasia-2027/` and tested on copies of the live databases. Rule for every 2026
+  fact: Post-Event Fact Sheet first, Closing Day Press Release second, Pre-Event Press
+  Release third. Pharma Asia exists live as exhibition `pharmaasia`; /social is set up but not
+  connected to Pulse.
+  **11 Nov 2026:** both deliveries installed by the owner and the Pharma Asia content approved;
+  cron jobs added on both accounts. Second update: the chat describes packages and sponsorship
+  tiers without prices when asked (`PricingEngine::catalogueForPrompt`, prompt section "WHAT IS
+  ON OFFER"), and the sponsorship tiers' 22 Oct 2026 end date removed. **Testing with the owner
+  is in progress: collect findings, do not fix until the owner decides.** Read
+  `docs/sales-agent-status-2026-11-11.md` (findings 1–10, causes, open items).
+  **Owner approved the chat fix plan (11 Nov 2026, built by the AI Sales Agent chat):** read
+  `docs/handover/2026-11-11-chat-review-and-fix-plan.md` and the Claude doc "AI Sales Agent
+  chat — review and fix plan" (https://claude.ai/code/artifact/723bf221-9947-403a-ac4b-7c4749d64e74).
+  Six steps: human wording (no "approved", no country in price replies, ask which option first),
+  contact asked once with a gap, whole-chat memory of the offer, research before the first
+  exhibitor reply (silent 10–20 s), sponsorship benefits/compare/recommend, Pharma Asia sectors +
+  Market article + tier guidance, outdoor from 80 sqm, 15 test chats. This ends the "do not fix
+  yet" pause.
 - The owner communicates in short, informal English and is not technical:
   reply in plain words, keep discussion answers focused, and ask only real
   decision questions.

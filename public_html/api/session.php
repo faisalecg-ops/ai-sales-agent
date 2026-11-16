@@ -47,9 +47,27 @@ if ($unavailable) {
 // while the assistant is offline.
 $introForm = !$unavailable && (int)($agent['chat_intro_form'] ?? 1) === 1;
 
+// Opened from a personal "Let's discuss more" link (13 Nov 2026): no card, a
+// welcome by name instead. A link that is not valid any more opens the
+// normal chat.
+$personal = null;
+if (!$unavailable && !empty($input['personal']) && is_string($input['personal'])) {
+    try {
+        $personal = PersonalLink::open($agent, $conversation, $input['personal']);
+    } catch (Throwable $ex) {
+        app_log('chat', 'personal link could not be opened', ['error' => $ex->getMessage()]);
+    }
+    if ($personal !== null) {
+        $introForm = false;
+        $blocks = Sanitizer::toBlocks($personal['text'], AgentResolver::approvedLinkDomains($agent));
+    }
+}
+
 api_respond([
     'ok'             => true,
     'intro_form'     => $introForm,
+    'personal'       => $personal !== null,
+    'language'       => $personal['language'] ?? null,
     'countries'      => $introForm ? ChatIntro::countryOptions() : [],
     'session_id'     => (string)$conversation['session_id'],
     'session_secret' => $started['session_secret'],

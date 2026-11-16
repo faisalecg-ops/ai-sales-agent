@@ -44,11 +44,22 @@ echo '<div class="card"><h2>About this conversation</h2><table class="table"><tb
    . '<tr><td>What they wanted</td><td>' . e(ucfirst((string)$conversation['intent'])) . '</td></tr>'
    . '<tr><td>Pricing region</td><td>' . e(ucfirst((string)$conversation['pricing_country'])) . '</td></tr>'
    . '<tr><td>How we knew</td><td>' . e(match ((string)$conversation['country_source']) {
-        'visitor_disclosed' => 'They told us',
+        'visitor_disclosed' => !empty(ConversationStore::leadState($conversation)['country_from'])
+            ? 'From ' . ConversationStore::leadState($conversation)['country_from'] . ' (personal chat link)' : 'They told us',
         'ip_geo'            => 'From their IP address',
         default             => 'Never established',
      }) . '</td></tr>'
    . ($conversation['disclosed_company_country'] ? '<tr><td>Company based in</td><td>' . e((string)$conversation['disclosed_company_country']) . '</td></tr>' : '')
+   . (Lang::of(ConversationStore::leadState($conversation)) !== 'en'
+        ? '<tr><td>Chat language</td><td>' . e(Lang::name(Lang::of(ConversationStore::leadState($conversation)))) . '</td></tr>' : '')
+   // Concerns the visitor raised, and an opt-out (13 Nov 2026).
+   . (($cs = ConversationStore::leadState($conversation)) && (!empty($cs['concerns']) || !empty($cs['no_contact']) || !empty($cs['no_contact_maybe']))
+        ? '<tr><td>Concerns raised</td><td>' . e(implode('; ', Concerns::labels((array)($cs['concerns'] ?? []))))
+          . (!empty($cs['no_contact']) ? ' <span class="pill pill-bad">Do not contact</span> <span class="small muted">Their email and phone are on the Do-not-contact list.</span>'
+             : (!empty($cs['no_contact_maybe']) ? ' <span class="pill pill-warn">May not want contact</span> <span class="small muted">Read the chat; add them under Do-not-contact if so.</span>' : ''))
+          . '</td></tr>' : '')
+   . (BlockedCountries::blocksConversation($conversation)
+        ? '<tr><td>Blocked country</td><td><span class="pill pill-bad">Blocked</span> <span class="small muted">Only the standard reply is given. No lead, no email to the team.</span></td></tr>' : '')
    . ($conversation['requested_sqm'] ? '<tr><td>Size asked about</td><td>' . e(rtrim(rtrim(number_format((float)$conversation['requested_sqm'], 2), '0'), '.')) . ' sqm</td></tr>' : '')
    . '<tr><td>Page</td><td class="small">' . e((string)$conversation['page_url']) . '</td></tr>'
    // The link that brought them (12 Oct 2026, docs/handover/2026-10-12-social-attribution.md).
@@ -77,6 +88,43 @@ if (!$active) {
     foreach ($active as $s) {
         echo '<span class="pill pill-info" style="margin:0 5px 5px 0">' . e($s) . '</span>';
     }
+}
+echo '</div>';
+
+// The sales path and the qualification record (plan approved 12 Nov 2026).
+$convState = ConversationStore::leadState($conversation);
+if (!empty($conversation['path_step']) && is_array($convState['qual'] ?? null)) {
+    $stepNo = (int)$conversation['path_step'];
+    echo '<div class="card"><h2>Sales path</h2><p><span class="pill pill-info">Step ' . $stepNo . ' of 8</span> '
+       . e(Qualification::STEPS[$stepNo] ?? '') . '</p></div>';
+    echo qualification_card($convState['qual'], $conversation['qual_pct'] ?? 0, $conversation['lead_label'] ?? null,
+        $conversation['lead_score'] ?? null);
+}
+
+// Whether their company was researched, what was found, or why not
+// (fix plan step 3, 11 Nov 2026).
+$research = CompanyResearch::statusForConversation($conversation);
+$rRow = $research['row'];
+echo '<div class="card"><h2>Company research</h2><p><span class="pill '
+   . e(match ($research['state']) { 'done' => 'pill-ok', 'failed', 'poor' => 'pill-bad', 'none' => '', default => 'pill-info' })
+   . '">' . e($research['label']) . '</span>'
+   . ($rRow !== null ? ' <span class="muted small">' . e((string)$rRow['company_name'])
+        . ($rRow['company_country'] ? ', ' . e((string)$rRow['company_country']) : '') . '</span>' : '')
+   . '</p>';
+if ($research['detail'] !== '') {
+    echo '<p class="small">' . e($research['detail']) . '</p>';
+}
+if ($rRow !== null && $research['state'] === 'done') {
+    $rf = CompanyResearch::findingsOf($rRow);
+    if (!empty($rf['products'])) {
+        echo '<p class="small"><strong>Makes:</strong> ' . e(implode(', ', array_slice((array)$rf['products'], 0, 8))) . '</p>';
+    }
+    echo '<p class="small muted">Match: ' . e(ucfirst((string)($rRow['match_level'] ?? ''))) . ' · Score '
+       . (int)($rRow['score'] ?? 0) . '/100'
+       . (!empty($rf['best_offer']['label']) ? ' · Best fit: ' . e((string)$rf['best_offer']['label']) : '') . '</p>';
+}
+if ($rRow !== null) {
+    echo '<p class="small"><a href="' . e(url('admin/research.php?view=' . (int)$rRow['id'])) . '">Open the research</a></p>';
 }
 echo '</div>';
 

@@ -12,10 +12,13 @@ content_page('stall_package', [
     'intro'    => 'Every price a visitor sees comes from here. The assistant is never allowed to work out a figure of its own — it receives these numbers already calculated.',
     'columns'  => [
         ['label' => 'Name', 'value' => static fn($i) => e((string)$i['package_name'])],
-        ['label' => 'Type', 'value' => static fn($i) => e((string)$i['package_type'] === 'shell' ? 'Shell scheme' : 'Bare space')],
+        ['label' => 'Type', 'value' => static fn($i) => e(PricingEngine::kindLabel((string)$i['package_type']))],
         ['label' => 'How it is priced', 'value' => static function ($i) {
             return (string)$i['pricing_mode'] === 'per_sqm'
-                ? e(PricingEngine::formatPrice((float)$i['rate_per_sqm'], (string)$i['currency']) . ' per sqm, from ' . rtrim(rtrim(number_format((float)$i['min_sqm'], 2), '0'), '.') . ' sqm')
+                ? e(PricingEngine::formatPrice((float)$i['rate_per_sqm'], (string)$i['currency']) . ' per sqm'
+                    . ((float)($i['min_sqm'] ?? 0) > 0
+                        ? ', from ' . rtrim(rtrim(number_format((float)$i['min_sqm'], 2), '0'), '.') . ' sqm'
+                        : ', no minimum'))
                 : e(PricingEngine::formatPrice((float)$i['price'], (string)$i['currency']));
         }],
         ['label' => 'Tax', 'value' => static fn($i) => $i['tax_rate_percent'] !== null
@@ -35,7 +38,8 @@ content_page('stall_package', [
             if ((float)($v['rate_per_sqm'] ?? 0) <= 0) {
                 $errors[] = 'Enter the rate per square metre.';
             }
-            if ((float)($v['min_sqm'] ?? 0) <= 0) {
+            // Outdoor space may be published with a rate and no minimum.
+            if ((float)($v['min_sqm'] ?? 0) <= 0 && (string)($v['package_type'] ?? '') !== 'outdoor') {
                 $errors[] = 'Enter the smallest size that can be booked.';
             }
         } elseif ((float)($v['price'] ?? 0) <= 0) {
@@ -51,7 +55,7 @@ content_page('stall_package', [
         'package_name' => ['type' => 'text', 'label' => 'Name', 'required' => true, 'max' => 160, 'group' => 'What it is',
             'hint' => 'What a visitor would recognise, for example Shell Scheme Stand.'],
         'package_type' => ['type' => 'select', 'label' => 'Kind of stand', 'default' => 'shell', 'group' => 'What it is',
-            'options' => ['shell' => 'Shell scheme (built for them)', 'bare' => 'Bare space (they build it)']],
+            'options' => ['shell' => 'Shell scheme (built for them)', 'bare' => 'Bare space (they build it)', 'outdoor' => 'Outdoor space (open area outside the halls)']],
         'stall_size' => ['type' => 'text', 'label' => 'Size description', 'max' => 64, 'group' => 'What it is',
             'hint' => 'Shown on the card, for example Built in 3m x 3m modules.'],
         'edition_label' => ['type' => 'text', 'label' => 'Which edition', 'max' => 160, 'group' => 'What it is',
@@ -69,7 +73,7 @@ content_page('stall_package', [
             'hint' => 'Used when the price is fixed. With a rate per square metre, put the price of the smallest bookable size here for reference.'],
         'rate_per_sqm' => ['type' => 'decimal', 'label' => 'Rate per square metre', 'group' => 'Price'],
         'min_sqm' => ['type' => 'decimal', 'label' => 'Smallest size (sqm)', 'group' => 'Price',
-            'hint' => 'A visitor asking for less is told the minimum rather than given a figure.'],
+            'hint' => 'A visitor asking for less is told the minimum rather than given a figure. May be left blank for outdoor space when the tariff gives no minimum.'],
         'increment_sqm' => ['type' => 'decimal', 'label' => 'Sold in steps of (sqm)', 'group' => 'Price',
             'hint' => 'For example 9, so sizes go 9, 18, 27. A size in between is refused and the nearest two are offered instead.'],
         'max_sqm' => ['type' => 'decimal', 'label' => 'Largest size (sqm)', 'group' => 'Price',

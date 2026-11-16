@@ -14,11 +14,11 @@ declare(strict_types=1);
  * exhibition justifies — lightly offered exhibiting or the conference. No
  * lead is created unless they take it up.
  *
- * Exhibiting: the answer goes through the ordinary chat engine, so pricing,
- * country rules, knowledge and handoff behave exactly as they do for a typed
- * message. This is where company research will run once it exists — before
- * the reply, so the first thing an exhibitor hears is already about their
- * business.
+ * Exhibiting: their company is researched first (waiting at most a few
+ * seconds), then the answer goes through the ordinary chat engine, so
+ * pricing, country rules, knowledge and handoff behave exactly as they do for
+ * a typed message, and the first thing an exhibitor hears is already about
+ * their business.
  */
 final class ChatIntro
 {
@@ -51,7 +51,7 @@ final class ChatIntro
         if (!in_array($interest, self::INTERESTS, true)) {
             return self::refuse('Please choose whether you are interested in exhibiting or visiting.');
         }
-        if ($country !== '' && CountryData::name($country) === null) {
+        if ($country !== '' && (CountryData::name($country) === null || BlockedCountries::blocks($country))) {
             return self::refuse('Please choose your country from the list.');
         }
         // An exhibitor's company and country decide what they are offered
@@ -69,6 +69,10 @@ final class ChatIntro
             $conversation = ChatOrchestrator::applyFormCountry($agent, $conversation, $country);
         }
 
+        $lang = Lang::valid($input['language'] ?? null);
+        if ($lang !== null) {
+            $leadState['language'] = $lang;     // chosen on the card (13 Nov 2026)
+        }
         $leadState['intro_done'] = true;
         $leadState['name']       = $firstName;
         if ($company !== null) {
@@ -76,6 +80,13 @@ final class ChatIntro
         }
         if ($countryName !== null) {
             $leadState['company_country'] = $countryName;
+        }
+        // Optional company website (owner, 12 Nov 2026). It tells research
+        // which company this is when several share the name. Anything that
+        // is not a website address is simply left out, never refused.
+        $website = CompanyStore::normaliseDomain(self::text($input['website'] ?? null, 160));
+        if ($website !== null && str_contains($website, '.') && empty($leadState['website'])) {
+            $leadState['website'] = $website;
         }
 
         ConversationStore::update($conversation, [
@@ -109,12 +120,13 @@ final class ChatIntro
      */
     private static function visiting(array $agent, array $conversation, string $firstName, ?string $company, ?string $country): array
     {
-        ConversationStore::appendMessage($conversation, 'visitor', self::summary('visit', $firstName, $company, $country), [
+        ConversationStore::appendMessage($conversation, 'visitor', self::summary('visit', $firstName, $company, $country, Lang::of(ConversationStore::leadState($conversation))), [
             'response_status' => 'intro_form',
         ]);
 
         // What the chat told us, in the shape the relevance rules read.
-        $person  = ['name' => $firstName, 'company_name' => (string)$company, 'country' => (string)$country];
+        $person  = ['name' => $firstName, 'company_name' => (string)$company, 'country' => (string)$country,
+                    'language' => Lang::of(ConversationStore::leadState($conversation))];
         $profile = VisitorProfile::fromRegistration($person, $agent);
         $case    = ValueProposition::build($agent, $profile, []);
 
@@ -185,15 +197,27 @@ final class ChatIntro
         ?string $company,
         ?string $country
     ): array {
-        // Company research (owner's rule 1B) will run here, before the reply,
-        // once it exists. Until then the assistant works from what the
-        // visitor told us and the exhibition's approved knowledge.
+        // Company research (owner's rule 1B; fix plan step 3, 11 Nov 2026)
+        // runs here, before the reply, so the first thing an exhibitor hears
+        // is already about their business. It waits at most the set number of
+        // seconds (owner: 10 to 20) with nothing said — the widget shows only
+        // the typing dots. If it is not finished by then, the reply goes out
+        // as normal and research is finished straight after it, for the next
+        // turn.
+        $wait = CompanyResearch::firstReplyWait();
+        if ($wait > 0) {
+            $outcome = CompanyResearch::beforeFirstReply($agent, $conversation, $wait);
+            app_log('research', 'before the first reply', [
+                'agent' => (int)$agent['id'], 'conversation' => (int)$conversation['id'], 'outcome' => $outcome,
+            ]);
+        }
 
         $response = ChatOrchestrator::handle($agent, [
             'request_id'     => (string)($input['request_id'] ?? ('intro' . bin2hex(random_bytes(8)))),
             'session_id'     => (string)$conversation['session_id'],
             'session_secret' => (string)($input['session_secret'] ?? ''),
-            'message'        => self::summary('exhibit', $firstName, $company, $country),
+            'message'        => self::summary('exhibit', $firstName, $company, $country, Lang::of(ConversationStore::leadState($conversation))),
+            'language'       => Lang::of(ConversationStore::leadState($conversation)),
             'origin'         => $input['origin'] ?? null,
             'known_contact'  => array_filter([
                 'name'            => $firstName,
@@ -209,17 +233,17 @@ final class ChatIntro
      * What the visitor said, in their own words, for the conversation record
      * and — when exhibiting — for the assistant.
      */
-    private static function summary(string $interest, string $firstName, ?string $company, ?string $country): string
+    private static function summary(string $interest, string $firstName, ?string $company, ?string $country, string $lang = 'en'): string
     {
-        $parts = ['My name is ' . $firstName . '.'];
+        $parts = [Lang::t($lang, 'said_name', ['name' => $firstName])];
         if ($company !== null) {
-            $parts[] = 'I am from ' . $company . ($country !== null ? ', based in ' . $country : '') . '.';
+            $parts[] = $country !== null
+                ? Lang::t($lang, 'said_from_country', ['org' => $company, 'country' => $country])
+                : Lang::t($lang, 'said_from', ['org' => $company]);
         } elseif ($country !== null) {
-            $parts[] = 'I am based in ' . $country . '.';
+            $parts[] = Lang::t($lang, 'said_country', ['country' => $country]);
         }
-        $parts[] = $interest === 'exhibit'
-            ? 'I am interested in exhibiting.'
-            : 'I am interested in visiting.';
+        $parts[] = Lang::t($lang, $interest === 'exhibit' ? 'said_exhibit' : 'said_visit');
         return implode(' ', $parts);
     }
 
@@ -229,8 +253,9 @@ final class ChatIntro
         $all = CountryData::COUNTRIES;
         asort($all, SORT_NATURAL | SORT_FLAG_CASE);
         $out = [['PK', $all['PK'] ?? 'Pakistan']];
+        $blocked = BlockedCountries::codes();
         foreach ($all as $code => $name) {
-            if ($code !== 'PK') {
+            if ($code !== 'PK' && !in_array($code, $blocked, true)) {
                 $out[] = [$code, $name];
             }
         }

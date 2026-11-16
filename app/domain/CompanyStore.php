@@ -424,6 +424,10 @@ final class CompanyStore
             && Suppression::has($agentId, 'domain', (string)$company['domain'])) {
             return false;
         }
+        // A company in a blocked country is never contacted (owner, 12 Nov 2026).
+        if (BlockedCountries::blocksCompany($agentId, $company)) {
+            return false;
+        }
         return true;
     }
 }

@@ -69,6 +69,12 @@ try {
         );
     }
 
+    // Blocked countries (owner, 12 Nov 2026): no lead, nothing sent to the team.
+    if ($conversation && BlockedCountries::blocksConversation($conversation)) {
+        db()->rollback();
+        api_respond(['ok' => true, 'stored' => false], 200, $ctx['cors']);
+    }
+
     if ($conversation) {
         $lead = LeadManager::ensureLead($agent, $conversation);
     } else {

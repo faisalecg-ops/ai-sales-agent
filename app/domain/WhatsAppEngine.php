@@ -54,8 +54,14 @@ final class WhatsAppEngine
      * apply the same test: the number, the email address, the email's
      * domain, and the company as a whole.
      */
-    public static function blockedReason(int $agentId, ?string $phone, ?string $email, ?int $companyId): ?string
+    public static function blockedReason(int $agentId, ?string $phone, ?string $email, ?int $companyId, ?string $country = null): ?string
     {
+        // Blocked countries (owner, 12 Nov 2026): the country on the record,
+        // or the number's dialling code.
+        if (BlockedCountries::blocks($country) || BlockedCountries::blocksPhone($phone)) {
+            return 'They are in a blocked country.';
+        }
+
         if ($phone !== null && $phone !== '' && Suppression::blocksPhone($agentId, $phone)) {
             return 'The number is on the do-not-contact list.';
         }
@@ -66,6 +72,9 @@ final class WhatsAppEngine
 
         if ($companyId !== null && $companyId > 0) {
             $company = db()->one('SELECT * FROM companies WHERE id = ? AND agent_id = ?', [$companyId, $agentId]);
+            if ($company !== null && BlockedCountries::blocksCompany($agentId, $company)) {
+                return 'Their company is in a blocked country.';
+            }
             if ($company !== null && !CompanyStore::isContactable($agentId, $company)) {
                 return 'Their company is marked do not contact.';
             }
@@ -154,7 +163,8 @@ final class WhatsAppEngine
             $agentId,
             $phone,
             $registration['email'] ?? null,
-            isset($registration['company_id']) ? (int)$registration['company_id'] : null
+            isset($registration['company_id']) ? (int)$registration['company_id'] : null,
+            $registration['country'] ?? null
         );
         if ($blocked !== null) {
             self::settleRegistration($agentId, $registrationId, 'suppressed');
@@ -398,7 +408,15 @@ final class WhatsAppEngine
         $provider = MessagingProviderFactory::make($agent);
 
         try {
-            $result = $provider->send((string)$message['phone_e164'], (string)$message['body']);
+            $body = (string)$message['body'];
+            // The personal chat link (13 Nov 2026): first messages and follow-ups to a registered visitor.
+            if (in_array((string)($message['kind'] ?? ''), ['opening', 'followup'], true) && !empty($message['registration_id'])) {
+                $chatLink = PersonalLink::url($agent, 'whatsapp', (int)$message['registration_id']);
+                if ($chatLink !== null) {
+                    $body = rtrim($body) . "\n\n" . PersonalLink::line($chatLink, true);
+                }
+            }
+            $result = $provider->send((string)$message['phone_e164'], $body);
         } catch (Throwable $ex) {
             // Thrown before a request could complete, so nothing went out.
             app_log('whatsapp', 'send threw', ['agent' => $agentId, 'error' => $ex->getMessage()]);
@@ -480,7 +498,7 @@ final class WhatsAppEngine
         $registration = null;
         if (!empty($message['registration_id'])) {
             $registration = db()->one(
-                'SELECT whatsapp_state, email, company_id FROM registrations WHERE id = ? AND agent_id = ?',
+                'SELECT whatsapp_state, email, company_id, country FROM registrations WHERE id = ? AND agent_id = ?',
                 [(int)$message['registration_id'], $agentId]
             );
             if ($registration === null) {
@@ -496,7 +514,8 @@ final class WhatsAppEngine
             $agentId,
             $phone,
             $registration['email'] ?? null,
-            isset($registration['company_id']) ? (int)$registration['company_id'] : null
+            isset($registration['company_id']) ? (int)$registration['company_id'] : null,
+            $registration['country'] ?? null
         );
         if ($blocked !== null) {
             return $blocked;
@@ -818,7 +837,9 @@ final class WhatsAppEngine
         // so a person decides — and no AI time is spent on it.
         $blocked = self::blockedReason($agentId, $phone, null, null);
         if ($blocked !== null) {
-            $note = 'On the do-not-contact list, so not answered automatically. A person should decide.';
+            $note = BlockedCountries::blocksPhone($phone)
+                ? 'The number is from a blocked country, so it is not answered.'
+                : 'On the do-not-contact list, so not answered automatically. A person should decide.';
             db()->update('whatsapp_inbox', ['handled' => 0, 'note' => $note], 'id = ?', [$inboxId]);
             return ['handled' => false, 'note' => $note, 'reply' => null];
         }

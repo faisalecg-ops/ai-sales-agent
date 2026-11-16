@@ -288,7 +288,7 @@ final class ProposalBuilder
         $mode = $rate !== null ? 'per_sqm' : 'fixed';
         $min  = isset($merged['min_sqm']) ? (float)$merged['min_sqm'] : null;
 
-        if ($mode === 'per_sqm' && $min === null) {
+        if ($mode === 'per_sqm' && $min === null && (string)($merged['package_type'] ?? '') !== 'outdoor') {
             $warnings[] = 'This is charged per square metre but no minimum size was found. '
                         . 'Set a minimum before approving, or the assistant cannot quote a size.';
         }
@@ -303,7 +303,11 @@ final class ProposalBuilder
             'stall_size'       => mb_substr((string)($merged['stall_size'] ?? ''), 0, 64),
             'pricing_mode'     => $mode,
             'currency'         => $currency,
-            'price'            => $price ?? ($rate !== null && $min !== null ? round($rate * $min, 2) : null),
+            // Outdoor space with no published minimum is referenced per single
+            // square metre: the stored price is the published rate itself.
+            'price'            => $price ?? ($rate !== null && $min !== null
+                ? round($rate * $min, 2)
+                : ($rate !== null && (string)($merged['package_type'] ?? '') === 'outdoor' ? $rate : null)),
             'rate_per_sqm'     => $rate,
             'min_sqm'          => $min,
             'increment_sqm'    => isset($merged['increment_sqm']) ? (float)$merged['increment_sqm'] : null,

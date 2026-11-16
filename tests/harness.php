@@ -238,7 +238,7 @@ function reset_database(): void
         'import_documents', 'import_runs',
         'whatsapp_outbox', 'whatsapp_inbox', 'agent_sales_reps', 'company_research', 'registrations',
         'outreach_emails', 'prospect_targets', 'prospect_campaigns',
-        'company_contacts', 'company_evidence', 'companies', 'suppression_list',
+        'company_contacts', 'company_evidence', 'companies', 'suppression_list', 'site_pages', 'quotations',
         'agents', 'admin_users', 'admin_user_access', 'settings', 'login_attempts',
     ];
     db()->raw()->query('SET FOREIGN_KEY_CHECKS = 0');

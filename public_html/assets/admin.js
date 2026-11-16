@@ -49,3 +49,20 @@
         });
     });
 })();
+
+// Blocked countries: find a country, or show only the ticked ones.
+(function () {
+  var list = document.querySelector('[data-tick-filter]');
+  if (!list) { return; }
+  var find = document.getElementById('bc-find'), only = document.getElementById('bc-only');
+  var items = list.querySelectorAll('label');
+  function go() {
+    var q = find ? find.value.trim().toLowerCase() : '';
+    items.forEach(function (l) {
+      var on = l.querySelector('input').checked;
+      l.style.display = ((l.dataset.name || '').indexOf(q) > -1 && (!only || !only.checked || on)) ? 'flex' : 'none';
+    });
+  }
+  if (find) { find.addEventListener('input', go); }
+  if (only) { only.addEventListener('change', go); }
+})();

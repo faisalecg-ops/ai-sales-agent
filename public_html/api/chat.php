@@ -55,6 +55,7 @@ try {
         'message'        => $message,
         'origin'         => $ctx['origin'],
         'retry'          => !empty($input['retry']),
+        'language'       => $input['language'] ?? null,
     ]);
 } catch (RuntimeException $ex) {
     $known = ['invalid_session', 'unknown_session'];

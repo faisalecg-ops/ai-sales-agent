@@ -75,6 +75,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                                         array_keys(ResearchCatalogue::selectable()), 'none'),
             'research.searches_per_company' => (string)max(1, min(6, (int)($_POST['research_searches'] ?? 4))),
             'research.monthly_credit_limit' => (string)max(0, min(100000, (int)($_POST['research_monthly_limit'] ?? 900))),
+            'research.first_reply_wait_seconds' => (string)max(0, min(20, (int)($_POST['research_first_wait'] ?? 18))),
             'mail.transport'       => Validator::inList($_POST['mail_transport'] ?? null, ['mail', 'smtp'], 'mail'),
             'mail.from_address'    => (string)(Validator::email($_POST['mail_from_address'] ?? null) ?? ''),
             'mail.from_name'       => (string)(Validator::text($_POST['mail_from_name'] ?? null, 120) ?? ''),
@@ -419,7 +420,14 @@ echo admin_card_open('set-research', 'Company research', 'Looks companies up on 
         'type' => 'number',
         'hint' => 'Research stops for the month when this is reached. 900 stays inside Tavily\'s free 1,000.',
      ])
-   . '</div>';
+   . '</div>'
+   . f_text('research_first_wait', 'Seconds to wait before the first reply to an exhibitor',
+        (string)CompanyResearch::firstReplyWait(), [
+        'type' => 'number',
+        'hint' => 'Between 0 and 20 (14 recommended). When someone chooses "exhibiting", their company is looked up first, '
+                . 'so the first reply is about their business; writing the reply takes about 6 seconds more. The visitor '
+                . 'sees only the typing dots. 0 switches the wait off.',
+     ]);
 
 $rsPct = $rsLimit > 0 ? min(100, (int)round(100 * $rsUsed / $rsLimit)) : 0;
 echo '<div class="meter-line"><span>This month: <b>' . number_format($rsUsed) . '</b> of '

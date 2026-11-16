@@ -200,7 +200,8 @@ final class WhatsAppFollowUp
             return 'skipped';
         }
         if (WhatsAppEngine::blockedReason($agentId, $phone, $registration['email'] ?? null,
-                !empty($registration['company_id']) ? (int)$registration['company_id'] : null) !== null) {
+                !empty($registration['company_id']) ? (int)$registration['company_id'] : null,
+                $registration['country'] ?? null) !== null) {
             return 'skipped';
         }
 

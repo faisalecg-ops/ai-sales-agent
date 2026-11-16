@@ -1,0 +1,285 @@
+Test chats — 13 Nov 2026 — Pharma Asia — openai / gpt-6-luna — languages
+
+=== 25. Chinese: a price, the quotation offer, "好的" sends it
+  (introduction card: {"first_name":"Wei","company":"Zhejiang Capsule Machinery Co","country":"CN","interest":"exhibit","language":"zh"}, answered in 16.2 s)
+  ASSISTANT: Wei，欢迎了解2027年12月7日至9日在Karachi Expo Centre举行的第25届Pharma Asia。为了判断展会是否适合贵公司，您最希望通过参展实现什么？
+  PASS
+  VISITOR: 18平方米的标准展位多少钱？我的邮箱是 wei@zjcapsule.example
+  ASSISTANT: Shell Scheme Stall 的标准配置包含墙板和公司名称楣板、地毯、一张桌子和两把椅子、照明及电源插座。Shell Scheme Stall 的最小面积为 9 sqm，按 9 sqm 为单位提供；您询问的 18 sqm 可选。您希望我通过电子邮件发送这项方案的正式报价吗？
+             我也可以将正式报价单通过电子邮件发送给您。如需要，请回复"是"。
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: 好的
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 正式报价单现正发送至 wei@zjcapsule.example。
+             报价单 PA27-Q-0001 正在发送至 wei@zjcapsule.example，有效期至 13 Dec 2026。
+  PASS
+  (research: done, direct)
+
+Replies passed: 3   failed: 0
+
+=== 26. Roman Urdu: a company in Pakistan asks the rate, gets the local rep, no price
+  (introduction card: {"first_name":"Bilal","company":"Lahore Packaging Works","country":"PK","interest":"exhibit","language":"ur"}, answered in 15.8 s)
+  ASSISTANT: Shukriya, Bilal. Pharma Asia mein packaging machinery aur materials ke suppliers manufacturers se mil sakte hain jo packaging solutions dhoond rahe hain. Aap exhibition mein sab se zyada kya hasil karna chahenge—naye customers, distributors, ya brand awareness?
+  PASS
+  VISITOR: Shell scheme stall ka rate kya hai?
+  ASSISTANT: Shell Scheme Stall mein yeh cheezen shamil hain:
+             - Walls aur fascia board par company ka naam
+             - Carpet
+             - Ek table aur do chairs
+             - Lights aur power socket
+             Rate aur official proposal ke liye hamare sales representative aap ko sahi maloomat denge; unki contact details is paigham ke neeche hain.
+             Aap in se seedha bhi raabta kar sakte hain:
+             Farhan Mobeen, Senior Manager Sales
+             Mobile: +923152228225
+             WhatsApp: +923152228225
+             Email: farhan@ecgateway.info
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 27. Arabic: what is included and the price, right figures
+  (introduction card: {"first_name":"Omar","company":"Gulf Pharma Packaging LLC","country":"AE","interest":"exhibit","language":"ar"}, answered in 16.1 s)
+  ASSISTANT: أهلًا Omar، يسعدني اهتمام Gulf Pharma Packaging LLC بالمشاركة كعارض في Pharma Asia 2027. بما أن نشاطكم يتوافق مع مجال التعبئة والتغليف في المعرض، فما الذي تودون تحقيقه من المشاركة؟
+  PASS
+  VISITOR: كم سعر جناح بمساحة 27 متر مربع؟
+  ASSISTANT: تتوفر خيارات الأجنحة بمساحة 27 sqm التالية:
+             - Shell Scheme Stall، 27 sqm: USD 10,125 (USD 11,643.75 with 15% VAT)
+             - Bare Space Inside Halls، 27 sqm: USD 8,775 (USD 10,091.25 with 15% VAT)
+             أي الخيارين يهمكم؟
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+==================================================================
+After the fix (an offer written by the AI in Chinese is recognised, so the program does not add a second):
+
+=== 25. Chinese: a price, the quotation offer, "好的" sends it
+  (introduction card: {"first_name":"Wei","company":"Zhejiang Capsule Machinery Co","country":"CN","interest":"exhibit","language":"zh"}, answered in 12.7 s)
+  ASSISTANT: Wei，欢迎考虑参加 Pharma Asia 2027。根据现有资料，相关产品包括胶囊填充机、泡罩封口机、胶囊和片剂计数及抛光设备，以及压片机；这些设备可以面向寻找生产设备的制药企业展示。您最希望在展会上展示哪几类产品？
+  PASS
+  VISITOR: 18平方米的标准展位多少钱？我的邮箱是 wei@zjcapsule.example
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 报价为：Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)。我可以为您发送这项的正式报价 PDF，您希望我通过 wei@zjcapsule.example 发送吗？
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: 好的
+  ASSISTANT: Shell Scheme Stall 的 18 sqm 报价单正在发送至 wei@zjcapsule.example。
+             报价单 PA27-Q-0001 正在发送至 wei@zjcapsule.example，有效期至 13 Dec 2026。
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, direct)
+
+Replies passed: 3   failed: 0
+
+=== 23. The assistant offers a quotation itself after a price, and "yes" sends it
+  (introduction card: {"first_name":"Lena","company":"Alpen Dosiertechnik GmbH","country":"AT","interest":"exhibit"}, answered in 15.5 s)
+  ASSISTANT: Thanks, Lena. What would you most want to achieve by exhibiting at Pharma Asia?
+  PASS
+  VISITOR: What does an 18 sqm shell scheme stall cost? My email is lena.huber@alpen-dosier.example
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             The Shell Scheme Stall is available in 18 sqm. It includes:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Would you like me to email you a quotation for this?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: yes
+  ASSISTANT: The quotation for the Shell Scheme Stall at 18 sqm is being emailed to lena.huber@alpen-dosier.example now.
+             Quotation PA27-Q-0001 is on its way to lena.huber@alpen-dosier.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 3   failed: 0
+
+=== 20. A quotation asked in one message, the email given in the next
+  (introduction card: {"first_name":"Klaus","company":"Sensorik Pumps GmbH","country":"DE","interest":"exhibit"}, answered in 16.6 s)
+  ASSISTANT: Thanks, Klaus. Pumps are relevant to the exhibition, as pharmaceutical manufacturers upgrading their plants need equipment, parts and service. What would you most want to achieve by exhibiting?
+  PASS
+  VISITOR: Please send me a quotation for an 18 sqm shell scheme stall.
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             I can arrange the quotation for the 18 sqm Shell Scheme Stall. What email address should it be sent to?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: klaus.meyer@sensorik-pumps.example
+  ASSISTANT: The quotation for Shell Scheme Stall at 18 sqm is being emailed to you now.
+             Quotation PA27-Q-0001 is on its way to klaus.meyer@sensorik-pumps.example. It is valid until 13 Dec 2026.
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  VISITOR: Thanks. Is the stand reserved for me now?
+  ASSISTANT: You’re welcome, Klaus. The quotation is an offer, not a reservation; a stand is booked only after the signed contract and payment. To proceed, please reply to the quotation email or contact your sales representative.
+  PASS
+  (research: done, poor)
+
+Replies passed: 4   failed: 0
+
+==================================================================
+Italian, Japanese, Persian and Thai added (owner, 13 Nov 2026):
+
+=== 28. Italian: price and quotation offer
+  (introduction card: {"first_name":"Marco","company":"Valvole Italia SpA","country":"IT","interest":"exhibit","language":"it"}, answered in 15.7 s)
+  ASSISTANT: Piacere, Marco. Per capire come Pharma Asia 2027 potrebbe essere utile a Valvole Italia SpA, quale risultato vorreste ottenere partecipando alla fiera?
+  PASS
+  VISITOR: Quanto costa uno stand shell scheme di 18 metri quadrati?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 con 15% VAT)
+             Lo Shell Scheme Stall di 18 sqm include:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Posso anche inviarle una quotazione ufficiale per questa opzione: desidera riceverla via email?
+             Posso anche inviarle via e-mail un preventivo ufficiale. Basta rispondere "sì".
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 29. Japanese: price and quotation offer
+  (introduction card: {"first_name":"Kenji","company":"Osaka Tablet Systems","country":"JP","interest":"exhibit","language":"ja"}, answered in 15.3 s)
+  ASSISTANT: Kenji様、出展にご関心をお寄せいただきありがとうございます。Osaka Tablet Systemsでは、どのような製品を製造されていますか？
+  PASS
+  VISITOR: 18平方メートルのシェルスキームブースはいくらですか？
+  ASSISTANT: 18 sqmのShell Scheme Stallは、壁と社名入りの fascia board、カーペット、テーブル1台と椅子2脚、照明と電源ソケットが含まれます。公式見積書をメールでお送りできます。メールアドレスを教えていただけますか？
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 2   failed: 0
+
+=== 30. Persian: price, right to left, right figures
+  (introduction card: {"first_name":"Reza","company":"Tehran Pharma Machinery","country":"TR","interest":"exhibit","language":"fa"}, answered in 15.5 s)
+  ASSISTANT: خوشحالم که به‌عنوان غرفه‌دار به Pharma Asia 2027 علاقه‌مندید، Reza. برای اینکه ببینیم نمایشگاه چطور می‌تواند به کسب‌وکارتان کمک کند، مهم‌ترین دستاوردی که از حضور در نمایشگاه می‌خواهید چیست؟
+  PASS
+  VISITOR: قیمت غرفه shell scheme با ۱۸ متر مربع چقدر است؟
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 با 15% VAT)
+             برای Shell Scheme Stall، اندازهٔ ۱۸ sqm در دسترس است. این گزینه شامل موارد زیر است:
+             - دیوارها و تابلوی پیشانی با نام شرکت
+             - فرش
+             - یک میز و دو صندلی
+             - چراغ‌ها و یک پریز برق
+             آیا مایلید برای این گزینه یک پیش‌فاکتور رسمی برایتان ایمیل کنم؟
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+=== 31. Thai: price and quotation offer
+  (introduction card: {"first_name":"Somchai","company":"Bangkok Pharma Pack","country":"TH","interest":"exhibit","language":"th"}, answered in 15.5 s)
+  ASSISTANT: ยินดีที่ได้รู้จักครับ Somchai การออกบูธที่ Pharma Asia เหมาะสำหรับบริษัทที่ต้องการพบผู้ผลิต ผู้ซื้อ และผู้จัดจำหน่ายในอุตสาหกรรมยา เพื่อช่วยแนะนำแนวทางที่เหมาะสม คุณผลิตหรือจำหน่ายสินค้าอะไรครับ
+  PASS
+  VISITOR: บูธ shell scheme ขนาด 18 ตารางเมตร ราคาเท่าไหร่
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             สิ่งที่รวมอยู่:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             ต้องการให้ฉันส่งใบเสนอราคาอย่างเป็นทางการสำหรับรายการนี้ทางอีเมลไหมครับ
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, poor)
+
+Replies passed: 2   failed: 0
+
+----- after adding the Italian word 'quotazione' (the offer was made twice) -----
+
+=== 28. Italian: price and quotation offer
+  (introduction card: {"first_name":"Marco","company":"Valvole Italia SpA","country":"IT","interest":"exhibit","language":"it"}, answered in 13.3 s)
+  ASSISTANT: Piacere, Marco. Valvole Italia realizza valvole idrauliche e soluzioni idrauliche ed elettroniche plug-and-play; per Pharma Asia potrebbe essere utile mostrare quelle applicabili agli impianti o alle attrezzature farmaceutiche. Quali prodotti vorreste presentare in fiera?
+  PASS
+  VISITOR: Quanto costa uno stand shell scheme di 18 metri quadrati?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 con 15% VAT)
+             Lo Shell Scheme Stall da 18 sqm include:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Vuoi che ti invii via email un preventivo ufficiale per questa opzione?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+==================================================================
+Bahasa Indonesia and Bahasa Melayu added (owner, 13 Nov 2026):
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 14.1 s)
+  ASSISTANT: Senang berkenalan, Budi. Agar saya bisa memahami kecocokan Pharma Asia untuk perusahaan Anda, apa yang diproduksi atau dijual Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Yang termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Apakah Anda ingin saya mengirimkan quotation resmi untuk opsi ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  FAIL: missing: offers a quotation
+  (research: done, poor)
+
+Replies passed: 1   failed: 1
+
+=== 33. Bahasa Melayu: price and quotation offer
+  (introduction card: {"first_name":"Aisyah","company":"Penang Pharma Pack Sdn Bhd","country":"MY","interest":"exhibit","language":"ms"}, answered in 16.3 s)
+  ASSISTANT: Terima kasih, Aisyah. Apakah yang paling ingin dicapai oleh Penang Pharma Pack melalui penyertaan di Pharma Asia 2027?
+  PASS
+  VISITOR: Berapa harga gerai shell scheme 18 meter persegi?
+  ASSISTANT: Kadar untuk Shell Scheme Stall 18 sqm ialah:
+             - Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Bolehkah saya e-melkan sebut harga rasmi untuk pilihan ini?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0
+
+----- Indonesian again, after the program learnt the words 'penawaran resmi' (it had offered twice) -----
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 8.6 s)
+  ASSISTANT: Terima kasih, Budi. Agar saya bisa memahami kecocokan Pharma Asia untuk perusahaan Anda, apa yang diproduksi atau dijual oleh Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Shell Scheme Stall mencakup:
+             - Dinding dan papan fascia dengan nama perusahaan
+             - Karpet
+             - Satu meja dan dua kursi
+             - Lampu dan satu soket listrik
+             Apakah Anda ingin saya mengirimkan penawaran resmi untuk ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  FAIL: missing: offers a quotation
+  (research: done, poor)
+
+Replies passed: 1   failed: 1
+
+=== 32. Bahasa Indonesia: price and quotation offer
+  (introduction card: {"first_name":"Budi","company":"Jakarta Farma Mesin","country":"ID","interest":"exhibit","language":"id"}, answered in 8.9 s)
+  ASSISTANT: Terima kasih, Budi. Saya memahami bahwa Anda tertarik menjadi peserta pameran untuk Jakarta Farma Mesin. Riset kami belum dapat memastikan produk yang dijual perusahaan Anda; apa yang dibuat atau dijual Jakarta Farma Mesin?
+  PASS
+  VISITOR: Berapa harga stan shell scheme 18 meter persegi?
+  ASSISTANT: Shell Scheme Stall, 18 sqm: USD 6,750 (USD 7,762.50 with 15% VAT)
+             Yang termasuk:
+             - Walls and fascia board with company name
+             - Carpet
+             - One table and two chairs
+             - Lights and a power socket
+             Apakah Anda ingin saya mengirimkan quotation untuk ini melalui email?
+             [card: Shell Scheme Stall USD 6,750]
+  PASS
+  (research: done, indirect)
+
+Replies passed: 2   failed: 0

@@ -31,6 +31,7 @@ final class LeadBriefing
         $research = self::research($lead);
         $headline = match (true) {
             $trigger === 'handoff'                       => $region . ' handoff — ' . self::personLabel($lead),
+            $trigger === 'quotation'                     => 'Quotation sent — ' . self::personLabel($lead),
             $trigger === 'researched' && $research !== null
                 => $region . ' exhibitor researched — ' . self::personLabel($lead)
                    . ' (' . $research['score'] . '/100, ' . $research['priority'] . ')',
@@ -40,10 +41,32 @@ final class LeadBriefing
         $subject = $headline . ' (' . (string)$agent['name'] . ')';
 
         $summary     = self::summaryRows($lead, $agent, $tz);
+        // Concerns the visitor raised (improvement plan, 13 Nov 2026).
+        $concerns    = self::concernsOf($conversations);
+        if ($concerns['labels']) {
+            $summary['Concerns raised'] = implode('; ', $concerns['labels']);
+        }
+        // Why the team is needed now (transcript review, 14 Nov 2026: a
+        // quotation the chat could not send must reach the team as a request).
+        if ($trigger === 'handoff') {
+            foreach ($conversations as $c) {
+                if (!empty($c['handoff_triggered']) && trim((string)($c['handoff_reason'] ?? '')) !== '') {
+                    $summary = ['Why they need you' => (string)$c['handoff_reason']] + $summary;
+                    break;
+                }
+            }
+        }
         $interest    = self::packageInterest($lead);
         $signals     = self::signalLabels($conversations);
         $unanswered  = self::unansweredQuestions($conversations);
         $suggestions = self::suggestions($agent, $lead, $conversations, $isLocal, $interest, $unanswered);
+        if ($concerns['no_contact']) {
+            array_unshift($suggestions, 'They asked in the chat NOT to be contacted. Their email address and phone number '
+                . 'are on the Do-not-contact list. Do not follow up unless they contact you again.');
+        } elseif ($concerns['no_contact_maybe']) {
+            array_unshift($suggestions, 'They may have asked in the chat not to be contacted (the assistant understood it '
+                . 'so). Read the conversation before any follow-up; if so, add them under Do-not-contact.');
+        }
 
         return [
             'subject' => $subject,
@@ -179,9 +202,77 @@ final class LeadBriefing
             'Products'       => trim((string)($lead['product_category'] ?? '')),
             'Website'        => trim((string)($lead['website'] ?? '')),
             'Status'         => LeadManager::STATUS_LABELS[(string)$lead['status']] ?? (string)$lead['status'],
+            'Quotations'     => self::quotationLine($lead),
+            'Chat language'  => self::languageLine($lead),
+            'Lead score'     => self::scoreLine($lead),
+            'Qualification'  => self::qualificationLine($lead),
             'First seen'     => self::localTime($lead['created_at'] ?? null, $tz),
             'Page'           => trim((string)($lead['source_url'] ?? '')),
         ], static fn($v) => $v !== '' && $v !== null);
+    }
+
+    /** The language the visitor chose on the chat card, when it is not English. */
+    private static function languageLine(array $lead): string
+    {
+        $state = db()->value('SELECT lead_state FROM conversations WHERE lead_id = ? ORDER BY id DESC LIMIT 1', [(int)$lead['id']]);
+        $code  = Lang::of((array)json_decode((string)$state, true));
+        return $code === 'en' ? '' : Lang::name($code) . ' (the transcript below is in that language)';
+    }
+
+    /** "PA27-Q-0003: Shell Scheme Stall, 18 sqm, USD 7,762.50, emailed 12 Nov (PDF attached)". */
+    private static function quotationLine(array $lead): string
+    {
+        $out = [];
+        foreach (array_slice(Quotation::forLead((int)$lead['agent_id'], (int)$lead['id']), 0, 3) as $q) {
+            $out[] = $q['number'] . ': ' . $q['title']
+                . ($q['sqm'] ? ', ' . rtrim(rtrim(number_format((float)$q['sqm'], 2), '0'), '.') . ' sqm' : '')
+                . ', ' . $q['total_text'] . ' — ' . strtolower(Quotation::statusLabel($q)) . ' to ' . $q['to_email'];
+        }
+        return implode('; ', $out);
+    }
+
+    /** "Warm (72 of 100), 67% complete" — from the guided-selling record, when there is one. */
+    private static function scoreLine(array $lead): string
+    {
+        $label = Qualification::labelText($lead['lead_label'] ?? null);
+        if ($label === '') {
+            return '';
+        }
+        return $label . ' (' . (float)($lead['lead_score'] ?? 0) . ' of 100), ' . (int)($lead['qual_pct'] ?? 0) . '% complete';
+    }
+
+    private static function qualificationLine(array $lead): string
+    {
+        $qual = json_decode((string)($lead['qualification'] ?? ''), true);
+        if (!is_array($qual)) {
+            return '';
+        }
+        $parts = [];
+        foreach (Qualification::FIELDS as $key => $name) {
+            $value = Qualification::display($qual, $key);
+            if ($value !== '') {
+                $parts[] = $name . ': ' . $value;
+            }
+        }
+        return implode('; ', $parts);
+    }
+
+    /** @return array{labels:string[],no_contact:bool,no_contact_maybe:bool} */
+    private static function concernsOf(array $conversations): array
+    {
+        $types = [];
+        $no = false;
+        $maybe = false;
+        foreach ($conversations as $c) {
+            $state = json_decode((string)($c['lead_state'] ?? ''), true);
+            if (!is_array($state)) {
+                continue;
+            }
+            array_push($types, ...array_map('strval', (array)($state['concerns'] ?? [])));
+            $no    = $no || !empty($state['no_contact']);
+            $maybe = $maybe || !empty($state['no_contact_maybe']);
+        }
+        return ['labels' => Concerns::labels($types), 'no_contact' => $no, 'no_contact_maybe' => $maybe && !$no];
     }
 
     private static function packageInterest(array $lead): array
@@ -286,6 +377,16 @@ final class LeadBriefing
         foreach (['company' => 'company name', 'industry' => 'industry', 'product_category' => 'what they make or sell'] as $field => $label) {
             if (trim((string)($lead[$field] ?? '')) === '') {
                 $missing[] = $label;
+            }
+        }
+        // From the guided-selling record: what is worth asking on the first call.
+        $qual = json_decode((string)($lead['qualification'] ?? ''), true);
+        if (is_array($qual) && $qual) {
+            foreach (['main_aim' => 'what they want from exhibiting', 'stand_interest' => 'the size of stand they need',
+                      'contact_role' => 'whether this person decides or prepares it for management'] as $key => $label) {
+                if (!Qualification::isKnown($qual, $key) && !($key === 'main_aim' && Qualification::isKnown($qual, 'seeking'))) {
+                    $missing[] = $label;
+                }
             }
         }
         if ($missing) {

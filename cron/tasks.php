@@ -78,6 +78,34 @@ try {
 }
 
 // ---------------------------------------------------------------------
+// 0c. Quotations whose email did not go out the first time
+// ---------------------------------------------------------------------
+try {
+    $requoted = Quotation::sendDue(10);
+    if ($requoted > 0) {
+        echo "Quotations emailed on a later try: {$requoted}\n";
+    }
+} catch (Throwable $ex) {
+    app_log('cron', 'quotation retry failed', ['error' => $ex->getMessage()]);
+}
+
+// ---------------------------------------------------------------------
+// 0d. The exhibition websites' pages (weekly, continued each run)
+// ---------------------------------------------------------------------
+try {
+    if (SitePages::ready()) {
+        foreach (db()->all("SELECT * FROM agents WHERE status = 'active'") as $siteAgent) {
+            $line = SitePages::cron($siteAgent, 15);
+            if ($line !== null) {
+                echo $line, "\n";
+            }
+        }
+    }
+} catch (Throwable $ex) {
+    app_log('cron', 'website reading failed', ['error' => $ex->getMessage()]);
+}
+
+// ---------------------------------------------------------------------
 // 1. Send queued notifications
 // ---------------------------------------------------------------------
 try {

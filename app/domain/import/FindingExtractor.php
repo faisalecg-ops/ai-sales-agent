@@ -183,7 +183,7 @@ final class FindingExtractor
         "kind" is one of: {$kinds}
 
         - stall_package: an exhibition space option that a company can book, such as a
-          shell scheme stand or bare floor space.
+          shell scheme stand, bare floor space inside the halls, or outdoor space.
         - sponsorship_package: a sponsorship or partnership tier.
         - faq: a question a visitor might ask, where the text gives a direct answer.
         - knowledge: any other useful background — what the event is, who attends,
@@ -229,7 +229,7 @@ final class FindingExtractor
         }
 
         Payload fields by kind:
-        - stall_package: package_name, package_type ("shell" or "bare"), stall_size,
+        - stall_package: package_name, package_type ("shell", "bare" or "outdoor"), stall_size,
           currency, price, rate_per_sqm, min_sqm, increment_sqm, max_sqm,
           included_items (array), tax_treatment ("included", "excluded" or "unstated"),
           tax_rate_percent, tax_label, description
@@ -516,7 +516,7 @@ final class FindingExtractor
                     'package_name'     => $name,
                     'package_type'     => Validator::inList(
                         is_string($payload['package_type'] ?? null) ? strtolower(trim($payload['package_type'])) : null,
-                        ['shell', 'bare'],
+                        ['shell', 'bare', 'outdoor'],
                         null
                     ),
                     'stall_size'       => $str('stall_size', 64),
@@ -651,14 +651,19 @@ final class FindingExtractor
     }
 
     /**
-     * Shell scheme means a built stand; bare space means floor only. Those
-     * are the two things being sold, whatever a given brochure calls them.
+     * Shell scheme means a built stand; bare space means floor only inside
+     * the halls; outdoor space is open area outside them. Those are the
+     * things being sold, whatever a given brochure calls them.
      */
     private static function stallType(string $words, array $payload): ?string
     {
         $declared = strtolower(trim((string)($payload['package_type'] ?? '')));
-        if ($declared === 'shell' || $declared === 'bare') {
+        if ($declared === 'shell' || $declared === 'bare' || $declared === 'outdoor') {
             return $declared;
+        }
+        // Checked first: "Outdoor Exhibit Space" is not bare space in a hall.
+        if (preg_match('/\b(outdoor|outdoors|outside|open air)\b/', $words)) {
+            return 'outdoor';
         }
         if (preg_match('/\b(shell|constructed|prefabricated|built|standard booth)\b/', $words)) {
             return 'shell';
